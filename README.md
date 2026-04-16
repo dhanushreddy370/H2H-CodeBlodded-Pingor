@@ -65,13 +65,12 @@ ollama run llama3.2
 
 ## 8. Demo / Screenshots
 *(Placeholders for screenshots)*
-- [Dashboard View]
-- [AI Chat View]
-- [Email Categorization View]
+Coming soon
 
 ## 9. Team Members
 - **CodeBlooded Team**
-- [Your Name/Handle]
+Dhanush Reddy S [Team Lead]
+M Rithika
 
 ## 10. Deployed Link
-- *Deploying to Render/Vercel (Pending Day 2)*: [Placeholder Link]
+- *Deploying to Render/Vercel (Pending Day 2)*: Coming soon
