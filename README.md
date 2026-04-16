@@ -69,8 +69,8 @@ Coming soon
 
 ## 9. Team Members
 - **CodeBlooded Team**
-Dhanush Reddy S [Team Lead]
-M Rithika
+- Dhanush Reddy S [Team Lead]
+- M Rithika
 
 ## 10. Deployed Link
 - *Deploying to Render/Vercel (Pending Day 2)*: Coming soon
