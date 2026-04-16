@@ -74,3 +74,4 @@ Coming soon
 
 ## 10. Deployed Link
 - *Deploying to Render/Vercel (Pending Day 2)*: Coming soon
+
