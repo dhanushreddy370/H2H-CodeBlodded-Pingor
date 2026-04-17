@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const { initHeartbeat } = require('./services/syncService');
+const Thread = require('./models/Thread');
+const SyncLog = require('./models/SyncLog');
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +20,25 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.send('Pingor Server is Running');
 });
+
+// API endpoint to fetch sync status and latest threads
+app.get('/api/sync/status', async (req, res) => {
+  try {
+    const latestLog = await SyncLog.findOne().sort({ executionTime: -1 });
+    const latestThreads = await Thread.find().sort({ lastUpdated: -1 }).limit(10);
+    res.json({
+      status: latestLog ? latestLog.status : 'No syncs yet',
+      lastSync: latestLog ? latestLog.executionTime : null,
+      latestLog,
+      threads: latestThreads
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Initialize heartbeat
+initHeartbeat();
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
