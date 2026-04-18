@@ -3,9 +3,11 @@ const { google } = require('googleapis');
 const { oauth2Client } = require('../config/gmail');
 const Thread = require('../models/Thread');
 const SyncLog = require('../models/SyncLog');
+const { classifyThread } = require('./aiService');
 
 /**
  * Fetches the latest threads from Gmail API and upserts them into MongoDB
+ * @returns {Promise<void>}
  */
 const syncThreads = async () => {
   const startTime = Date.now();
@@ -45,12 +47,22 @@ const syncThreads = async () => {
         const subjectHeader = headers.find(h => h.name.toLowerCase() === 'subject');
         const subject = subjectHeader ? subjectHeader.value : '(No Subject)';
 
+        // Pass to AI Service for classification
+        let categoryTag = 'unclassified';
+        try {
+          categoryTag = await classifyThread(subject, snippet);
+        } catch (aiError) {
+          console.error(`AI Classification failed for thread ${t.id}, marking as unclassified.`);
+          // System continues to sync the email as 'unclassified'
+        }
+
         // Upsert into MongoDB
         await Thread.findOneAndUpdate(
           { threadId: t.id },
           { 
             subject: subject,
             snippet: snippet,
+            categoryTag: categoryTag,
             lastUpdated: new Date()
           },
           { upsert: true, new: true }
