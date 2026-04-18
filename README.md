@@ -4,7 +4,7 @@
 
 - **Day 1:** Set up the basic structural foundations. Created the React frontend and Node/Express backend. Configured Google OAuth2 for Gmail API access.
 - **Day 2:** Created MongoDB data models (Thread, SyncLog, ActionItem). Implemented `node-cron` for an automated hourly heartbeat sync that fetches the latest threads and upserts them into the database.
-- **Day 3:** Integrated the local LLM (Ollama) into the sync pipeline. Created `aiService.js` to categorize threads automatically. Additionally, built an interactive CLI app (`terminalChat.js`) that handles OAuth authentication, fetches live emails, and streams a conversational AI chat session directly in the terminal using the local GPU!
+- **Day 3:** Integrated the local LLM (Ollama) into the sync pipeline. Created `aiService.js` to categorize threads automatically. Built an interactive CLI app (`terminalChat.js`) that handles OAuth authentication and fetches live emails. Transformed this basic LLM chat into an autonomous LangChain Agent using `createToolCallingAgent`. Built dynamic tools (`gmailTools.js`) giving Pingor the ability to autonomously search emails, read specific threads, and create email drafts directly in the user's Gmail. Additionally, implemented persistent OAuth token caching to streamline development!
 
 ---
 

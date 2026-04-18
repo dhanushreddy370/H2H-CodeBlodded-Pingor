@@ -1,7 +1,9 @@
 const readline = require('readline');
 const axios = require('axios');
 const dotenv = require('dotenv');
-const { oauth2Client, getAuthUrl, setCredentials, getGmailClient } = require('./config/gmail');
+const { oauth2Client, getAuthUrl, loadSavedTokens, setCredentials, getGmailClient } = require('./config/gmail');
+const { initAgent } = require('./agents/agentService');
+const { AIMessage, HumanMessage } = require("@langchain/core/messages");
 
 dotenv.config();
 
@@ -41,10 +43,15 @@ async function preloadModelToGPU() {
 }
 
 async function authenticateGmail() {
+  if (loadSavedTokens()) {
+    console.log('[SYS] Real OAuth tokens found in tokens.json! Loaded successfully.');
+    return;
+  }
+
   if (!process.env.GMAIL_CLIENT_ID || process.env.GMAIL_CLIENT_ID === 'your_client_id_here') {
     console.log('\n[SYS] No GMAIL_CLIENT_ID found in your .env file.');
     console.log('[SYS] Falling back to OFFLINE Mock Emails to let you test the AI properly.\n');
-    return null; // Signals we should use mock data
+    return; // Signals we should use mock data
   }
 
   const authUrl = getAuthUrl();
@@ -60,77 +67,23 @@ async function authenticateGmail() {
 
   try {
     await setCredentials(code.trim());
-    console.log('✅ Successfully authenticated with Gmail!\n');
-    return getGmailClient(oauth2Client);
+    console.log('✅ Successfully authenticated with Gmail! Your tokens have been permanently saved.\n');
   } catch (error) {
     console.error('❌ Error authenticating:', error.message);
     console.log('[SYS] Falling back to OFFLINE Mock Emails due to auth failure.\n');
-    return null;
   }
 }
 
-async function fetchLatestEmails(gmail) {
-  if (!gmail) {
-    console.log('[SYS] Simulating email fetch from Gmail (Offline mode)...');
-    return `Here is the context of my latest emails:
-
-From: boss@company.com
-Subject: Action Required: Server Migration
-Snippet: Don't forget that we are migrating the production server this Friday at 11 PM. You are on call so please prep your tools and monitor the Slack channels!
-
-From: hr@company.com
-Subject: Team Building Activity
-Snippet: Quick reminder that we have our team building lunch at 1 PM tomorrow. See you there!`;
-  }
-
-  console.log('Fetching your latest 5 emails from Gmail API...');
-  try {
-    const response = await gmail.users.threads.list({
-      userId: 'me',
-      maxResults: 5,
-    });
-    
-    const threads = response.data.threads || [];
-    let emailsContext = "Here is the context of my latest emails:\n\n";
-
-    for (const t of threads) {
-      const threadDetails = await gmail.users.threads.get({
-        userId: 'me',
-        id: t.id,
-      });
-
-      const snippet = threadDetails.data.snippet;
-      const messages = threadDetails.data.messages || [];
-      const firstMessage = messages[0];
-      const headers = firstMessage?.payload?.headers || [];
-      const subjectHeader = headers.find(h => h.name.toLowerCase() === 'subject');
-      const senderHeader = headers.find(h => h.name.toLowerCase() === 'from');
-      
-      const subject = subjectHeader ? subjectHeader.value : '(No Subject)';
-      const sender = senderHeader ? senderHeader.value : 'Unknown';
-
-      emailsContext += `From: ${sender}\nSubject: ${subject}\nSnippet: ${snippet}\n\n`;
-    }
-    console.log('✅ Live Emails fetched and ready to be analyzed by Ollama!\n');
-    return emailsContext;
-  } catch (err) {
-    console.error('❌ Error fetching emails:', err.message);
-    return 'Could not fetch emails.';
-  }
-}
-
-async function startChat(context) {
+async function startChat() {
   console.log('=======================================');
   console.log('        OLLAMA CHAT INTERFACE          ');
   console.log('=======================================');
   console.log('Type "exit" to quit the chat.\n');
 
-  let conversationHistory = [
-    {
-      role: 'system',
-      content: `You are Pingor, an intelligent, privacy-first local AI assistant. The user will ask you questions about their emails. Address the user politely and answer questions based solely on the email context provided.\n\n${context}`
-    }
-  ];
+  console.log('[SYS] Starting LangChain Agent...');
+  const agentExecutor = await initAgent();
+  let chatHistory = [];
+  console.log('✅ Agent is ready to chat and fetch emails!\n');
 
   const chatLoop = async () => {
     const userPrompt = await askQuestion('You: ');
@@ -143,47 +96,22 @@ async function startChat(context) {
 
     if (!userPrompt.trim()) return chatLoop();
 
-    conversationHistory.push({ role: 'user', content: userPrompt });
-
     try {
-      process.stdout.write('Ollama (Pingor): ');
+      process.stdout.write('Ollama (Pingor): [Thinking and exploring tools...]\n');
       
-      const response = await axios.post(OLLAMA_URL, {
-        model: OLLAMA_MODEL,
-        messages: conversationHistory,
-        stream: true
-      }, { responseType: 'stream' });
-
-      let fullResponse = '';
-
-      response.data.on('data', (chunk) => {
-        const lines = chunk.toString().split('\n').filter(line => line.trim() !== '');
-        for (const line of lines) {
-          try {
-            const parsed = JSON.parse(line);
-            if (parsed.message && parsed.message.content) {
-              process.stdout.write(parsed.message.content);
-              fullResponse += parsed.message.content;
-            }
-          } catch (e) {
-            // Ignore parse errors on individual chunks
-          }
-        }
+      const response = await agentExecutor.invoke({
+        input: userPrompt,
+        chat_history: chatHistory
       });
 
-      response.data.on('end', () => {
-        console.log('\n');
-        conversationHistory.push({ role: 'assistant', content: fullResponse });
-        chatLoop();
-      });
+      console.log(`\nOllama (Pingor): ${response.output}\n`);
+      
+      chatHistory.push(new HumanMessage(userPrompt));
+      chatHistory.push(new AIMessage(response.output));
 
-      response.data.on('error', (err) => {
-        console.log(`\n❌ Stream error: ${err.message}\n`);
-        chatLoop();
-      });
-
+      chatLoop();
     } catch (err) {
-      if (err.code === 'ECONNREFUSED') {
+      if (err.code === 'ECONNREFUSED' || err.message.includes('ECONNREFUSED')) {
           console.log('\n❌ Error: Cannot connect to Ollama. Ensure the server is running on localhost:11434.\n');
       } else {
           console.log(`\n❌ Error communicating with Ollama: ${err.message}\n`);
@@ -200,12 +128,11 @@ async function main() {
   const modelLoadPromise = preloadModelToGPU();
 
   // Perform IO/Auth bound tasks without waiting for GPU load
-  const gmail = await authenticateGmail();
-  const context = await fetchLatestEmails(gmail);
+  await authenticateGmail();
 
   // Guarantee model has finished loading before starting interactive chat
   await modelLoadPromise;
-  await startChat(context);
+  await startChat();
 }
 
 // Trap Sigint
