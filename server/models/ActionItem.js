@@ -5,7 +5,10 @@ const actionItemSchema = new mongoose.Schema({
   owner: { type: String },
   deadline: { type: Date },
   source_email: { type: String, required: true }, // e.g., threadId or messageId
-  status: { type: String, default: 'pending' }
+  status: { type: String, default: 'pending' },
+  priority: { type: Number, default: 3 },
+  type: { type: String },
+  sender: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('ActionItem', actionItemSchema);

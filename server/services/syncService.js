@@ -4,7 +4,7 @@ const { oauth2Client } = require('../config/gmail');
 const Thread = require('../models/Thread');
 const SyncLog = require('../models/SyncLog');
 const ActionItem = require('../models/ActionItem');
-const { classifyThread, extractActionItems, evaluateAcknowledgement } = require('./aiService');
+const { classifyThread, extractActionItems, evaluateAcknowledgement, assignPriority } = require('./aiService');
 const { createAutoReplyDraft } = require('./gmailService');
 
 /**
@@ -53,10 +53,12 @@ const syncThreads = async () => {
 
         // Pass to AI Service for classification
         let categoryTag = 'unclassified';
+        let priority = 3;
         try {
           categoryTag = await classifyThread(subject, snippet);
+          priority = await assignPriority(subject, snippet);
         } catch (aiError) {
-          console.error(`AI Classification failed for thread ${t.id}, marking as unclassified.`);
+          console.error(`AI Classification failed for thread ${t.id}, marking as unclassified/priority 3.`);
           // System continues to sync the email as 'unclassified'
         }
 
@@ -67,7 +69,10 @@ const syncThreads = async () => {
             subject: subject,
             snippet: snippet,
             categoryTag: categoryTag,
-            lastUpdated: new Date()
+            lastUpdated: new Date(),
+            priority: priority,
+            sender: fromAddress,
+            type: categoryTag
           },
           { upsert: true, new: true }
         );
@@ -84,7 +89,7 @@ const syncThreads = async () => {
             }
             await ActionItem.findOneAndUpdate(
               { action: a.action, source_email: a.source_email },
-              { owner: a.owner, deadline: finalDeadline, status: 'pending' },
+              { owner: a.owner, deadline: finalDeadline, status: 'pending', priority: priority, sender: fromAddress, type: categoryTag },
               { upsert: true }
             );
           }
