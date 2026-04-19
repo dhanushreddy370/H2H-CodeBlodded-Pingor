@@ -5,7 +5,7 @@ const { oauth2Client, getAuthUrl, loadSavedTokens, setCredentials, getGmailClien
 const { initAgent } = require('./agents/agentService');
 const { AIMessage, HumanMessage } = require("@langchain/core/messages");
 
-dotenv.config();
+dotenv.config({ path: require('path').join(__dirname, '.env') });
 
 const rl = readline.createInterface({
   input: process.stdin,

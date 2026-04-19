@@ -7,7 +7,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
     { name: 'Inbox', icon: <Inbox size={20} /> },
     { name: 'Tasks', icon: <CheckSquare size={20} /> },
     { name: 'Follow-ups', icon: <Clock size={20} /> },
-    { name: 'Pingor', icon: <Bot size={20} /> }
+    { name: 'AI Assistant', icon: <Bot size={20} /> }
   ];
 
   return (

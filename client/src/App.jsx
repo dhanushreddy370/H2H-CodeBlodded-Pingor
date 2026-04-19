@@ -6,7 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Inbox from './pages/Inbox';
 import Tasks from './pages/Tasks';
 import FollowUps from './pages/FollowUps';
-import AIAssistant from './pages/AIAssistant';
+import ChatPage from './pages/ChatPage'; // Updated
 import { Bot } from 'lucide-react';
 
 function App() {
@@ -26,9 +26,10 @@ function App() {
     switch(activePage) {
       case 'Dashboard': return <Dashboard setActivePage={setActivePage} />;
       case 'Inbox': return <Inbox />;
-      case 'Tasks': return <Tasks />;
-      case 'Follow-ups': return <FollowUps />;
-      case 'AI Assistant': return <AIAssistant />;
+      case 'Tasks': return <Tasks setActivePage={setActivePage} />;
+      case 'Follow-ups': return <FollowUps setActivePage={setActivePage} />;
+      case 'Pingor Chat': return <ChatPage />; // Updated route name
+      case 'AI Assistant': return <ChatPage />; // Fallback
       default: return <Dashboard setActivePage={setActivePage} />;
     }
   };
@@ -53,8 +54,8 @@ function App() {
           {renderContent()}
         </div>
 
-        {activePage !== 'AI Assistant' && (
-          <div className="fab" onClick={() => setActivePage('AI Assistant')} title="Open AI Assistant">
+        {activePage !== 'Pingor Chat' && activePage !== 'AI Assistant' && (
+          <div className="fab" onClick={() => setActivePage('Pingor Chat')} title="Open Pingor">
             <Bot size={28} />
           </div>
         )}

@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 const { initHeartbeat } = require('./services/syncService');
 const Thread = require('./models/Thread');
 const SyncLog = require('./models/SyncLog');
-const apiRoutes = require('./routes/api');
 
 // Load environment variables
 dotenv.config();
@@ -22,6 +21,17 @@ app.get('/', (req, res) => {
   res.send('Pingor Server is Running');
 });
 
+// Import Routes
+const tasksRoute = require('./routes/tasks');
+const followupsRoute = require('./routes/followups');
+const filtersRoute = require('./routes/filters');
+const chatRoute = require('./routes/chat');
+
+app.use('/api/tasks', tasksRoute);
+app.use('/api/followups', followupsRoute);
+app.use('/api/filters', filtersRoute);
+app.use('/api/chat', chatRoute);
+
 // API endpoint to fetch sync status and latest threads
 app.get('/api/sync/status', async (req, res) => {
   try {
@@ -37,9 +47,6 @@ app.get('/api/sync/status', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// Advanced API Routes
-app.use('/api', apiRoutes);
 
 // Initialize heartbeat
 initHeartbeat();

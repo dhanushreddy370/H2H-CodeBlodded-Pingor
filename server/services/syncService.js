@@ -3,7 +3,9 @@ const { google } = require('googleapis');
 const { oauth2Client } = require('../config/gmail');
 const Thread = require('../models/Thread');
 const SyncLog = require('../models/SyncLog');
-const { classifyThread } = require('./aiService');
+const ActionItem = require('../models/ActionItem');
+const { classifyThread, extractActionItems, evaluateAcknowledgement, assignPriority } = require('./aiService');
+const { createAutoReplyDraft } = require('./gmailService');
 
 /**
  * Fetches the latest threads from Gmail API and upserts them into MongoDB
@@ -46,13 +48,17 @@ const syncThreads = async () => {
         const headers = firstMessage?.payload?.headers || [];
         const subjectHeader = headers.find(h => h.name.toLowerCase() === 'subject');
         const subject = subjectHeader ? subjectHeader.value : '(No Subject)';
+        const fromHeader = headers.find(h => h.name.toLowerCase() === 'from');
+        const fromAddress = fromHeader ? fromHeader.value : 'Unknown';
 
         // Pass to AI Service for classification
         let categoryTag = 'unclassified';
+        let priority = 3;
         try {
           categoryTag = await classifyThread(subject, snippet);
+          priority = await assignPriority(subject, snippet);
         } catch (aiError) {
-          console.error(`AI Classification failed for thread ${t.id}, marking as unclassified.`);
+          console.error(`AI Classification failed for thread ${t.id}, marking as unclassified/priority 3.`);
           // System continues to sync the email as 'unclassified'
         }
 
@@ -63,11 +69,46 @@ const syncThreads = async () => {
             subject: subject,
             snippet: snippet,
             categoryTag: categoryTag,
-            lastUpdated: new Date()
+            lastUpdated: new Date(),
+            priority: priority,
+            sender: fromAddress,
+            type: categoryTag
           },
           { upsert: true, new: true }
         );
         upsertedCount++;
+
+        // Post-classification specialized logic
+        if (categoryTag === 'action-required') {
+          const actions = await extractActionItems(t.id, subject, snippet);
+          for (const a of actions) {
+            let finalDeadline = null;
+            if (a.deadline && a.deadline.toLowerCase() !== 'none') {
+              const d = new Date(a.deadline);
+              if (!isNaN(d.valueOf())) finalDeadline = d;
+            }
+            await ActionItem.findOneAndUpdate(
+              { action: a.action, source_email: a.source_email },
+              { owner: a.owner, deadline: finalDeadline, status: 'pending', priority: priority, sender: fromAddress, type: categoryTag },
+              { upsert: true }
+            );
+          }
+        } else if (categoryTag === 'FYI/informational') {
+          const evalRes = await evaluateAcknowledgement(subject, snippet);
+          if (evalRes && evalRes.isInformational && evalRes.draftReply) {
+            // Create a draft
+            const draftCreated = await createAutoReplyDraft(t.id, fromAddress, subject, evalRes.draftReply);
+            
+            if (draftCreated) {
+              // Alert user in console
+              console.log(`\n[ALERT] A new FYI email was received.`);
+              console.log(`From: ${fromAddress}`);
+              console.log(`Subject: ${subject}`);
+              console.log(`I am going to respond in the following way:`);
+              console.log(`${evalRes.draftReply}\n`);
+            }
+          }
+        }
       } catch (err) {
         console.error(`Error processing thread ${t.id}:`, err.message);
         // Continue with the next thread despite an error

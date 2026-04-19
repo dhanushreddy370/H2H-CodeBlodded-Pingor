@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const filterSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  naturalLanguagePrompt: { type: String, required: true },
-  mongoQuery: { type: mongoose.Schema.Types.Mixed, required: true }, // Store the parsed JSON query
+  queryPrompt: { type: String, required: true },
+  mongoQuery: { type: Object, required: true }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Filter', filterSchema);
