@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const { initHeartbeat } = require('./services/syncService');
 const Thread = require('./models/Thread');
 const SyncLog = require('./models/SyncLog');
+const apiRoutes = require('./routes/api');
 
 // Load environment variables
 dotenv.config();
@@ -36,6 +37,9 @@ app.get('/api/sync/status', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Advanced API Routes
+app.use('/api', apiRoutes);
 
 // Initialize heartbeat
 initHeartbeat();

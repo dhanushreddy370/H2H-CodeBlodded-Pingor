@@ -69,6 +69,75 @@ Do not include any explanation, markdown formatting, or extra text.
   }
 }
 
+/**
+ * AI Agent to assign Follow-Up Priority
+ * @param {string} subject 
+ * @param {string} snippet 
+ * @returns {Promise<string>} High, Medium, or Low
+ */
+async function assignThreadPriority(subject, snippet) {
+  const prompt = `
+You are a priority assignment AI. Read the following email snippet and assign a priority level for follow-up.
+Options: "High", "Medium", "Low".
+Email Subject: ${subject}
+Email Snippet: ${snippet}
+Respond ONLY with a valid JSON: {"priority": "High"}
+`;
+
+  try {
+    const response = await axios.post(OLLAMA_URL, {
+      model: OLLAMA_MODEL,
+      prompt: prompt,
+      stream: false,
+      format: 'json'
+    });
+    
+    const responseText = response.data.response;
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
+    
+    const valid = ['High', 'Medium', 'Low'];
+    return valid.includes(parsed.priority) ? parsed.priority : 'Medium';
+  } catch (err) {
+    console.error('Failed priority assignment:', err.message);
+    return 'Medium'; // Fallback
+  }
+}
+
+/**
+ * AI Agent to convert Natural Language into a MongoDB Query object
+ * @param {string} nlPrompt 
+ * @returns {Promise<Object>} 
+ */
+async function generateMongoQueryFromPrompt(nlPrompt) {
+  const prompt = `
+You are an expert MongoDB developer. Convert this user search query into a valid MongoDB query object for a "Thread" collection schema.
+The Thread schema fields are: subject (string), snippet (string), senderName (string).
+For fuzzy searches, you MUST use regex patterns like {"$regex": "search_term", "$options": "i"}.
+User Query: "${nlPrompt}"
+
+Respond ONLY with the raw valid JSON query object. No markdown formatting.
+`;
+
+  try {
+    const response = await axios.post(OLLAMA_URL, {
+      model: OLLAMA_MODEL,
+      prompt: prompt,
+      stream: false,
+      format: 'json'
+    });
+    
+    const responseText = response.data.response;
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    return JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
+  } catch (err) {
+    console.error('Failed to generate Mongo query:', err.message);
+    return {}; 
+  }
+}
+
 module.exports = {
-  classifyThread
+  classifyThread,
+  assignThreadPriority,
+  generateMongoQueryFromPrompt
 };
