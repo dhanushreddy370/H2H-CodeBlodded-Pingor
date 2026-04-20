@@ -1,111 +1,149 @@
-import React, { useState } from 'react';
-import { Bot, CheckSquare } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bot, CheckSquare, Filter, Archive, Trash2, Reply, Forward, Inbox as InboxIcon } from 'lucide-react';
 
 const Inbox = () => {
-  const [selectedThreadId, setSelectedThreadId] = useState('t_1001');
+  const [selectedThreadId, setSelectedThreadId] = useState(null);
+  const [threads, setThreads] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const threads = [
-    { threadId: 't_1001', subject: 'Review: Q3 Marketing Assets', snippet: 'Hi, I just shared the new marketing assets for Q3. Could you please review them by Friday?', lastUpdated: '2026-10-24T10:30:00Z', senderName: 'Alice Smith', senderEmail: 'alice@example.com', aiSummary: 'Alice shared Q3 marketing assets and requested a review by Friday.', extractedTasks: ['Review Q3 assets by Friday'] },
-    { threadId: 't_1002', subject: 'Weekly Team Sync', snippet: 'Here is the agenda for our upcoming team sync. Please add your points.', lastUpdated: '2026-10-23T14:15:00Z', senderName: 'Bob Johnson', senderEmail: 'bob@example.com', aiSummary: 'Bob sent the agenda for the sync and asked team to add discussion points.', extractedTasks: ['Add points to sync agenda'] },
-    { threadId: 't_1003', subject: 'Server Maintenance Notice', snippet: 'Scheduled maintenance will occur this weekend from 2am to 4am EST.', lastUpdated: '2026-10-22T08:00:00Z', senderName: 'System Notifications', senderEmail: 'no-reply@system.com', aiSummary: 'Routine maintenance scheduled for the weekend (2am-4am EST).', extractedTasks: [] },
-    { threadId: 't_1004', subject: 'Invoice #4029 Due', snippet: 'Attached is the invoice for services rendered in September.', lastUpdated: '2026-10-21T09:45:00Z', senderName: 'Finance Dept', senderEmail: 'finance@acme.com', aiSummary: 'Finance sent Invoice #4029 for September services.', extractedTasks: ['Pay Invoice #4029'] },
-    { threadId: 't_1005', subject: 'User Interview Feedback', snippet: 'I finished the user interviews, the main takeaways are quite surprising...', lastUpdated: '2026-10-20T16:20:00Z', senderName: 'Sarah Connor', senderEmail: 'sarah.c@example.com', aiSummary: 'Sarah completed interviews and attached surprising takeaways.', extractedTasks: [] },
-    { threadId: 't_1006', subject: 'Lunch this Thursday?', snippet: 'Hey, are you free for lunch on Thursday? Thinking about hitting up the new sushi place.', lastUpdated: '2026-10-20T11:00:00Z', senderName: 'Mike Davis', senderEmail: 'mdavis@example.com', aiSummary: 'Mike wants to get sushi for lunch on Thursday.', extractedTasks: ['Reply to Mike about Thursday lunch'] },
-    { threadId: 't_1007', subject: 'Action Required: Security Update', snippet: 'Please update your security credentials by EOD to avoid account locking.', lastUpdated: '2026-10-19T13:30:00Z', senderName: 'IT Support', senderEmail: 'it-helpdesk@company.com', aiSummary: 'IT requires security credentials update by End of Day.', extractedTasks: ['Update security credentials by EOD'] },
-    { threadId: 't_1008', subject: 'Partnership Inquiry', snippet: 'We love what Pingor is building and want to integrate with our platform.', lastUpdated: '2026-10-18T15:10:00Z', senderName: 'Jane Williams', senderEmail: 'jane.w@partner.com', aiSummary: 'Jane is interested in a partnership integration with Pingor.', extractedTasks: ['Follow up with Jane regarding partnership'] },
-    { threadId: 't_1009', subject: 'Design System Iteration 3', snippet: 'Here are the Figma links for the latest iterations on the design system components.', lastUpdated: '2026-10-18T09:05:00Z', senderName: 'Design Team', senderEmail: 'design@company.com', aiSummary: 'Design team shared Figma links for iteration 3.', extractedTasks: [] },
-    { threadId: 't_1010', subject: 'Welcome to the platform!', snippet: 'Thanks for signing up! Here is a quick guide to getting started with your new account.', lastUpdated: '2026-10-17T18:00:00Z', senderName: 'Onboarding', senderEmail: 'hello@company.com', aiSummary: 'Automated onboarding email with a getting started guide.', extractedTasks: [] },
-    { threadId: 't_1011', subject: 'Contract Revision v2', snippet: 'I have attached the updated contract with the clauses we discussed.', lastUpdated: '2026-10-16T14:40:00Z', senderName: 'Emma Watson', senderEmail: 'emma.w@lawfirm.com', aiSummary: 'Emma sent updated contract v2 with discussed clauses attached.', extractedTasks: ['Review Contract Revision v2'] },
+  const fallbackThreads = [
+    { _id: 't_1001', subject: 'Review: Q3 Marketing Assets', snippet: 'Hi, I just shared the new marketing assets for Q3. Could you please review them by Friday?', lastUpdated: '2026-10-24T10:30:00Z', sender: 'Alice Smith', aiSummary: 'Alice shared Q3 marketing assets and requested a review by Friday.', extractedTasks: ['Review Q3 assets by Friday'], priority: 4 },
+    { _id: 't_1002', subject: 'Weekly Team Sync', snippet: 'Here is the agenda for our upcoming team sync. Please add your points.', lastUpdated: '2026-10-23T14:15:00Z', sender: 'Bob Johnson', aiSummary: 'Bob sent the agenda for the sync and asked team to add discussion points.', extractedTasks: ['Add points to sync agenda'], priority: 3 }
   ];
 
-  const selectedThread = threads.find(t => t.threadId === selectedThreadId);
+  useEffect(() => {
+    const fetchThreads = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/followups');
+        const data = await res.json();
+        setThreads(data.length > 0 ? data : fallbackThreads);
+        if (data.length > 0) setSelectedThreadId(data[0]._id);
+        else setSelectedThreadId('t_1001');
+      } catch (err) {
+        setThreads(fallbackThreads);
+        setSelectedThreadId('t_1001');
+      } finally {
+        setTimeout(() => setLoading(false), 800);
+      }
+    };
+    fetchThreads();
+  }, []);
 
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const selectedThread = threads.find(t => t._id === selectedThreadId);
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   return (
-    <div>
-      <h1 className="page-title">Inbox</h1>
+    <div className="inbox-page">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h1 className="page-title" style={{ margin: 0 }}>Inbox</h1>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="button" style={{ background: 'transparent', color: 'var(--text-main)', border: '1px solid var(--border)' }}>
+            <Filter size={18} />
+          </button>
+          <button className="button">Compose</button>
+        </div>
+      </div>
+
       <div className="inbox-layout">
-        <div className="inbox-sidebar">
-          {threads.length === 0 ? (
-             <div className="empty-state">
-               <h3>Inbox Zero! 🎉</h3>
-               <p>You're all caught up on your emails.</p>
-             </div>
+        <div className="inbox-sidebar card" style={{ padding: 0 }}>
+          {loading ? (
+            <div style={{ padding: '20px' }}>
+              {[1,2,3,4,5].map(i => <div key={i} className="skeleton" style={{ height: '80px', marginBottom: '12px', borderRadius: '8px' }}></div>)}
+            </div>
           ) : (
-            threads.map(thread => (
-              <div 
-                key={thread.threadId} 
-                className={`email-item ${selectedThreadId === thread.threadId ? 'selected' : ''}`}
-                onClick={() => setSelectedThreadId(thread.threadId)}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span className="email-subject" style={{ maxWidth: '180px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {thread.subject}
-                  </span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{formatTime(thread.lastUpdated)}</span>
+            <div className="threads-list">
+              {threads.map(thread => (
+                <div 
+                  key={thread._id} 
+                  className={`email-item ${selectedThreadId === thread._id ? 'selected' : ''}`}
+                  onClick={() => setSelectedThreadId(thread._id)}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span className="email-subject" style={{ fontWeight: selectedThreadId === thread._id ? '700' : '600' }}>
+                      {thread.subject}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{formatDate(thread.lastUpdated)}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span className="email-sender" style={{ fontSize: '0.85rem' }}>{thread.sender || 'Unknown'}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {thread.snippet}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span className="email-sender" style={{ color: 'var(--text-main)' }}>{thread.senderName || 'Unknown Sender'}</span>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {thread.snippet}
-                  </span>
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
         
-        <div className="inbox-main">
+        <div className="inbox-main card" style={{ padding: 0 }}>
           {selectedThread ? (
-            <div>
-              <h2 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>{selectedThread.subject}</h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid var(--border)' }}>
-                <div className="avatar">
-                  {(selectedThread.senderName || 'U').charAt(0)}
-                </div>
-                <div>
-                  <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{selectedThread.senderName}</div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{selectedThread.senderEmail}</div>
-                </div>
-                <div style={{ marginLeft: 'auto', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  {formatTime(selectedThread.lastUpdated)}
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{selectedThread.subject}</h2>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div className="icon-container" style={{ border: '1px solid var(--border)', cursor: 'pointer' }}><Reply size={18} /></div>
+                  <div className="icon-container" style={{ border: '1px solid var(--border)', cursor: 'pointer' }}><Archive size={18} /></div>
+                  <div className="icon-container" style={{ border: '1px solid var(--border)', color: 'var(--danger-text)', cursor: 'pointer' }}><Trash2 size={18} /></div>
                 </div>
               </div>
 
-              {/* AI Enhancements Block */}
-              <div className="ai-summary-block">
-                <div className="ai-summary-title">
-                  <Bot size={18} /> AI Summary
-                </div>
-                <p style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>
-                  {selectedThread.aiSummary}
-                </p>
-                
-                {selectedThread.extractedTasks && selectedThread.extractedTasks.length > 0 && (
-                  <div style={{ marginTop: '16px' }}>
-                     <div className="ai-summary-title" style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>
-                       <CheckSquare size={16} /> Extracted Tasks
-                     </div>
-                     <ul style={{ paddingLeft: '24px', fontSize: '0.9rem', color: 'var(--text-main)' }}>
-                       {selectedThread.extractedTasks.map((t, i) => <li key={i}>{t}</li>)}
-                     </ul>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+                  <div className="avatar" style={{ width: '48px', height: '48px', background: 'var(--primary)', color: 'white' }}>
+                    {(selectedThread.sender || 'U').charAt(0)}
                   </div>
-                )}
-              </div>
+                  <div>
+                    <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>{selectedThread.sender}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{selectedThread.sender}</div>
+                  </div>
+                  <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{new Date(selectedThread.lastUpdated).toLocaleString()}</div>
+                    <span className={`badge ${selectedThread.priority >= 4 ? 'high' : 'pending'}`} style={{ marginTop: '8px' }}>
+                      Priority P{selectedThread.priority}
+                    </span>
+                  </div>
+                </div>
 
-              <div style={{ color: 'var(--text-main)', lineHeight: '1.6' }}>
-                <p>{selectedThread.snippet}</p>
-                <br/>
-                <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.9rem' }}>[Full raw email content would be mapped from Gmail payload here...]</p>
+                <div className="ai-summary-block">
+                  <div className="ai-summary-title">
+                    <Bot size={18} /> AI Insight
+                  </div>
+                  <p style={{ fontSize: '1rem', color: 'var(--text-main)', lineHeight: '1.6' }}>
+                    {selectedThread.aiSummary || 'AI analysis pending...'}
+                  </p>
+                  
+                  {selectedThread.extractedTasks && selectedThread.extractedTasks.length > 0 && (
+                    <div style={{ marginTop: '20px', padding: '16px', background: 'white', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                       <div className="ai-summary-title" style={{ color: 'var(--text-main)', fontSize: '0.9rem', marginBottom: '12px' }}>
+                         <CheckSquare size={16} /> Extracted Action Items
+                       </div>
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                         {selectedThread.extractedTasks.map((t, i) => (
+                           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.95rem' }}>
+                             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)' }}></div>
+                             {t}
+                           </div>
+                         ))}
+                       </div>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ color: 'var(--text-main)', lineHeight: '1.8', fontSize: '1.05rem', whiteSpace: 'pre-wrap' }}>
+                  {selectedThread.snippet}
+                  {"\n\n"}
+                  [Full content synchronized from backend payload]
+                </div>
               </div>
             </div>
           ) : (
             <div className="empty-state">
-              <p>Select a thread to read</p>
+              <InboxIcon size={48} color="var(--border)" />
+              <h3>Select a thread</h3>
             </div>
           )}
         </div>

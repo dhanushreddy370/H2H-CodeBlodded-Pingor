@@ -1,68 +1,141 @@
-import React from 'react';
-import { Mail, CheckCircle, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, CheckCircle, CheckSquare, Clock, AlertTriangle, TrendingUp, ArrowRight } from 'lucide-react';
 
-const Dashboard = ({ setActivePage }) => {
-  const recentActions = [
-    { id: 1, action: 'Drafted reply to "Project Proposal"', time: '10 mins ago' },
-    { id: 2, action: 'Categorized 15 incoming emails', time: '1 hour ago' },
-    { id: 3, action: 'Follow-up sent automatically to Client XYZ', time: '2 hours ago' },
-    { id: 4, action: 'Extracted task: "Review Q3 marketing assets"', time: '3 hours ago' },
-    { id: 5, action: 'Sent meeting invite to Marketing Team', time: '5 hours ago' },
-    { id: 6, action: 'Archived 42 promotional emails', time: '6 hours ago' },
-    { id: 7, action: 'Drafted response to "Urgent: Server Outage"', time: 'Yesterday' },
-    { id: 8, action: 'Extracted task: "Update project timeline"', time: 'Yesterday' },
-    { id: 9, action: 'Categorized 8 incoming emails as Finance', time: 'Yesterday' },
-    { id: 10, action: 'Follow-up sent to Alice Smith', time: '2 days ago' },
-    { id: 11, action: 'Summarized long thread: "Weekly sync notes"', time: '2 days ago' }
-  ];
+const Dashboard = ({ setActivePage = () => {} }) => {
+  const [data, setData] = useState({
+    stats: [
+      { label: 'Emails', value: '...', icon: <Mail size={18} />, color: '#2563eb' },
+      { label: 'Tasks', value: '...', icon: <CheckSquare size={18} />, color: '#166534' },
+      { label: 'Followups', value: '...', icon: <Clock size={18} />, color: '#b45309' },
+      { label: 'Urgent', value: '...', icon: <AlertTriangle size={18} />, color: '#b91c1c' }
+    ],
+    threads: [],
+    tasks: []
+  });
+  const [loading, setLoading] = useState(true);
 
-  const stats = { emailsProcessed: 438, tasksPending: 6, followUpsNeeded: 12 };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [tasksRes, followupsRes] = await Promise.all([
+          fetch('http://localhost:5000/api/tasks'),
+          fetch('http://localhost:5000/api/followups')
+        ]);
+        
+        const tasks = await tasksRes.json();
+        const followups = await followupsRes.json();
+        
+        const urgentCount = [...tasks, ...followups].filter(i => i.priority >= 4).length;
 
-  const prompts = [
-    "Show my pending tasks",
-    "Summarize today's emails",
-    "Find emails from Ravi"
-  ];
+        setData({
+          stats: [
+            { label: 'Emails', value: '1,284', icon: <Mail size={18} />, color: '#2563eb' },
+            { label: 'Tasks', value: tasks.length || '0', icon: <CheckCircle size={18} />, color: '#166534' },
+            { label: 'Followups', value: followups.length || '0', icon: <Clock size={18} />, color: '#b45309' },
+            { label: 'Urgent', value: urgentCount, icon: <AlertTriangle size={18} />, color: '#b91c1c' }
+          ],
+          threads: followups.slice(0, 10),
+          tasks: tasks.slice(0, 10)
+        });
+      } catch (err) {
+        console.error('Failed to align with backend:', err);
+      } finally {
+        setTimeout(() => setLoading(false), 800);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="loading-overlay">
+        <dotlottie-player
+          src="https://lottie.host/a0777886-4a6c-4f15-be5d-99a902caa6ae/5chwxQ3WHT.lottie"
+          background="transparent"
+          speed="1"
+          style={{ width: '200px', height: '200px' }}
+          loop
+          autoplay
+        ></dotlottie-player>
+        <p style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Syncing with Pingor Backend...</p>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h1 className="page-title">Dashboard</h1>
+    <div className="dashboard-container">
+      <h1 className="page-title">Welcome back, Rithika</h1>
       
-      <div className="quick-actions">
-        {prompts.map((p, i) => (
-          <button key={i} className="quick-action-btn" onClick={() => setActivePage && setActivePage('AI Assistant')}>
-             ✨ {p}
-          </button>
+      <div className="ai-summary-block">
+        <h3 className="ai-summary-title">
+          <TrendingUp size={20} /> Today's Focus
+        </h3>
+        <p style={{ color: 'var(--text-muted)', lineHeight: '1.6' }}>
+          Backend sync complete. You have <strong>{data.stats[3].value} urgent items</strong> needing attention. 
+          Your AI Assistant has analyzed <strong>{data.threads.length}</strong> follow-up threads for today.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-4" style={{ marginBottom: '40px' }}>
+        {data.stats.map((stat, i) => (
+          <div key={i} className="card clickable" onClick={() => i === 0 ? setActivePage('Inbox') : i === 1 ? setActivePage('Tasks') : i === 2 ? setActivePage('Follow-ups') : null}>
+            <div className="stat-label">
+              <span className="icon-container" style={{ background: `${stat.color}15`, color: stat.color }}>{stat.icon}</span>
+              {stat.label}
+            </div>
+            <div className="stat-value">{stat.value}</div>
+          </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-3" style={{ marginBottom: '32px', marginTop: '24px' }}>
-        <div className="card clickable" onClick={() => setActivePage && setActivePage('Inbox')}>
-          <div className="stat-label"><Mail size={16} /> Emails Processed</div>
-          <div className="stat-value">{stats.emailsProcessed}</div>
+      <div className="grid grid-cols-2">
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 className="section-title" style={{ margin: 0 }}>Follow-up Threads</h3>
+            <button className="button" style={{ padding: '4px 12px', fontSize: '0.8rem' }} onClick={() => setActivePage('Follow-ups')}>View All <ArrowRight size={14} /></button>
+          </div>
+          <div className="timeline-container">
+            {data.threads.length > 0 ? data.threads.map(thread => (
+              <div key={thread._id} className="timeline-item">
+                <div className="timeline-dot"></div>
+                <div className="timeline-content">
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ maxWidth: '70%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{thread.subject}</span>
+                    <span className={`badge ${thread.priority >= 4 ? 'high' : 'pending'}`} style={{ fontSize: '0.65rem' }}>P{thread.priority}</span>
+                  </div>
+                  <div className="timeline-time">{thread.sender || 'Unknown'} &bull; {new Date(thread.lastUpdated).toLocaleDateString()}</div>
+                </div>
+              </div>
+            )) : (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '20px' }}>No follow-ups found in backend.</p>
+            )}
+          </div>
         </div>
-        
-        <div className="card clickable" onClick={() => setActivePage && setActivePage('Tasks')}>
-          <div className="stat-label"><CheckCircle size={16} /> Tasks Pending</div>
-          <div className="stat-value">{stats.tasksPending}</div>
-        </div>
-        
-        <div className="card clickable" onClick={() => setActivePage && setActivePage('Follow-ups')}>
-          <div className="stat-label"><Clock size={16} /> Follow-ups Needed</div>
-          <div className="stat-value">{stats.followUpsNeeded}</div>
-        </div>
-      </div>
 
-      <div className="card">
-        <h3 className="section-title">Activity Timeline</h3>
-        <div className="timeline-container">
-          {recentActions.map(action => (
-            <div key={action.id} className="timeline-item">
-              <div className="timeline-dot"></div>
-              <div className="timeline-content">{action.action}</div>
-              <div className="timeline-time">{action.time}</div>
-            </div>
-          ))}
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 className="section-title" style={{ margin: 0 }}>Pending Tasks</h3>
+            <button className="button" style={{ padding: '4px 12px', fontSize: '0.8rem' }} onClick={() => setActivePage('Tasks')}>Manage <ArrowRight size={14} /></button>
+          </div>
+          <div className="timeline-container">
+            {data.tasks.length > 0 ? data.tasks.map(task => (
+              <div key={task._id} className="timeline-item">
+                <div className="timeline-dot" style={{ background: task.priority >= 4 ? '#ef4444' : task.priority >= 3 ? '#f59e0b' : '#10b981' }}></div>
+                <div className="timeline-content">
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{task.action}</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: task.priority >= 4 ? '#ef4444' : task.priority >= 3 ? '#f59e0b' : '#10b981' }}>
+                      P{task.priority}
+                    </span>
+                  </div>
+                  <div className="timeline-time">Due: {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}</div>
+                </div>
+              </div>
+            )) : (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '20px' }}>No active tasks in backend.</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

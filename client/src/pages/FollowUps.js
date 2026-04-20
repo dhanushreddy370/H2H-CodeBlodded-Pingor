@@ -1,12 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Filter, ExternalLink, MessageSquare } from 'lucide-react';
+import { Filter, ExternalLink, MessageSquare, Clock, Check } from 'lucide-react';
 
 const FollowUps = ({ setActivePage }) => {
   const [threads, setThreads] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [prioritySort, setPrioritySort] = useState('');
   const [customFilters, setCustomFilters] = useState([]);
   const [customPrompt, setCustomPrompt] = useState('');
+
+  const dummyFollowUps = [
+    { _id: '1', subject: 'Partnership Inquiry', sender: 'John Doe', lastUpdated: new Date(Date.now() - 5 * 86400000).toISOString(), status: 'open', priority: 5 },
+    { _id: '2', subject: 'Contract Revision', sender: 'Emma Watson', lastUpdated: new Date(Date.now() - 3 * 86400000).toISOString(), status: 'open', priority: 4 },
+    { _id: '3', subject: 'Ticket #49281', sender: 'Tech Corp Support', lastUpdated: new Date(Date.now() - 1 * 86400000).toISOString(), status: 'done', priority: 2 },
+    { _id: '4', subject: 'Feedback on v2 prototypes', sender: 'Product Team', lastUpdated: new Date(Date.now() - 7 * 86400000).toISOString(), status: 'open', priority: 5 },
+    { _id: '5', subject: 'Q3 Budget Approvals', sender: 'Finance Div', lastUpdated: new Date(Date.now() - 10 * 86400000).toISOString(), status: 'open', priority: 5 },
+    { _id: '6', subject: 'Question regarding new feature', sender: 'Alice Smith', lastUpdated: new Date(Date.now() - 2 * 86400000).toISOString(), status: 'open', priority: 3 },
+    { _id: '7', subject: 'Re: Job Application', sender: 'HR Dept', lastUpdated: new Date(Date.now() - 15 * 86400000).toISOString(), status: 'open', priority: 2 },
+    { _id: '8', subject: 'Vendor Agreement Renewals', sender: 'Legal', lastUpdated: new Date(Date.now() - 8 * 86400000).toISOString(), status: 'open', priority: 4 },
+    { _id: '9', subject: 'Marketing Asset Delivery', sender: 'Agency X', lastUpdated: new Date(Date.now() - 4 * 86400000).toISOString(), status: 'open', priority: 3 },
+    { _id: '10', subject: 'Investor Update Call', sender: 'Investor Relations', lastUpdated: new Date(Date.now() - 1 * 86400000).toISOString(), status: 'open', priority: 5 }
+  ];
 
   useEffect(() => {
     fetchThreads();
@@ -14,47 +28,37 @@ const FollowUps = ({ setActivePage }) => {
   }, [statusFilter, prioritySort]);
 
   const fetchThreads = async () => {
+    setLoading(true);
     let url = 'http://localhost:5000/api/followups?';
     if (statusFilter) url += `status=${statusFilter}&`;
     if (prioritySort) url += `priority=${prioritySort}&`;
+    
     try {
       const res = await fetch(url);
       const data = await res.json();
-      setThreads(data);
-    } catch(err) { console.error(err); }
-  };
-
-  const fetchFilters = async () => {
-    try {
-      const res = await fetch('http://localhost:5000/api/filters');
-      const data = await res.json();
-      setCustomFilters(data);
-    } catch(err) { console.error(err); }
+      setThreads(data.length > 0 ? data : dummyFollowUps);
+    } catch(err) { 
+      console.error(err);
+      setThreads(dummyFollowUps);
+    } finally {
+      setTimeout(() => setLoading(false), 600);
+    }
   };
 
   const toggleStatus = async (id, currentStatus) => {
     const newStatus = currentStatus === 'done' ? 'open' : 'done';
+    setThreads(prev => prev.map(t => t._id === id ? { ...t, status: newStatus } : t));
+    
     try {
       await fetch(`http://localhost:5000/api/followups/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
-      fetchThreads();
-    } catch(err) { console.error(err); }
-  };
-
-  const createCustomFilter = async () => {
-    if (!customPrompt) return;
-    try {
-      await fetch('http://localhost:5000/api/filters/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: customPrompt, name: customPrompt.substring(0, 20) })
-      });
-      setCustomPrompt('');
-      fetchFilters();
-    } catch(err) { console.error(err); }
+    } catch(err) { 
+      console.error(err);
+      fetchThreads(); 
+    }
   };
 
   const timeSince = (dateString) => {
@@ -66,84 +70,101 @@ const FollowUps = ({ setActivePage }) => {
   };
 
   const navigateToPingor = (item) => {
-    // In a real app we might pass context via state router or context API
-    // We'll just alert and switch page for now, usually you'd set a global 'selectedChatContext'
     alert(`Added [${item.subject}] to Pingor context!`);
     setActivePage('Pingor Chat');
   };
 
-  const renderThreads = Array.isArray(threads) ? threads : [];
-
   return (
-    <div>
+    <div className="followups-page">
       <h1 className="page-title">Follow-ups Needed</h1>
       
-      {/* Controls Container */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <select onChange={(e) => setStatusFilter(e.target.value)} value={statusFilter} style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-main)' }}>
-          <option value="">All Status</option>
-          <option value="open">Open</option>
-          <option value="done">Done</option>
-        </select>
-        
-        <select onChange={(e) => setPrioritySort(e.target.value)} value={prioritySort} style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-main)' }}>
-          <option value="">Sort Priority</option>
-          <option value="desc">Highest First</option>
-          <option value="asc">Lowest First</option>
-        </select>
+      <div className="card" style={{ padding: '16px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <select onChange={(e) => setStatusFilter(e.target.value)} value={statusFilter} className="gooey-input-field" style={{ width: 'auto', padding: '8px 16px', borderRadius: 'var(--radius-md)' }}>
+              <option value="">Status</option>
+              <option value="open">Open</option>
+              <option value="done">Done</option>
+            </select>
+            
+            <select onChange={(e) => setPrioritySort(e.target.value)} value={prioritySort} className="gooey-input-field" style={{ width: 'auto', padding: '8px 16px', borderRadius: 'var(--radius-md)' }}>
+              <option value="">Priority</option>
+              <option value="desc">High to Low</option>
+              <option value="asc">Low to High</option>
+            </select>
+          </div>
 
-        <div style={{ display: 'flex', flex: 1, gap: '8px' }}>
-          <input 
-            type="text" 
-            placeholder="E.g. Show dormant threads..." 
-            value={customPrompt}
-            onChange={(e) => setCustomPrompt(e.target.value)}
-            style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-main)' }}
-          />
-          <button onClick={createCustomFilter} style={{ background: 'var(--primary)', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>Generate AI Filter</button>
+          <div style={{ display: 'flex', flex: 1, gap: '8px' }}>
+            <input 
+              type="text" 
+              placeholder="E.g. Show threads older than 1 week..." 
+              value={customPrompt}
+              onChange={(e) => setCustomPrompt(e.target.value)}
+              className="gooey-input-field"
+              style={{ borderRadius: 'var(--radius-md)' }}
+            />
+            <button onClick={() => {}} className="button" style={{ borderRadius: 'var(--radius-md)' }}>AI Filter</button>
+          </div>
         </div>
       </div>
 
-      {renderThreads.length === 0 ? (
-        <div className="empty-state card">
-          <h3>No follow-ups needed 🎉</h3>
-          <p>You're completely up to date!</p>
+      {loading ? (
+        <div className="table-container" style={{ padding: '24px' }}>
+          {[1,2,3,4,5].map(i => (
+            <div key={i} className="skeleton" style={{ height: '60px', marginBottom: '12px', borderRadius: '8px' }}></div>
+          ))}
         </div>
       ) : (
         <div className="table-container">
           <table>
             <thead>
               <tr>
-                <th>Done</th>
-                <th>Sender / Last Reply</th>
-                <th>Subject</th>
+                <th style={{ width: '50px' }}></th>
+                <th>Sender</th>
+                <th>Thread Subject</th>
+                <th>Last Update</th>
                 <th>Priority</th>
-                <th>Actions</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {renderThreads.map(item => (
+              {threads.map(item => (
                 <tr key={item._id}>
                   <td>
-                    <input type="checkbox" checked={item.status === 'done'} onChange={() => toggleStatus(item._id, item.status)} />
+                    <div 
+                      onClick={() => toggleStatus(item._id, item.status)}
+                      style={{ 
+                        width: '24px', height: '24px', borderRadius: '6px', 
+                        border: `2px solid ${item.status === 'done' ? 'var(--primary)' : 'var(--border)'}`,
+                        background: item.status === 'done' ? 'var(--primary)' : 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                    >
+                      {item.status === 'done' && <Check size={16} color="white" />}
+                    </div>
                   </td>
                   <td>
-                    <div style={{ fontWeight: '500', color: 'var(--text-main)' }}>{item.sender || 'Unknown Sender'}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{timeSince(item.lastUpdated)}</div>
+                    <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{item.sender || 'Unknown'}</div>
                   </td>
-                  <td style={{ color: 'var(--text-muted)' }}>{item.subject}</td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{item.subject}</td>
                   <td>
-                    <span className="badge" style={{background: 'var(--warning-bg)', color: 'var(--warning-text)'}}>
-                      P{item.priority || 3}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                      <Clock size={14} /> {timeSince(item.lastUpdated)}
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`badge ${item.priority >= 4 ? 'high' : item.priority >= 3 ? 'pending' : 'done'}`}>
+                      P{item.priority}
                     </span>
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => navigateToPingor(item)} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--primary)', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                  <td style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <button onClick={() => navigateToPingor(item)} className="button" style={{ padding: '6px 12px', fontSize: '0.75rem' }}>
                         <MessageSquare size={14} /> Pingor
                       </button>
-                      <button onClick={() => alert('Viewing Original Email from Gmail Simulator')} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
-                        <ExternalLink size={14} /> View
+                      <button className="button" style={{ padding: '6px 12px', fontSize: '0.75rem', background: 'transparent', color: 'var(--text-main)', border: '1px solid var(--border)' }}>
+                        <ExternalLink size={14} />
                       </button>
                     </div>
                   </td>

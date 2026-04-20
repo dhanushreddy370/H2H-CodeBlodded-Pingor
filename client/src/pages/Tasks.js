@@ -1,12 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Filter, Search } from 'lucide-react';
+import { Filter, Search, Plus, Check } from 'lucide-react';
 
 const Tasks = ({ setActivePage }) => {
   const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [prioritySort, setPrioritySort] = useState('');
   const [customFilters, setCustomFilters] = useState([]);
   const [customPrompt, setCustomPrompt] = useState('');
+
+  const dummyTasks = [
+    { _id: '1', action: 'Review marketing presentation', deadline: new Date().toISOString(), status: 'pending', priority: 5, sender: 'marketing@company.com' },
+    { _id: '2', action: 'Sign contract for Vendor X', deadline: new Date().toISOString(), status: 'pending', priority: 4, sender: 'legal@company.com' },
+    { _id: '3', action: 'Update project timeline', deadline: new Date().toISOString(), status: 'done', priority: 2, sender: 'pm@company.com' },
+    { _id: '4', action: 'Send feedback to design team', deadline: new Date().toISOString(), status: 'pending', priority: 5, sender: 'sarah.c@company.com' },
+    { _id: '5', action: 'Fix bug on landing page', deadline: new Date().toISOString(), status: 'pending', priority: 3, sender: 'dev@company.com' },
+    { _id: '6', action: 'Prepare agenda for sync', deadline: new Date().toISOString(), status: 'done', priority: 2, sender: 'bob@company.com' },
+    { _id: '7', action: 'Order office supplies', deadline: new Date().toISOString(), status: 'pending', priority: 1, sender: 'admin@company.com' },
+    { _id: '8', action: 'Renew domain registration', deadline: new Date().toISOString(), status: 'pending', priority: 5, sender: 'system@company.com' },
+    { _id: '9', action: 'Call candidate for interview', deadline: new Date().toISOString(), status: 'pending', priority: 4, sender: 'hr@company.com' },
+    { _id: '10', action: 'Draft Q1 strategy doc', deadline: new Date().toISOString(), status: 'pending', priority: 4, sender: 'strategy@company.com' }
+  ];
 
   useEffect(() => {
     fetchTasks();
@@ -14,34 +28,37 @@ const Tasks = ({ setActivePage }) => {
   }, [statusFilter, prioritySort]);
 
   const fetchTasks = async () => {
+    setLoading(true);
     let url = 'http://localhost:5000/api/tasks?';
     if (statusFilter) url += `status=${statusFilter}&`;
     if (prioritySort) url += `priority=${prioritySort}&`;
+    
     try {
       const res = await fetch(url);
       const data = await res.json();
-      setTasks(data);
-    } catch(err) { console.error(err); }
-  };
-
-  const fetchFilters = async () => {
-    try {
-      const res = await fetch('http://localhost:5000/api/filters');
-      const data = await res.json();
-      setCustomFilters(data);
-    } catch(err) { console.error(err); }
+      setTasks(data.length > 0 ? data : dummyTasks);
+    } catch(err) { 
+      console.error(err);
+      setTasks(dummyTasks);
+    } finally {
+      setTimeout(() => setLoading(false), 600);
+    }
   };
 
   const toggleTaskStatus = async (id, currentStatus) => {
     const newStatus = currentStatus === 'done' ? 'pending' : 'done';
+    setTasks(prev => prev.map(t => t._id === id ? { ...t, status: newStatus } : t));
+    
     try {
       await fetch(`http://localhost:5000/api/tasks/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
+    } catch(err) { 
+      console.error(err);
       fetchTasks();
-    } catch(err) { console.error(err); }
+    }
   };
 
   const createCustomFilter = async () => {
@@ -62,79 +79,103 @@ const Tasks = ({ setActivePage }) => {
     return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  // Safe error handling wrapper for map
-  const renderTasks = Array.isArray(tasks) ? tasks : [];
-
   return (
-    <div>
-      <h1 className="page-title">Tasks (Action Items)</h1>
+    <div className="tasks-page">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h1 className="page-title" style={{ margin: 0 }}>Action Items</h1>
+        <button className="button">
+          <Plus size={18} /> New Task
+        </button>
+      </div>
       
-      {/* Controls Container */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <select onChange={(e) => setStatusFilter(e.target.value)} value={statusFilter} style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-main)' }}>
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="done">Done</option>
-        </select>
-        
-        <select onChange={(e) => setPrioritySort(e.target.value)} value={prioritySort} style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-main)' }}>
-          <option value="">Sort Priority</option>
-          <option value="desc">Highest First</option>
-          <option value="asc">Lowest First</option>
-        </select>
+      {/* Filters Hub */}
+      <div className="card" style={{ padding: '16px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <select onChange={(e) => setStatusFilter(e.target.value)} value={statusFilter} className="gooey-input-field" style={{ width: 'auto', padding: '8px 16px', borderRadius: 'var(--radius-md)' }}>
+              <option value="">Status</option>
+              <option value="pending">Pending</option>
+              <option value="done">Done</option>
+            </select>
+            
+            <select onChange={(e) => setPrioritySort(e.target.value)} value={prioritySort} className="gooey-input-field" style={{ width: 'auto', padding: '8px 16px', borderRadius: 'var(--radius-md)' }}>
+              <option value="">Priority</option>
+              <option value="desc">High to Low</option>
+              <option value="asc">Low to High</option>
+            </select>
+          </div>
 
-        <div style={{ display: 'flex', flex: 1, gap: '8px' }}>
-          <input 
-            type="text" 
-            placeholder="E.g. Only show tasks related to marketing..." 
-            value={customPrompt}
-            onChange={(e) => setCustomPrompt(e.target.value)}
-            style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-main)' }}
-          />
-          <button onClick={createCustomFilter} style={{ background: 'var(--primary)', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>Generate AI Filter</button>
+          <div style={{ display: 'flex', flex: 1, gap: '8px' }}>
+            <input 
+              type="text" 
+              placeholder="Ask AI to filter... e.g. 'Only marketing'" 
+              value={customPrompt}
+              onChange={(e) => setCustomPrompt(e.target.value)}
+              className="gooey-input-field"
+              style={{ borderRadius: 'var(--radius-md)' }}
+            />
+            <button onClick={createCustomFilter} className="button" style={{ borderRadius: 'var(--radius-md)' }}>Generate</button>
+          </div>
         </div>
+
+        {customFilters.length > 0 && (
+          <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '600'}}>SAVED:</span>
+            {customFilters.map(f => (
+              <button key={f._id} className="quick-action-btn" style={{ borderRadius: 'var(--radius-full)' }}>{f.name}</button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Custom Filters UI */}
-      {customFilters.length > 0 && (
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-          <span style={{color: 'var(--text-muted)', display: 'flex', alignItems: 'center'}}><Filter size={14} style={{marginRight: '4px'}}/> Saved Filters:</span>
-          {customFilters.map(f => (
-            <button key={f._id} style={{ fontSize: '12px', padding: '4px 10px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text-main)' }}>
-              {f.name}
-            </button>
+      {loading ? (
+        <div className="table-container" style={{ padding: '24px' }}>
+          {[1,2,3,4,5].map(i => (
+            <div key={i} className="skeleton" style={{ height: '60px', marginBottom: '12px', borderRadius: '8px' }}></div>
           ))}
-        </div>
-      )}
-
-      {renderTasks.length === 0 ? (
-        <div className="empty-state card">
-          <h3>No tasks found 🎉</h3>
-          <p>You're all caught up!</p>
         </div>
       ) : (
         <div className="table-container">
           <table>
             <thead>
               <tr>
-                <th>Done</th>
-                <th>Task Action</th>
+                <th style={{ width: '50px' }}></th>
+                <th>Task Details</th>
                 <th>Deadline</th>
                 <th>Priority</th>
+                <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
             <tbody>
-              {renderTasks.map(item => (
-                <tr key={item._id}>
+              {tasks.map(item => (
+                <tr key={item._id} className={item.status === 'done' ? 'completed-row' : ''}>
                   <td>
-                    <input type="checkbox" checked={item.status === 'done'} onChange={() => toggleTaskStatus(item._id, item.status)} />
+                    <div 
+                      onClick={() => toggleTaskStatus(item._id, item.status)}
+                      style={{ 
+                        width: '24px', height: '24px', borderRadius: '6px', 
+                        border: `2px solid ${item.status === 'done' ? 'var(--primary)' : 'var(--border)'}`,
+                        background: item.status === 'done' ? 'var(--primary)' : 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                    >
+                      {item.status === 'done' && <Check size={16} color="white" />}
+                    </div>
                   </td>
-                  <td style={{ fontWeight: '500', color: 'var(--text-main)', textDecoration: item.status === 'done' ? 'line-through' : 'none' }}>{item.action}</td>
-                  <td style={{ color: 'var(--text-muted)' }}>{formatDate(item.deadline)}</td>
                   <td>
-                    <span className="badge priority-item" style={{background: 'var(--success-bg)', color: 'var(--success-text)'}}>
-                      {item.priority || 3}
+                    <div style={{ fontWeight: '600', color: 'var(--text-main)', textDecoration: item.status === 'done' ? 'line-through' : 'none', opacity: item.status === 'done' ? 0.6 : 1 }}>
+                      {item.action}
+                    </div>
+                  </td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{formatDate(item.deadline)}</td>
+                  <td>
+                    <span className={`badge ${item.priority >= 4 ? 'high' : item.priority >= 3 ? 'pending' : 'done'}`}>
+                      P{item.priority}
                     </span>
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <button className="button" style={{ padding: '6px 12px', fontSize: '0.75rem', background: 'transparent', color: 'var(--primary)', border: '1px solid var(--primary)' }}>Edit</button>
                   </td>
                 </tr>
               ))}

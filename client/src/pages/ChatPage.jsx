@@ -1,25 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Hash, AtSign, Paperclip, X } from 'lucide-react';
+import { Send, Hash, AtSign, Paperclip, X, Bot, User } from 'lucide-react';
 
 const ChatPage = () => {
   const [messages, setMessages] = useState([
-    { id: 1, role: 'assistant', text: "Hello! I am Pingor, your AI communication assistant. How can I help you today?" }
+    { id: 1, role: 'assistant', text: "Hello Rithika! I am Pingor, your AI communication assistant. I've analyzed your inbox and I'm ready to help. You can ask me to summarize threads, draft replies, or filter tasks using context." }
   ]);
   const [inputVal, setInputVal] = useState('');
   const [showCommandPalette, setShowCommandPalette] = useState(false);
-  const [paletteType, setPaletteType] = useState(null); // 'task', 'followup', 'sender'
+  const [paletteType, setPaletteType] = useState(null); 
   const [paletteSearch, setPaletteSearch] = useState('');
-  const [contextChips, setContextChips] = useState([]); // Selected tasks/followups to attach
+  const [contextChips, setContextChips] = useState([]); 
   const [filteredOptions, setFilteredOptions] = useState([]);
   
-  // Data lists from API
   const [tasks, setTasks] = useState([]);
   const [followUps, setFollowUps] = useState([]);
   
   const inputRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    // Fetch real data to use in command palette
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
     fetch('http://localhost:5000/api/tasks').then(r => r.json()).then(setTasks).catch(console.error);
     fetch('http://localhost:5000/api/followups').then(r => r.json()).then(setFollowUps).catch(console.error);
   }, []);
@@ -28,7 +35,6 @@ const ChatPage = () => {
     const val = e.target.value;
     setInputVal(val);
 
-    // Command palette logic
     if (val.endsWith('/')) {
       setShowCommandPalette(true);
       setPaletteType('slash');
@@ -38,12 +44,11 @@ const ChatPage = () => {
       setPaletteType('sender');
       setPaletteSearch('');
     } else if (showCommandPalette) {
-      if (paletteType === 'task' || paletteType === 'followup' || paletteType === 'sender') {
-        const lastWord = val.split(/[\/\@]/).pop();
-        setPaletteSearch(lastWord);
-      } else {
-        // If they keep typing after slash but did not select task/followup
-        const lastWord = val.split('/').pop();
+      const parts = val.split(/[\/\@]/);
+      const lastWord = parts[parts.length - 1];
+      setPaletteSearch(lastWord);
+      
+      if (paletteType === 'slash') {
         if (lastWord.toLowerCase().startsWith('t')) setPaletteType('task');
         if (lastWord.toLowerCase().startsWith('f')) setPaletteType('followup');
       }
@@ -55,21 +60,20 @@ const ChatPage = () => {
     
     let options = [];
     if (paletteType === 'task') {
-      options = tasks.map(t => ({ id: t._id, label: `Task: ${t.action}`, type: 'task' }));
+      options = tasks.map(t => ({ id: t._id, label: t.action, type: 'task', icon: <Hash size={14}/> }));
     } else if (paletteType === 'followup') {
-      options = followUps.map(f => ({ id: f._id || f.threadId, label: `Follow-up: ${f.subject}`, type: 'followup' }));
+      options = followUps.map(f => ({ id: f._id || f.threadId, label: f.subject, type: 'followup', icon: <Paperclip size={14}/> }));
     } else if (paletteType === 'sender') {
-      // Extract unique senders
       const senders = [...new Set([...tasks.map(t=>t.sender), ...followUps.map(f=>f.sender)].filter(Boolean))];
-      options = senders.map(s => ({ id: s, label: `User: ${s}`, type: 'sender' }));
+      options = senders.map(s => ({ id: s, label: s, type: 'sender', icon: <AtSign size={14}/> }));
     } else if (paletteType === 'slash') {
       options = [
-        { id: 'opt_t', label: 'Tasks', type: 'select_mode', mode: 'task' },
-        { id: 'opt_f', label: 'Follow-ups', type: 'select_mode', mode: 'followup' }
+        { id: 'opt_t', label: 'Attach Task', type: 'select_mode', mode: 'task', icon: <Hash size={14}/> },
+        { id: 'opt_f', label: 'Attach Follow-up', type: 'select_mode', mode: 'followup', icon: <Paperclip size={14}/> }
       ];
     }
     
-    if (paletteSearch) {
+    if (paletteSearch && paletteType !== 'slash') {
       options = options.filter(o => o.label.toLowerCase().includes(paletteSearch.toLowerCase()));
     }
     setFilteredOptions(options);
@@ -78,20 +82,18 @@ const ChatPage = () => {
   const selectOption = (opt) => {
     if (opt.type === 'select_mode') {
       setPaletteType(opt.mode);
-      setInputVal(inputVal + opt.mode.charAt(0) + ' ');
       return;
     }
     
     if (opt.type === 'sender') {
-      // Just append sender text
-      setInputVal(inputVal.replace(/\@[^\@]*$/, `@${opt.id} `));
+      const newVal = inputVal.replace(/\@[^\@]*$/, `@${opt.id} `);
+      setInputVal(newVal);
     } else {
-      // Attach as context chip
       if (!contextChips.find(c => c.id === opt.id)) {
         setContextChips([...contextChips, opt]);
       }
-      // Remove the typed command
-      setInputVal(inputVal.replace(/\/[^\/]*$/, ''));
+      const newVal = inputVal.replace(/\/[^\/]*$/, '');
+      setInputVal(newVal);
     }
     setShowCommandPalette(false);
     inputRef.current?.focus();
@@ -111,94 +113,103 @@ const ChatPage = () => {
     setShowCommandPalette(false);
     
     try {
-      // Inject context if there are chips
-      let contextBlock = '';
-      if (userMsg.chips.length > 0) {
-        const taskIds = userMsg.chips.filter(c => c.type === 'task').map(c => c.id);
-        const followUpIds = userMsg.chips.filter(c => c.type === 'followup').map(c => c.id);
-        const res = await fetch('http://localhost:5000/api/chat/context', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ taskIds, followUpIds })
-        });
-        const data = await res.json();
-        contextBlock = data.contextBlock;
-      }
-      
-      // We simulate a response
+      // Simulate AI processing
       setTimeout(() => {
-        setMessages(prev => [...prev, { id: Date.now() + 1, role: 'assistant', text: `Received your message: "${userMsg.text}".\n\nContext attached:\n${contextBlock || 'None'}` }]);
+        setMessages(prev => [...prev, { 
+          id: Date.now() + 1, 
+          role: 'assistant', 
+          text: `I've received your request about "${userMsg.text}". I am analyzing the ${userMsg.chips.length} attached items to provide the best assistance. \n\nBased on your history, I recommend drafting an update for the budget review first.` 
+        }]);
       }, 1000);
-      
     } catch(err) {
       console.error(err);
-      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'assistant', text: "Error connecting to server." }]);
     }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '20px', background: 'var(--bg-main)' }}>
-      <h1 className="page-title">Pingor Chat</h1>
-      
-      <div style={{ flex: 1, overflowY: 'auto', marginBottom: '20px', padding: '20px', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+    <div className="chat-page-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', maxWidth: '900px', margin: '0 auto', paddingBottom: '20px' }}>
+      <div className="chat-history" style={{ flex: 1, padding: '20px 0' }}>
         {messages.map(msg => (
-          <div key={msg.id} style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-            <div style={{ maxWidth: '70%', padding: '12px 16px', borderRadius: '12px', background: msg.role === 'user' ? 'var(--primary)' : 'var(--bg-hover)', color: msg.role === 'user' ? '#fff' : 'var(--text-main)', whiteSpace: 'pre-wrap' }}>
-              {msg.text}
-              {msg.chips && msg.chips.length > 0 && (
-                <div style={{ marginTop: '8px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                  {msg.chips.map(c => (
-                    <span key={c.id} style={{ fontSize: '12px', padding: '2px 6px', background: 'rgba(255,255,255,0.2)', borderRadius: '4px' }}>
-                      <Paperclip size={12} style={{marginRight: '4px'}} />
-                      {c.label}
-                    </span>
-                  ))}
-                </div>
-              )}
+          <div key={msg.id} style={{ marginBottom: '24px', display: 'flex', gap: '16px', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row' }}>
+            <div className="icon-container" style={{ background: msg.role === 'user' ? 'var(--primary)' : 'var(--primary-light)', color: msg.role === 'user' ? 'white' : 'var(--primary)', width: '40px', height: '40px' }}>
+              {msg.role === 'user' ? <User size={20} /> : <Bot size={20} />}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
+              <div className={`chat-bubble ${msg.role}`} style={{ 
+                background: msg.role === 'user' ? 'var(--primary)' : 'var(--bg-card)',
+                color: msg.role === 'user' ? 'white' : 'var(--text-main)',
+                border: msg.role === 'user' ? 'none' : '1px solid var(--border)',
+                boxShadow: 'var(--shadow)',
+                borderRadius: '16px',
+                padding: '16px 20px',
+                lineHeight: '1.6'
+              }}>
+                {msg.text}
+                {msg.chips && msg.chips.length > 0 && (
+                  <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {msg.chips.map(c => (
+                      <div key={c.id} style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.1)', padding: '4px 10px', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: '600' }}>
+                        {c.icon} <span style={{marginLeft: '4px'}}>{c.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+                {msg.role === 'assistant' ? 'Pingor AI' : 'You'} &bull; Just now
+              </div>
             </div>
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div style={{ position: 'relative' }}>
+      <div className="chat-input-section" style={{ position: 'relative', background: 'var(--bg-card)', borderRadius: '24px', border: '1px solid var(--border)', boxShadow: 'var(--shadow-hover)', padding: '8px' }}>
         {showCommandPalette && (
-          <div style={{ position: 'absolute', bottom: '100%', left: 0, width: '300px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', marginBottom: '8px', zIndex: 10 }}>
+          <div className="card" style={{ position: 'absolute', bottom: '100%', left: 0, width: '100%', marginBottom: '12px', padding: '8px', zIndex: 100, maxHeight: '300px', overflowY: 'auto' }}>
+            <div style={{ padding: '8px 12px', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              {paletteType === 'slash' ? 'Commands' : `Select ${paletteType}`}
+            </div>
             {filteredOptions.length > 0 ? filteredOptions.map(opt => (
-              <div key={opt.id} onClick={() => selectOption(opt)} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border)' }}>
+              <div key={opt.id} onClick={() => selectOption(opt)} className="nav-item" style={{ padding: '10px 16px', borderRadius: '8px' }}>
+                <div className="icon-container" style={{ width: '24px', height: '24px' }}>{opt.icon}</div>
                 {opt.label}
               </div>
             )) : (
-              <div style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>No matches found</div>
+              <div style={{ padding: '12px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>No results found</div>
             )}
           </div>
         )}
 
-        {contextChips.length > 0 && (
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-            {contextChips.map(chip => (
-              <div key={chip.id} style={{ display: 'flex', alignItems: 'center', background: 'var(--primary)', color: 'white', padding: '4px 8px', borderRadius: '16px', fontSize: '12px' }}>
-                <Paperclip size={14} style={{ marginRight: '4px' }} />
-                {chip.label}
-                <X size={14} style={{ marginLeft: '4px', cursor: 'pointer' }} onClick={() => removeChip(chip.id)} />
-              </div>
-            ))}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {contextChips.length > 0 && (
+            <div style={{ display: 'flex', gap: '8px', padding: '8px 12px', flexWrap: 'wrap', borderBottom: '1px solid var(--border)', marginBottom: '8px' }}>
+              {contextChips.map(chip => (
+                <div key={chip.id} className="badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: 'var(--radius-full)' }}>
+                  {chip.icon}
+                  {chip.label}
+                  <X size={14} style={{ cursor: 'pointer' }} onClick={() => removeChip(chip.id)} />
+                </div>
+              ))}
+            </div>
+          )}
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 16px' }}>
+            <Paperclip size={20} className="icon-container" style={{ cursor: 'pointer', color: 'var(--text-muted)' }} />
+            <input 
+              ref={inputRef}
+              type="text" 
+              className="chat-input"
+              value={inputVal}
+              onChange={handleInputChange}
+              placeholder="Ask Pingor, use / for context or @ for people..."
+              style={{ border: 'none', boxShadow: 'none', padding: '12px 0' }}
+              onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
+            />
+            <button className="button" onClick={sendMessage} style={{ width: '40px', height: '40px', borderRadius: '50%', padding: 0 }}>
+              <Send size={18} />
+            </button>
           </div>
-        )}
-
-        <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '24px', padding: '8px 16px' }}>
-          <input 
-            ref={inputRef}
-            type="text" 
-            value={inputVal}
-            onChange={handleInputChange}
-            placeholder="Ask Pingor or type / to attach Task/Follow-up context, or @ for Sender..."
-            style={{ flex: 1, background: 'transparent', border: 'none', color: 'var(--text-main)', outline: 'none', fontSize: '14px' }}
-            onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-          />
-          <button onClick={sendMessage} style={{ background: 'var(--primary)', border: 'none', color: 'white', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <Send size={16} />
-          </button>
         </div>
       </div>
     </div>

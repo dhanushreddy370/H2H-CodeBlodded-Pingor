@@ -20,6 +20,12 @@
   --warning-text: #b45309;
   --success-bg: #dcfce3;
   --success-text: #166534;
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
 }
 
 [data-theme='dark'] {
@@ -117,6 +123,28 @@ h1, h2, h3, h4, h5, h6 { color: var(--text-main); }
   border-right: 4px solid var(--primary);
 }
 
+.icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  transition: var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.nav-item:hover .icon-container {
+  background: var(--primary-light);
+  transform: scale(1.1);
+}
+
+.nav-item.active .icon-container {
+  background: var(--primary);
+  color: white;
+}
+
 /* CSS Tooltip for sidebar */
 .nav-item::after {
   content: attr(data-tooltip);
@@ -162,6 +190,25 @@ h1, h2, h3, h4, h5, h6 { color: var(--text-main); }
   z-index: 5;
 }
 
+/* Scroll Progress Bar */
+.scroll-progress-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  z-index: 1000;
+  background: transparent;
+}
+
+.scroll-progress-bar {
+  height: 100%;
+  background: var(--primary);
+  width: 0%;
+  transition: width 0.1s ease-out;
+  box-shadow: 0 0 10px var(--primary);
+}
+
 .navbar-user {
   display: flex;
   align-items: center;
@@ -198,17 +245,45 @@ h1, h2, h3, h4, h5, h6 { color: var(--text-main); }
 
 .card {
   background-color: var(--bg-card);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 24px;
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s;
+  transition: var(--transition-smooth);
+  position: relative;
+  overflow: hidden;
 }
 
-.card:hover.clickable {
-  transform: translateY(-4px);
+.card:hover {
+  transform: translateY(-5px);
   box-shadow: var(--shadow-hover);
+}
+
+.button, .btn {
+  background: var(--primary);
+  color: white;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-weight: 600;
   cursor: pointer;
+  transition: var(--transition-smooth);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.button:hover, .btn:hover {
+  transform: scale(1.05);
+  background: var(--primary-hover);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.button:active, .btn:active {
+  transform: scale(0.98);
 }
 
 .grid { display: grid; gap: 24px; }
@@ -466,3 +541,90 @@ th {
   padding: 40px;
 }
 .empty-state h3 { color: var(--text-main); margin-top: 16px; margin-bottom: 8px; font-size: 1.25rem;}
+
+/* Ripple Effect */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  background: rgba(255, 255, 255, 0.4);
+  animation: ripple-animation 0.6s linear;
+  pointer-events: none;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Gooey Input Styles */
+.gooey-input-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+.input-blob-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.gooey-input-field {
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-main);
+  outline: none;
+  font-size: 0.95rem;
+  transition: var(--transition-smooth);
+  z-index: 1;
+}
+
+.gooey-input-field:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-light);
+}
+
+/* Page Transitions */
+.fade-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s, transform 0.4s;
+}
+
+/* Skeleton Loading */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    var(--sidebar-hover) 50%,
+    var(--border) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 200px;
+}
+

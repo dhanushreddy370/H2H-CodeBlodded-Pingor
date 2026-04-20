@@ -7,7 +7,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
     { name: 'Inbox', icon: <Inbox size={20} /> },
     { name: 'Tasks', icon: <CheckSquare size={20} /> },
     { name: 'Follow-ups', icon: <Clock size={20} /> },
-    { name: 'AI Assistant', icon: <Bot size={20} /> }
+    { name: 'Pingor Chat', icon: <Bot size={20} /> }
   ];
 
   return (
@@ -33,7 +33,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
             onClick={() => setActivePage(item.name)}
             data-tooltip={item.name}
           >
-            <div className="nav-icon" style={{ flexShrink: 0 }}>{item.icon}</div>
+            <div className="icon-container">{item.icon}</div>
             {isOpen && <span className="nav-label">{item.name}</span>}
           </div>
         ))}
