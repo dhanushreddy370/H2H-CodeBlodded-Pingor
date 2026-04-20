@@ -1,45 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { Filter, ExternalLink, MessageSquare, Clock, Check } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const FollowUps = ({ setActivePage }) => {
+  const { user } = useAuth();
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [prioritySort, setPrioritySort] = useState('');
   const [customFilters, setCustomFilters] = useState([]);
   const [customPrompt, setCustomPrompt] = useState('');
-
-  const dummyFollowUps = [
-    { _id: '1', subject: 'Partnership Inquiry', sender: 'John Doe', lastUpdated: new Date(Date.now() - 5 * 86400000).toISOString(), status: 'open', priority: 5 },
-    { _id: '2', subject: 'Contract Revision', sender: 'Emma Watson', lastUpdated: new Date(Date.now() - 3 * 86400000).toISOString(), status: 'open', priority: 4 },
-    { _id: '3', subject: 'Ticket #49281', sender: 'Tech Corp Support', lastUpdated: new Date(Date.now() - 1 * 86400000).toISOString(), status: 'done', priority: 2 },
-    { _id: '4', subject: 'Feedback on v2 prototypes', sender: 'Product Team', lastUpdated: new Date(Date.now() - 7 * 86400000).toISOString(), status: 'open', priority: 5 },
-    { _id: '5', subject: 'Q3 Budget Approvals', sender: 'Finance Div', lastUpdated: new Date(Date.now() - 10 * 86400000).toISOString(), status: 'open', priority: 5 },
-    { _id: '6', subject: 'Question regarding new feature', sender: 'Alice Smith', lastUpdated: new Date(Date.now() - 2 * 86400000).toISOString(), status: 'open', priority: 3 },
-    { _id: '7', subject: 'Re: Job Application', sender: 'HR Dept', lastUpdated: new Date(Date.now() - 15 * 86400000).toISOString(), status: 'open', priority: 2 },
-    { _id: '8', subject: 'Vendor Agreement Renewals', sender: 'Legal', lastUpdated: new Date(Date.now() - 8 * 86400000).toISOString(), status: 'open', priority: 4 },
-    { _id: '9', subject: 'Marketing Asset Delivery', sender: 'Agency X', lastUpdated: new Date(Date.now() - 4 * 86400000).toISOString(), status: 'open', priority: 3 },
-    { _id: '10', subject: 'Investor Update Call', sender: 'Investor Relations', lastUpdated: new Date(Date.now() - 1 * 86400000).toISOString(), status: 'open', priority: 5 }
-  ];
-
   useEffect(() => {
-    fetchThreads();
-    fetchFilters();
-  }, [statusFilter, prioritySort]);
+    if (user?.sub) {
+      fetchThreads();
+      fetchFilters();
+    }
+  }, [user, statusFilter, prioritySort]);
+
+  const fetchFilters = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/filters`);
+      const data = await res.json();
+      setCustomFilters(Array.isArray(data) ? data : []);
+    } catch(err) {
+      console.error(err);
+    }
+  };
 
   const fetchThreads = async () => {
     setLoading(true);
-    let url = 'http://localhost:5000/api/followups?';
+    let url = `http://localhost:5000/api/followups?userId=${user.sub}&`;
     if (statusFilter) url += `status=${statusFilter}&`;
     if (prioritySort) url += `priority=${prioritySort}&`;
     
     try {
       const res = await fetch(url);
       const data = await res.json();
-      setThreads(data.length > 0 ? data : dummyFollowUps);
+      setThreads(Array.isArray(data) ? data : []);
     } catch(err) { 
       console.error(err);
-      setThreads(dummyFollowUps);
+      setThreads([]);
     } finally {
       setTimeout(() => setLoading(false), 600);
     }

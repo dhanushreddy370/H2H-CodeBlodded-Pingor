@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const ActionItem = require('../models/ActionItem');
-const Thread = require('../models/Thread');
+const { readDB } = require('../services/dbService');
+const { generateChatResponse } = require('../services/aiService');
 
 // Context Injection Endpoint
 router.post('/context', async (req, res) => {
@@ -9,18 +9,17 @@ router.post('/context', async (req, res) => {
     const { taskIds = [], followUpIds = [] } = req.body;
     let contextParts = [];
 
-    if (taskIds.length > 0) {
-      const tasks = await ActionItem.find({ _id: { $in: taskIds } });
+      const db = readDB();
+      const tasks = db.actionItems.filter(t => taskIds.includes(t._id));
       if (tasks.length > 0) {
         contextParts.push('--- TASKS ---');
         tasks.forEach(t => {
           contextParts.push(`Task [${t._id}]: ${t.action} - Status: ${t.status} - Priority: ${t.priority} - Deadline: ${t.deadline} - Owner: ${t.owner}`);
         });
       }
-    }
-
     if (followUpIds.length > 0) {
-      const threads = await Thread.find({ _id: { $in: followUpIds } });
+      const db = readDB();
+      const threads = db.threads.filter(th => followUpIds.includes(th._id));
       if (threads.length > 0) {
         contextParts.push('--- FOLLOW-UPS ---');
         threads.forEach(th => {
@@ -31,6 +30,21 @@ router.post('/context', async (req, res) => {
 
     const contextBlock = contextParts.join('\n');
     res.json({ contextBlock });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Real Chat Endpoint
+router.post('/ask', async (req, res) => {
+  try {
+    const { messages } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Messages array is required' });
+    }
+
+    const response = await generateChatResponse(messages);
+    res.json({ text: response });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

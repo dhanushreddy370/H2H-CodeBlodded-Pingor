@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Inbox, CheckSquare, Clock, Bot, Menu } from 'lucide-react';
+import { LayoutDashboard, Inbox, CheckSquare, Clock, Bot, Menu, Settings as SettingsIcon } from 'lucide-react';
 
 const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
   const navItems = [
@@ -7,7 +7,8 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
     { name: 'Inbox', icon: <Inbox size={20} /> },
     { name: 'Tasks', icon: <CheckSquare size={20} /> },
     { name: 'Follow-ups', icon: <Clock size={20} /> },
-    { name: 'Pingor Chat', icon: <Bot size={20} /> }
+    { name: 'Chat History', icon: <Bot size={20} /> },
+    { name: 'Settings', icon: <SettingsIcon size={20} /> }
   ];
 
   return (

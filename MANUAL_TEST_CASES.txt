@@ -4,7 +4,7 @@ Welcome to Day 4 testing! Since we implemented the logic backend in `services`, 
 
 ## Prerequisites
 - Make sure Ollama is running (`llama3.2` model) locally.
-- Make sure your MongoDB is running.
+- Ensure your local JSON database (`server/data/db.json`) is initialized (starts automatically with the server).
 - Ensure your Gmail account is authenticated (you can use your own account to send emails to yourself).
 
 ---
@@ -17,9 +17,9 @@ Welcome to Day 4 testing! Since we implemented the logic backend in `services`, 
    - **Body**: "Please ensure the new hero image is uploaded by tomorrow. Also, fix the broken navigation link."
 2. **Execute**: Run your sync loop. (If `terminalChat.js` initializes your heartbeat or if you have an `index.js` that pulls emails, run that script: `node server/index.js` or `node server/terminalChat.js`).
 3. **Verify**:
-   - Check your MongoDB instance (e.g., using MongoDB Compass). Look inside the `ActionItem` collection.
-   - You should see two pending action items. 
-   - `source_email` should match the Thread ID of the email you just sent.
+   - Check your local database file at `server/data/db.json`.
+   - You should see new entries in the `actionItems` array.
+   - `source_email` or `threadId` should match the Thread of the email you just sent.
 
 ---
 
@@ -31,7 +31,7 @@ Welcome to Day 4 testing! Since we implemented the logic backend in `services`, 
    - **Body**: "Please contact John Doe at 555-0198 and email him the documents at john.doe@example.com ASAP."
 2. **Execute**: Run the backend sync loop again so it ingests the new email.
 3. **Verify**:
-   - Check MongoDB for the generated `ActionItem`.
+   - Check `db.json` for the generated `actionItems`.
    - The `action` and `owner` fields must **NOT** contain "John Doe", "555-0198", or "john.doe@example.com". They should have been replaced with generic terms (e.g., "Contact the client and send the documents").
 
 ---

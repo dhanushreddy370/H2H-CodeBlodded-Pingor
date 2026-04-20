@@ -1,26 +1,44 @@
 const express = require('express');
 const router = express.Router();
-const ActionItem = require('../models/ActionItem');
-
-// Get tasks with optional query params for sorting & filtering
+const { readDB, writeDB } = require('../services/dbService');
+const { v4: uuidv4 } = require('uuid');
 router.get('/', async (req, res) => {
   try {
-    const { deadline, priority, status, type, sender, filterId } = req.query;
+    const { deadline, priority, status, type, sender, filterId, userId } = req.query;
+    const db = readDB();
     
-    let query = {};
-    if (status) query.status = status;
-    if (type) query.type = type;
-    if (sender) query.sender = new RegExp(sender, 'i');
+    let filtered = db.actionItems;
+    
+    if (userId) {
+      filtered = filtered.filter(t => t.userId === userId);
+    }
+    if (status) {
+      filtered = filtered.filter(t => t.status === status);
+    }
+    if (type) {
+      filtered = filtered.filter(t => t.type === type);
+    }
+    if (sender) {
+      const senderRegex = new RegExp(sender, 'i');
+      filtered = filtered.filter(t => senderRegex.test(t.sender));
+    }
     
     // Sort logic
-    let sortObj = { createdAt: -1 };
-    if (deadline === 'asc') sortObj.deadline = 1;
-    if (deadline === 'desc') sortObj.deadline = -1;
-    if (priority === 'asc') sortObj.priority = 1;
-    if (priority === 'desc') sortObj.priority = -1;
+    filtered.sort((a, b) => {
+      // Default: createdAt desc
+      let dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      let dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      let diff = dateB - dateA;
+      
+      if (deadline === 'asc') diff = (a.deadline ? new Date(a.deadline).getTime() : Infinity) - (b.deadline ? new Date(b.deadline).getTime() : Infinity);
+      if (deadline === 'desc') diff = (b.deadline ? new Date(b.deadline).getTime() : 0) - (a.deadline ? new Date(a.deadline).getTime() : 0);
+      if (priority === 'asc') diff = (a.priority || 3) - (b.priority || 3);
+      if (priority === 'desc') diff = (b.priority || 3) - (a.priority || 3);
+      
+      return diff;
+    });
 
-    const tasks = await ActionItem.find(query).sort(sortObj);
-    res.json(tasks);
+    res.json(filtered);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -30,8 +48,18 @@ router.get('/', async (req, res) => {
 router.patch('/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
-    const task = await ActionItem.findByIdAndUpdate(req.params.id, { status }, { new: true });
-    res.json(task);
+    const db = readDB();
+    const taskIndex = db.actionItems.findIndex(t => t._id === req.params.id);
+    
+    if (taskIndex === -1) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    
+    db.actionItems[taskIndex].status = status;
+    db.actionItems[taskIndex].updatedAt = new Date().toISOString();
+    writeDB(db);
+    
+    res.json(db.actionItems[taskIndex]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

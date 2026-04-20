@@ -1,25 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, CheckCircle, CheckSquare, Clock, AlertTriangle, TrendingUp, ArrowRight } from 'lucide-react';
+import { Mail, CheckCircle, CheckSquare, Clock, AlertTriangle, TrendingUp, ArrowRight, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard = ({ setActivePage = () => {} }) => {
+  const { user } = useAuth();
   const [data, setData] = useState({
     stats: [
-      { label: 'Emails', value: '...', icon: <Mail size={18} />, color: '#2563eb' },
-      { label: 'Tasks', value: '...', icon: <CheckSquare size={18} />, color: '#166534' },
-      { label: 'Followups', value: '...', icon: <Clock size={18} />, color: '#b45309' },
-      { label: 'Urgent', value: '...', icon: <AlertTriangle size={18} />, color: '#b91c1c' }
+      { label: 'Emails', value: '0', icon: <Mail size={18} />, color: '#2563eb' },
+      { label: 'Tasks', value: '0', icon: <CheckSquare size={18} />, color: '#166534' },
+      { label: 'Followups', value: '0', icon: <Clock size={18} />, color: '#b45309' },
+      { label: 'Urgent', value: '0', icon: <AlertTriangle size={18} />, color: '#b91c1c' }
     ],
     threads: [],
     tasks: []
   });
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
+      // Return early if user is still loading
+      if (!user?.sub) return;
+
       try {
         const [tasksRes, followupsRes] = await Promise.all([
-          fetch('http://localhost:5000/api/tasks'),
-          fetch('http://localhost:5000/api/followups')
+          fetch(`http://localhost:5000/api/tasks?userId=${user.sub}`),
+          fetch(`http://localhost:5000/api/followups?userId=${user.sub}`)
         ]);
         
         const tasks = await tasksRes.json();
@@ -29,7 +35,7 @@ const Dashboard = ({ setActivePage = () => {} }) => {
 
         setData({
           stats: [
-            { label: 'Emails', value: '1,284', icon: <Mail size={18} />, color: '#2563eb' },
+            { label: 'Emails', value: '0', icon: <Mail size={18} />, color: '#2563eb' },
             { label: 'Tasks', value: tasks.length || '0', icon: <CheckCircle size={18} />, color: '#166534' },
             { label: 'Followups', value: followups.length || '0', icon: <Clock size={18} />, color: '#b45309' },
             { label: 'Urgent', value: urgentCount, icon: <AlertTriangle size={18} />, color: '#b91c1c' }
@@ -45,7 +51,39 @@ const Dashboard = ({ setActivePage = () => {} }) => {
     };
 
     fetchData();
-  }, []);
+  }, [user]);
+
+  const handleManualSync = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/sync/manual', { method: 'POST' });
+      if (res.ok) {
+        // Re-run fetchData logic manually
+        const [tasksRes, followupsRes] = await Promise.all([
+          fetch(`http://localhost:5000/api/tasks?userId=${user?.sub}`),
+          fetch(`http://localhost:5000/api/followups?userId=${user?.sub}`)
+        ]);
+        const tasks = await tasksRes.json();
+        const followups = await followupsRes.json();
+        const urgentCount = [...tasks, ...followups].filter(i => i.priority >= 4).length;
+
+        setData({
+          stats: [
+            { label: 'Emails', value: '0', icon: <Mail size={18} />, color: '#2563eb' },
+            { label: 'Tasks', value: tasks.length || '0', icon: <CheckCircle size={18} />, color: '#166534' },
+            { label: 'Followups', value: followups.length || '0', icon: <Clock size={18} />, color: '#b45309' },
+            { label: 'Urgent', value: urgentCount, icon: <AlertTriangle size={18} />, color: '#b91c1c' }
+          ],
+          threads: followups.slice(0, 10),
+          tasks: tasks.slice(0, 10)
+        });
+      }
+    } catch (err) {
+      console.error('Manual sync failed:', err);
+    } finally {
+      setTimeout(() => setIsSyncing(false), 2000);
+    }
+  };
 
   if (loading) {
     return (
@@ -65,7 +103,67 @@ const Dashboard = ({ setActivePage = () => {} }) => {
 
   return (
     <div className="dashboard-container">
-      <h1 className="page-title">Welcome back, Rithika</h1>
+      {isSyncing && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.85)',
+          backdropFilter: 'blur(12px)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          color: 'white',
+          animation: 'fadeIn 0.5s ease-out'
+        }}>
+          <div style={{ position: 'relative', marginBottom: '32px' }}>
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '120px',
+              height: '120px',
+              borderRadius: '50%',
+              border: '4px dashed var(--primary)',
+              animation: 'spin 4s linear infinite',
+              opacity: 0.3
+            }}></div>
+            <RefreshCw size={64} className="animate-spin" style={{ color: 'var(--primary)', position: 'relative', zIndex: 1 }} />
+          </div>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '12px', letterSpacing: '-0.03em' }}>Syncing Intelligence</h2>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.2rem', textAlign: 'center', maxWidth: '500px' }}>
+            Updating your inbox, prioritizing tasks, and generating AI insights across all communication channels.
+          </p>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
+        <div>
+          <h1 className="page-title" style={{ marginBottom: '4px' }}>Welcome back, {user?.name || 'User'}</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Efficiency score is high today. Here's your status.</p>
+        </div>
+        <button 
+          className="button" 
+          onClick={handleManualSync}
+          disabled={isSyncing}
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '10px', 
+            padding: '14px 28px', 
+            borderRadius: '16px',
+            boxShadow: 'var(--shadow-hover)' 
+          }}
+        >
+          <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
+          {isSyncing ? 'Synchronizing...' : 'Sync Now'}
+        </button>
+      </div>
       
       <div className="ai-summary-block">
         <h3 className="ai-summary-title">

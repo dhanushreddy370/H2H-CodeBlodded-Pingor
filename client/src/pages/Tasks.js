@@ -1,45 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { Filter, Search, Plus, Check } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Tasks = ({ setActivePage }) => {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [prioritySort, setPrioritySort] = useState('');
   const [customFilters, setCustomFilters] = useState([]);
   const [customPrompt, setCustomPrompt] = useState('');
-
-  const dummyTasks = [
-    { _id: '1', action: 'Review marketing presentation', deadline: new Date().toISOString(), status: 'pending', priority: 5, sender: 'marketing@company.com' },
-    { _id: '2', action: 'Sign contract for Vendor X', deadline: new Date().toISOString(), status: 'pending', priority: 4, sender: 'legal@company.com' },
-    { _id: '3', action: 'Update project timeline', deadline: new Date().toISOString(), status: 'done', priority: 2, sender: 'pm@company.com' },
-    { _id: '4', action: 'Send feedback to design team', deadline: new Date().toISOString(), status: 'pending', priority: 5, sender: 'sarah.c@company.com' },
-    { _id: '5', action: 'Fix bug on landing page', deadline: new Date().toISOString(), status: 'pending', priority: 3, sender: 'dev@company.com' },
-    { _id: '6', action: 'Prepare agenda for sync', deadline: new Date().toISOString(), status: 'done', priority: 2, sender: 'bob@company.com' },
-    { _id: '7', action: 'Order office supplies', deadline: new Date().toISOString(), status: 'pending', priority: 1, sender: 'admin@company.com' },
-    { _id: '8', action: 'Renew domain registration', deadline: new Date().toISOString(), status: 'pending', priority: 5, sender: 'system@company.com' },
-    { _id: '9', action: 'Call candidate for interview', deadline: new Date().toISOString(), status: 'pending', priority: 4, sender: 'hr@company.com' },
-    { _id: '10', action: 'Draft Q1 strategy doc', deadline: new Date().toISOString(), status: 'pending', priority: 4, sender: 'strategy@company.com' }
-  ];
-
   useEffect(() => {
-    fetchTasks();
-    fetchFilters();
-  }, [statusFilter, prioritySort]);
+    if (user?.sub) {
+      fetchTasks();
+      fetchFilters();
+    }
+  }, [user, statusFilter, prioritySort]);
+
+  const fetchFilters = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/filters`);
+      const data = await res.json();
+      setCustomFilters(Array.isArray(data) ? data : []);
+    } catch(err) {
+      console.error(err);
+    }
+  };
 
   const fetchTasks = async () => {
     setLoading(true);
-    let url = 'http://localhost:5000/api/tasks?';
+    let url = `http://localhost:5000/api/tasks?userId=${user.sub}&`;
     if (statusFilter) url += `status=${statusFilter}&`;
     if (prioritySort) url += `priority=${prioritySort}&`;
     
     try {
       const res = await fetch(url);
       const data = await res.json();
-      setTasks(data.length > 0 ? data : dummyTasks);
+      setTasks(Array.isArray(data) ? data : []);
     } catch(err) { 
       console.error(err);
-      setTasks(dummyTasks);
+      setTasks([]);
     } finally {
       setTimeout(() => setLoading(false), 600);
     }

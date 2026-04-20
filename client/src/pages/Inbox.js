@@ -1,33 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Bot, CheckSquare, Filter, Archive, Trash2, Reply, Forward, Inbox as InboxIcon } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Inbox = () => {
+  const { user } = useAuth();
   const [selectedThreadId, setSelectedThreadId] = useState(null);
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fallbackThreads = [
-    { _id: 't_1001', subject: 'Review: Q3 Marketing Assets', snippet: 'Hi, I just shared the new marketing assets for Q3. Could you please review them by Friday?', lastUpdated: '2026-10-24T10:30:00Z', sender: 'Alice Smith', aiSummary: 'Alice shared Q3 marketing assets and requested a review by Friday.', extractedTasks: ['Review Q3 assets by Friday'], priority: 4 },
-    { _id: 't_1002', subject: 'Weekly Team Sync', snippet: 'Here is the agenda for our upcoming team sync. Please add your points.', lastUpdated: '2026-10-23T14:15:00Z', sender: 'Bob Johnson', aiSummary: 'Bob sent the agenda for the sync and asked team to add discussion points.', extractedTasks: ['Add points to sync agenda'], priority: 3 }
-  ];
 
   useEffect(() => {
+    if (!user?.sub) return;
+
     const fetchThreads = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/followups');
+        const res = await fetch(`http://localhost:5000/api/followups?userId=${user.sub}`);
         const data = await res.json();
-        setThreads(data.length > 0 ? data : fallbackThreads);
-        if (data.length > 0) setSelectedThreadId(data[0]._id);
-        else setSelectedThreadId('t_1001');
+        setThreads(Array.isArray(data) ? data : []);
+        if (Array.isArray(data) && data.length > 0) setSelectedThreadId(data[0]._id);
+        else setSelectedThreadId(null);
       } catch (err) {
-        setThreads(fallbackThreads);
-        setSelectedThreadId('t_1001');
+        setThreads([]);
+        setSelectedThreadId(null);
       } finally {
         setTimeout(() => setLoading(false), 800);
       }
     };
     fetchThreads();
-  }, []);
+  }, [user]);
 
   const selectedThread = threads.find(t => t._id === selectedThreadId);
 

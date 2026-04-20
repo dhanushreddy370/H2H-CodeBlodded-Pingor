@@ -1,0 +1,22 @@
+{
+  "actionItems": [],
+  "threads": [],
+  "chatSessions": [],
+  "syncLogs": [
+    {
+      "_id": "be728b11-ec55-420c-a402-027e2270603c",
+      "status": "failed",
+      "durationMs": 0,
+      "error": "OAuth2 credentials are not set. A user must authenticate first.",
+      "executionTime": "2026-04-20T12:30:00.208Z"
+    },
+    {
+      "_id": "629d3e5a-2400-41b4-be30-aca42a8db381",
+      "status": "failed",
+      "durationMs": 1,
+      "error": "OAuth2 credentials are not set. A user must authenticate first.",
+      "executionTime": "2026-04-20T12:34:30.319Z"
+    }
+  ],
+  "filters": []
+}

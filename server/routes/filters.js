@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const Filter = require('../models/Filter');
+const { readDB, writeDB } = require('../services/dbService');
 const { generateFilterQuery } = require('../services/aiService');
+const { v4: uuidv4 } = require('uuid');
 
 router.post('/generate', async (req, res) => {
   try {
@@ -10,13 +11,16 @@ router.post('/generate', async (req, res) => {
     
     const mongoQuery = await generateFilterQuery(prompt);
     
-    // Save to Filters collection
-    const filter = new Filter({
+    const db = readDB();
+    const filter = {
+      _id: uuidv4(),
       name: name || 'Custom Filter',
       queryPrompt: prompt,
-      mongoQuery: mongoQuery
-    });
-    await filter.save();
+      mongoQuery: mongoQuery,
+      createdAt: new Date().toISOString()
+    };
+    db.filters.push(filter);
+    writeDB(db);
     
     res.json(filter);
   } catch (err) {
@@ -26,7 +30,8 @@ router.post('/generate', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
-    const filters = await Filter.find().sort({ createdAt: -1 });
+    const db = readDB();
+    const filters = db.filters.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.json(filters);
   } catch (err) {
     res.status(500).json({ error: err.message });

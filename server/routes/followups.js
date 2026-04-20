@@ -1,25 +1,35 @@
 const express = require('express');
 const router = express.Router();
-const Thread = require('../models/Thread');
-
-// Get follow-up threads with sorting & filtering
+const { readDB, writeDB } = require('../services/dbService');
 router.get('/', async (req, res) => {
   try {
-    const { priority, status, type, sender, timeSinceReply } = req.query;
+    const { priority, status, type, sender, timeSinceReply, userId } = req.query;
+    const db = readDB();
     
-    let query = {};
-    if (status) query.status = status;
-    if (type) query.type = type;
-    if (sender) query.sender = new RegExp(sender, 'i');
+    let filtered = db.threads;
     
-    let sortObj = { lastUpdated: -1 };
-    if (priority === 'asc') sortObj.priority = 1;
-    if (priority === 'desc') sortObj.priority = -1;
-    if (timeSinceReply === 'asc') sortObj.lastUpdated = -1;
-    if (timeSinceReply === 'desc') sortObj.lastUpdated = 1;
+    if (userId) filtered = filtered.filter(t => t.userId === userId);
+    if (status) filtered = filtered.filter(t => t.status === status);
+    if (type) filtered = filtered.filter(t => t.type === type);
+    if (sender) {
+      const senderRegex = new RegExp(sender, 'i');
+      filtered = filtered.filter(t => senderRegex.test(t.sender));
+    }
+    
+    filtered.sort((a, b) => {
+      let dateA = a.lastUpdated ? new Date(a.lastUpdated).getTime() : 0;
+      let dateB = b.lastUpdated ? new Date(b.lastUpdated).getTime() : 0;
+      let diff = dateB - dateA;
+      
+      if (priority === 'asc') diff = (a.priority || 3) - (b.priority || 3);
+      if (priority === 'desc') diff = (b.priority || 3) - (a.priority || 3);
+      if (timeSinceReply === 'asc') diff = dateB - dateA;
+      if (timeSinceReply === 'desc') diff = dateA - dateB;
 
-    const followups = await Thread.find(query).sort(sortObj);
-    res.json(followups);
+      return diff;
+    });
+
+    res.json(filtered);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -29,8 +39,18 @@ router.get('/', async (req, res) => {
 router.patch('/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
-    const thread = await Thread.findByIdAndUpdate(req.params.id, { status }, { new: true });
-    res.json(thread);
+    const db = readDB();
+    const tIndex = db.threads.findIndex(t => t._id === req.params.id);
+    
+    if (tIndex === -1) {
+      return res.status(404).json({ error: 'Thread not found' });
+    }
+    
+    db.threads[tIndex].status = status;
+    db.threads[tIndex].updatedAt = new Date().toISOString();
+    writeDB(db);
+    
+    res.json(db.threads[tIndex]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

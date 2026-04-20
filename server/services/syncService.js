@@ -1,11 +1,10 @@
 const cron = require('node-cron');
 const { google } = require('googleapis');
 const { oauth2Client } = require('../config/gmail');
-const Thread = require('../models/Thread');
-const SyncLog = require('../models/SyncLog');
-const ActionItem = require('../models/ActionItem');
+const { readDB, writeDB } = require('./dbService');
 const { classifyThread, extractActionItems, evaluateAcknowledgement, assignPriority } = require('./aiService');
 const { createAutoReplyDraft } = require('./gmailService');
+const { v4: uuidv4 } = require('uuid');
 
 /**
  * Fetches the latest threads from Gmail API and upserts them into MongoDB
@@ -62,20 +61,27 @@ const syncThreads = async () => {
           // System continues to sync the email as 'unclassified'
         }
 
-        // Upsert into MongoDB
-        await Thread.findOneAndUpdate(
-          { threadId: t.id },
-          { 
-            subject: subject,
-            snippet: snippet,
-            categoryTag: categoryTag,
-            lastUpdated: new Date(),
-            priority: priority,
-            sender: fromAddress,
-            type: categoryTag
-          },
-          { upsert: true, new: true }
-        );
+        // Upsert into JSON DB
+        const db = readDB();
+        const threadIndex = db.threads.findIndex(th => th.threadId === t.id);
+        const threadData = {
+          threadId: t.id,
+          subject: subject,
+          snippet: snippet,
+          categoryTag: categoryTag,
+          lastUpdated: new Date().toISOString(),
+          priority: priority,
+          sender: fromAddress,
+          type: categoryTag
+        };
+
+        if (threadIndex > -1) {
+          db.threads[threadIndex] = { ...db.threads[threadIndex], ...threadData };
+        } else {
+          db.threads.push({ _id: uuidv4(), ...threadData, createdAt: new Date().toISOString() });
+        }
+        writeDB(db);
+        
         upsertedCount++;
 
         // Post-classification specialized logic
@@ -87,11 +93,26 @@ const syncThreads = async () => {
               const d = new Date(a.deadline);
               if (!isNaN(d.valueOf())) finalDeadline = d;
             }
-            await ActionItem.findOneAndUpdate(
-              { action: a.action, source_email: a.source_email },
-              { owner: a.owner, deadline: finalDeadline, status: 'pending', priority: priority, sender: fromAddress, type: categoryTag },
-              { upsert: true }
-            );
+            
+            const db = readDB();
+            const actionIndex = db.actionItems.findIndex(ai => ai.action === a.action && ai.source_email === a.source_email);
+            const actionData = {
+              action: a.action,
+              source_email: a.source_email,
+              owner: a.owner,
+              deadline: finalDeadline ? finalDeadline.toISOString() : null,
+              status: 'pending',
+              priority: priority,
+              sender: fromAddress,
+              type: categoryTag
+            };
+            
+            if (actionIndex > -1) {
+              db.actionItems[actionIndex] = { ...db.actionItems[actionIndex], ...actionData, updatedAt: new Date().toISOString() };
+            } else {
+              db.actionItems.push({ _id: uuidv4(), ...actionData, createdAt: new Date().toISOString() });
+            }
+            writeDB(db);
           }
         } else if (categoryTag === 'FYI/informational') {
           const evalRes = await evaluateAcknowledgement(subject, snippet);
@@ -116,21 +137,29 @@ const syncThreads = async () => {
     }
 
     const duration = Date.now() - startTime;
-    await SyncLog.create({
+    const db = readDB();
+    db.syncLogs.push({
+      _id: uuidv4(),
       status: 'success',
       threadsFetched: threads.length,
       threadsUpserted: upsertedCount,
-      durationMs: duration
+      durationMs: duration,
+      executionTime: new Date().toISOString()
     });
+    writeDB(db);
     
     console.log(`Sync complete: ${upsertedCount} threads upserted in ${duration}ms`);
   } catch (error) {
     const duration = Date.now() - startTime;
-    await SyncLog.create({
+    const db = readDB();
+    db.syncLogs.push({
+      _id: uuidv4(),
       status: 'failed',
       durationMs: duration,
-      error: error.message
+      error: error.message,
+      executionTime: new Date().toISOString()
     });
+    writeDB(db);
     console.error('Heartbeat Sync Error:', error.message);
   }
 };

@@ -1,11 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const mongoose = require('mongoose');
-const { initHeartbeat } = require('./services/syncService');
-const Thread = require('./models/Thread');
-const SyncLog = require('./models/SyncLog');
-
+const { initHeartbeat, syncThreads } = require('./services/syncService');
+const { readDB } = require('./services/dbService');
 // Load environment variables
 dotenv.config();
 
@@ -26,17 +23,26 @@ const tasksRoute = require('./routes/tasks');
 const followupsRoute = require('./routes/followups');
 const filtersRoute = require('./routes/filters');
 const chatRoute = require('./routes/chat');
+const historyRoute = require('./routes/history');
 
 app.use('/api/tasks', tasksRoute);
 app.use('/api/followups', followupsRoute);
 app.use('/api/filters', filtersRoute);
 app.use('/api/chat', chatRoute);
+app.use('/api/history', historyRoute);
 
+// API endpoint to fetch sync status and latest threads
 // API endpoint to fetch sync status and latest threads
 app.get('/api/sync/status', async (req, res) => {
   try {
-    const latestLog = await SyncLog.findOne().sort({ executionTime: -1 });
-    const latestThreads = await Thread.find().sort({ lastUpdated: -1 }).limit(10);
+    const db = readDB();
+    const sortedSyncs = [...db.syncLogs].sort((a, b) => new Date(b.executionTime) - new Date(a.executionTime));
+    const latestLog = sortedSyncs[0];
+    
+    const latestThreads = [...db.threads]
+      .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
+      .slice(0, 10);
+      
     res.json({
       status: latestLog ? latestLog.status : 'No syncs yet',
       lastSync: latestLog ? latestLog.executionTime : null,
@@ -48,13 +54,21 @@ app.get('/api/sync/status', async (req, res) => {
   }
 });
 
+app.post('/api/sync/manual', async (req, res) => {
+  try {
+    await syncThreads();
+    const db = readDB();
+    const latestLog = db.syncLogs[db.syncLogs.length - 1];
+    res.json({ success: true, log: latestLog });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Initialize heartbeat
 initHeartbeat();
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('Could not connect to MongoDB', err));
+// MongoDB features stripped in favor of local JSON DB
 
 // Start Server
 app.listen(PORT, () => {

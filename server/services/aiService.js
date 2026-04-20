@@ -146,31 +146,30 @@ User Prompt: "${userPrompt}"
 Respond ONLY with a valid JSON object representing the MongoDB query. Do not include any explanations or markdown.
 `;
 
+}
+/**
+ * Generate a full chat response using local Ollama llama3.2
+ * @param {Array} messages - Array of {role, content} objects
+ * @returns {Promise<string>} The generated response text
+ */
+async function generateChatResponse(messages) {
   try {
-    const response = await axios.post(OLLAMA_URL, {
+    const response = await axios.post('http://localhost:11434/api/chat', {
       model: OLLAMA_MODEL,
-      prompt: prompt,
-      stream: false,
-      format: 'json'
+      messages: messages,
+      stream: false
     });
 
-    const responseText = response.data.response;
-    let parsed;
-    try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(responseText);
-      return parsed || {};
-    } catch (e) {
-      console.error('Failed to parse Ollama JSON response for query:', responseText);
-    }
-  } catch (err) {
-    console.error('Error with generateFilterQuery:', err.message);
+    return response.data.message.content;
+  } catch (error) {
+    console.error('Error with generateChatResponse:', error.message);
+    return "I'm sorry, my local brain (Ollama) is currently unreachable. Please ensure it's running with llama3.2.";
   }
-  return {};
 }
 
 module.exports = {
   classifyThread,
   assignPriority,
-  generateFilterQuery
+  generateFilterQuery,
+  generateChatResponse
 };
