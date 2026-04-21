@@ -86,32 +86,22 @@ const FollowUps = ({ onOpenChat }) => {
   };
 
   return (
-    <div className="tasks-page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-        <div>
-          <h1 className="page-title" style={{ margin: 0 }}>Human-in-the-loop Center</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>Review and approve AI-generated communication</p>
-        </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="button" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => onOpenChat()}>
-            <MessageSquare size={18} /> Pingor Chat
-          </button>
-        </div>
-      </div>
-
+    <div className="followups-page">
       <div className="card" style={{ padding: '16px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <select onChange={(e) => setStatusFilter(e.target.value)} value={statusFilter} className="gooey-input-field" style={{ width: 'auto', padding: '8px 16px', borderRadius: '12px' }}>
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="done">Done</option>
-          </select>
-          
-          <select onChange={(e) => setPrioritySort(e.target.value)} value={prioritySort} className="gooey-input-field" style={{ width: 'auto', padding: '8px 16px', borderRadius: '12px' }}>
-            <option value="">Sort Priority</option>
-            <option value="desc">High to Low</option>
-            <option value="asc">Low to High</option>
-          </select>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <select onChange={(e) => setStatusFilter(e.target.value)} value={statusFilter} className="gooey-input-field" style={{ width: 'auto', padding: '8px 16px', borderRadius: 'var(--radius-md)' }}>
+              <option value="">Status</option>
+              <option value="open">Open</option>
+              <option value="done">Done</option>
+            </select>
+            
+            <select onChange={(e) => setPrioritySort(e.target.value)} value={prioritySort} className="gooey-input-field" style={{ width: 'auto', padding: '8px 16px', borderRadius: 'var(--radius-md)' }}>
+              <option value="">Priority</option>
+              <option value="desc">High to Low</option>
+              <option value="asc">Low to High</option>
+            </select>
+          </div>
         </div>
       </div>
 

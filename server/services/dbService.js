@@ -11,6 +11,7 @@ const initDB = () => {
   }
   if (!fs.existsSync(DB_PATH)) {
     const initialSchema = {
+      users: [],
       actionItems: [],
       threads: [],
       chatSessions: [],

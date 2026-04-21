@@ -336,12 +336,6 @@ const FloatingChat = ({ isOpen, onClose, chatId }) => {
           )}
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Paperclip 
-              size={18} 
-              className="icon-container" 
-              style={{ cursor: 'pointer', color: 'var(--text-muted)' }} 
-              onClick={() => fileInputRef.current?.click()}
-            />
             <input 
               ref={inputRef}
               type="text" 

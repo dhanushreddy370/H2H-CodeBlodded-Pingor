@@ -35,7 +35,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
   ];
 
   return (
-    <div className={`sidebar ${isOpen ? 'expanded' : 'collapsed'}`}>
+    <div className={`sidebar glass ${isOpen ? 'expanded' : 'collapsed'}`}>
       <div className="sidebar-header">
         <Menu 
           size={24} 

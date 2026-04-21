@@ -40,7 +40,6 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
 
   return (
     <div className="settings-container">
-      <h1 className="page-title">Preferences</h1>
       
       <div className="grid grid-cols-1" style={{ maxWidth: '800px' }}>
         <div className="card" style={{ padding: '32px' }}>

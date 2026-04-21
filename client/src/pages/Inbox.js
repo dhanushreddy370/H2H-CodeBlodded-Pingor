@@ -117,25 +117,13 @@ const Inbox = () => {
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 className="page-title" style={{ margin: 0 }}>Correspondence</h1>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="button-secondary" onClick={() => setSearchTerm('')} title="Clear Filters"><Filter size={18} /></button>
-          <button className="button" onClick={() => setIsComposeOpen(true)}>Compose</button>
-        </div>
-      </div>
-
       <div className="inbox-layout">
-        <div className="inbox-sidebar card" style={{ padding: 0 }}>
-          <div style={{ padding: '16px', borderBottom: '1px solid var(--border)' }}>
-            <div style={{ position: 'relative' }}>
-              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input 
-                type="text" placeholder="Search threads..." 
-                value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                style={{ width: '100%', padding: '10px 12px 10px 36px', borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-main)', fontSize: '0.9rem', outline: 'none' }}
-              />
-            </div>
+        <div className="inbox-sidebar card" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontWeight: '800', fontSize: '0.85rem', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>MESSAGES</div>
+            <button onClick={() => setIsComposeOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '4px' }}>
+               <Plus size={18} />
+            </button>
           </div>
           <div className="threads-list" style={{ overflowY: 'auto', flex: 1 }}>
             {filteredThreads.length > 0 ? filteredThreads.map(thread => (

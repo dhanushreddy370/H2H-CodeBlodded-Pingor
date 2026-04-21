@@ -141,40 +141,81 @@ const Dashboard = ({ setActivePage = () => {} }) => {
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.92)',
-          backdropFilter: 'blur(20px)',
+          width: '100%',
+          height: '100dvh',
+          background: 'rgba(255,255,255,0.98)',
+          backdropFilter: 'blur(40px)',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 10000,
-          color: 'white',
-          animation: 'fadeIn 0.5s ease-out'
+          zIndex: 2147483647,
+          overflow: 'hidden',
+          margin: 0,
+          padding: 0
         }}>
-          <div style={{ position: 'relative', marginBottom: '48px' }}>
-            <div className="pulse-ring"></div>
-            <RefreshCw size={80} className="animate-spin" style={{ color: 'var(--primary)', position: 'relative', zIndex: 1 }} />
-          </div>
-          
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', letterSpacing: '-0.03em' }}>Syncing Intelligence</h2>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.1rem', textAlign: 'center', maxWidth: '500px', marginBottom: '40px' }}>
-            Our AI agents are analyzing your communications to prioritize tasks and extract insights.
-          </p>
-
-          <div style={{ width: '400px', background: 'rgba(255,255,255,0.1)', height: '8px', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            textAlign: 'center',
+            width: '90%',
+            maxWidth: '500px',
+          }}>
             <div style={{ 
-              width: `${syncProgress.totalThreads > 0 ? (syncProgress.processedThreads / syncProgress.totalThreads) * 100 : 0}%`, 
-              background: 'var(--primary)', 
-              height: '100%', 
-              transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: '0 0 20px var(--primary)'
-            }}></div>
-          </div>
+              position: 'relative', 
+              width: '180px', 
+              height: '180px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              marginBottom: '32px' 
+            }}>
+              <div style={{ 
+                position: 'absolute', 
+                width: '100%', 
+                height: '100%', 
+                borderRadius: '50%', 
+                border: '4px solid var(--primary)',
+                animation: 'pulse 2.5s ease-in-out infinite',
+                boxShadow: '0 0 40px rgba(37, 99, 235, 0.2)',
+                boxSizing: 'border-box'
+              }} />
+              <RefreshCw size={80} className="animate-spin" style={{ color: 'var(--primary)', position: 'relative', zIndex: 2 }} />
+            </div>
           
-          <div style={{ marginTop: '16px', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', fontWeight: '600', letterSpacing: '0.05em' }}>
-            {syncProgress.processedThreads} / {syncProgress.totalThreads} THREADS PROCESSED
+            <h2 style={{ 
+              fontSize: '2.5rem', 
+              fontWeight: '900', 
+              marginBottom: '12px', 
+              letterSpacing: '-0.03em',
+              color: 'var(--text-main)'
+            }}>
+              Syncing Intelligence
+            </h2>
+            
+            <p style={{ 
+              color: 'var(--text-muted)', 
+              fontSize: '1.1rem', 
+              marginBottom: '48px',
+              maxWidth: '400px'
+            }}>
+              Pingor is analyzing your communications to extract high-priority tasks and insights.
+            </p>
+
+            <div style={{ width: '100%', background: 'rgba(0,0,0,0.05)', height: '6px', borderRadius: '3px', overflow: 'hidden', position: 'relative' }}>
+              <div style={{ 
+                width: `${syncProgress.totalThreads > 0 ? (syncProgress.processedThreads / syncProgress.totalThreads) * 100 : 0}%`, 
+                background: 'var(--primary)', 
+                height: '100%', 
+                transition: 'width 0.4s ease-out',
+                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)'
+              }}></div>
+            </div>
+            
+            <div style={{ marginTop: '16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              Extracting {syncProgress.processedThreads} / {syncProgress.totalThreads} Items
+            </div>
           </div>
         </div>
       )}
@@ -214,12 +255,57 @@ const Dashboard = ({ setActivePage = () => {} }) => {
 
       <div className="grid grid-cols-4" style={{ marginBottom: '40px' }}>
         {data.stats.map((stat, i) => (
-          <div key={i} className="card clickable" onClick={() => i === 0 ? setActivePage('Inbox') : i === 1 ? setActivePage('Tasks') : i === 2 ? setActivePage('Follow-ups') : null}>
-            <div className="stat-label">
-              <span className="icon-container" style={{ background: `${stat.color}15`, color: stat.color }}>{stat.icon}</span>
-              {stat.label}
+          <div key={i} 
+               className="card clickable" 
+               onClick={() => {
+                 if (i === 0) setActivePage('Inbox');
+                 else if (i === 1) setActivePage('Tasks');
+                 else if (i === 2) setActivePage('Follow-ups');
+                 else if (i === 3) {
+                   window.history.pushState(null, '', '?filter=urgent');
+                   setActivePage('Tasks');
+                 }
+               }}
+               style={{ 
+                 borderLeft: `none`, 
+                 borderBottom: `4px solid ${stat.color}`,
+                 display: 'flex', 
+                 flexDirection: 'column', 
+                 justifyContent: 'center',
+                 alignItems: 'center',
+                 gap: '12px',
+                 padding: '32px 20px',
+                 textAlign: 'center'
+               }}>
+            <div className="icon-container" style={{ 
+              background: `${stat.color}15`, 
+              color: stat.color, 
+              width: '56px', 
+              height: '56px',
+              borderRadius: '16px',
+              marginBottom: '4px'
+            }}>
+              {stat.icon && React.cloneElement(stat.icon, { size: 24 })}
             </div>
-            <div className="stat-value">{stat.value}</div>
+            <div>
+              <div style={{ 
+                fontSize: '0.85rem', 
+                fontWeight: '800', 
+                color: 'var(--text-muted)', 
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                {stat.label}
+              </div>
+              <div style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: '900', 
+                color: 'var(--text-main)',
+                lineHeight: '1.2'
+              }}>
+                {stat.value}
+              </div>
+            </div>
           </div>
         ))}
       </div>
