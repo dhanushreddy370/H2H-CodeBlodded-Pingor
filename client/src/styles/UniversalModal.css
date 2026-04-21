@@ -19,8 +19,8 @@
   background: var(--bg-card);
   width: 90%;
   max-width: 1200px;
-  height: 90vh;
-  max-height: 900px;
+  height: auto;
+  max-height: 92vh;
   border-radius: 32px;
   border: 1px solid var(--border);
   box-shadow: 0 50px 150px rgba(0, 0, 0, 0.6);
@@ -46,6 +46,15 @@
   display: grid;
   grid-template-columns: 1.5fr 1fr;
   gap: 32px;
+  min-height: 0; /* Important for grid overflow */
+}
+
+@media (max-width: 1024px) {
+  .modal-body {
+    grid-template-columns: 1fr;
+    padding: 24px;
+    gap: 24px;
+  }
 }
 
 .modal-section-title {

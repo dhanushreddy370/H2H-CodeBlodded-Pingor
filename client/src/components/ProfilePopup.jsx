@@ -2,7 +2,7 @@ import React from 'react';
 import { User, LogOut, Settings, Briefcase, Building } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const ProfilePopup = ({ isOpen, onClose }) => {
+const ProfilePopup = ({ isOpen, onClose, setActivePage }) => {
   const { user, logout } = useAuth();
 
   if (!isOpen) return null;
@@ -50,6 +50,9 @@ const ProfilePopup = ({ isOpen, onClose }) => {
           
           <div style={{ height: '1px', background: 'var(--border)', margin: '12px 0' }} />
           
+          <div className="nav-item" onClick={() => { setActivePage('Contacts'); onClose(); }} style={{ padding: '12px 16px', borderRadius: '12px' }}>
+            <User size={18} /> Contacts
+          </div>
           <div className="nav-item" style={{ padding: '12px 16px', borderRadius: '12px' }}>
             <Settings size={18} /> Account Settings
           </div>

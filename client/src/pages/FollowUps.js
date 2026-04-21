@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Mail, Clock, MessageSquare, Check, X, Edit2, Send, Bot, Sparkles, Filter, MoreHorizontal, ChevronRight, Save, Trash2, Archive } from 'lucide-react';
+import { Mail, Clock, MessageSquare, Check, X, Edit2, Send, Bot, Sparkles, Filter, MoreHorizontal, ChevronRight, Save, Trash2, Archive, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import DetailModal from '../components/DetailModal';
 
@@ -22,24 +22,14 @@ const FollowUps = ({ onOpenChat }) => {
       const userId = user?.id || user?.sub;
       if (!userId) return;
       
-      let url = `http://localhost:5000/api/threads?userId=${userId}`;
+      // Use the dedicated follow-ups endpoint which handles filtering on the backend
+      let url = `http://localhost:5000/api/followups?userId=${userId}`;
+      if (statusFilter) url += `&status=${statusFilter}`;
+      if (prioritySort) url += `&priority=${prioritySort}`;
+      
       const res = await fetch(url);
       const data = await res.json();
-      
-      // Filter for follow-ups (FYI/informational or pending drafts)
-      let filtered = data.filter(t => t.categoryTag === 'FYI/informational' || t.draftStatus !== 'none');
-      
-      if (statusFilter) {
-        filtered = filtered.filter(t => t.status === statusFilter);
-      }
-      
-      if (prioritySort) {
-        filtered.sort((a, b) => {
-          return prioritySort === 'desc' ? b.priority - a.priority : a.priority - b.priority;
-        });
-      }
-
-      setThreads(filtered);
+      setThreads(data);
     } catch (err) {
       console.error('Failed to fetch follow-ups', err);
     } finally {
@@ -90,7 +80,7 @@ const FollowUps = ({ onOpenChat }) => {
   return (
     <div className="followups-page">
       <div className="card" style={{ padding: '16px', marginBottom: '24px', zIndex: 10, overflow: 'visible' }}>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', gap: '8px' }}>
             <CustomSelect 
               value={statusFilter} 
@@ -114,6 +104,10 @@ const FollowUps = ({ onOpenChat }) => {
               placeholder="Priority"
             />
           </div>
+
+          <button className="button" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => { setSelectedThread({}); setIsModalOpen(true); }}>
+            <Plus size={20} /> New Follow-up
+          </button>
         </div>
       </div>
 
@@ -232,6 +226,7 @@ const FollowUps = ({ onOpenChat }) => {
         onClose={() => setIsModalOpen(false)}
         data={selectedThread}
         onUpdate={handleUpdate}
+        type="followup"
       />
     </div>
   );

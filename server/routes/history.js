@@ -1,15 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const ChatHistory = require('../models/ChatHistory');
+const { readDB, writeDB } = require('../services/dbService');
 
-router.get('/', async (req, res) => {
+router.get('/', (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ error: 'userId is required' });
 
-    const sessions = await ChatHistory.find({ userId })
-      .sort({ updatedAt: -1 })
-      .select('title updatedAt updatedAt');
+    const db = readDB();
+    const sessions = (db.chatSessions || [])
+      .filter(s => s.userId === userId)
+      .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+      .map(s => ({
+        _id: s._id,
+        title: s.title,
+        updatedAt: s.updatedAt
+      }));
     
     res.json(sessions);
   } catch (error) {
@@ -17,9 +23,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', (req, res) => {
   try {
-    const session = await ChatHistory.findById(req.params.id);
+    const db = readDB();
+    const session = (db.chatSessions || []).find(s => s._id === req.params.id);
     if (!session) return res.status(404).json({ error: 'Session not found' });
     res.json(session);
   } catch (error) {
@@ -27,36 +34,46 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', (req, res) => {
   try {
     const { userId, title, initialMessage } = req.body;
-    const newSession = new ChatHistory({
+    const db = readDB();
+    if (!db.chatSessions) db.chatSessions = [];
+
+    const newSession = {
+      _id: `chat-${Date.now()}`,
       userId,
       title: title || 'New Conversation',
-      messages: initialMessage ? [initialMessage] : []
-    });
-    await newSession.save();
+      messages: initialMessage ? [initialMessage] : [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    db.chatSessions.push(newSession);
+    writeDB(db);
     res.status(201).json(newSession);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post('/:id/messages', async (req, res) => {
+router.post('/:id/messages', (req, res) => {
   try {
     const { role, content } = req.body;
-    const session = await ChatHistory.findById(req.params.id);
-    if (!session) return res.status(404).json({ error: 'Session not found' });
-
-    session.messages.push({ role, content });
-    session.updatedAt = new Date();
+    const db = readDB();
+    const index = (db.chatSessions || []).findIndex(s => s._id === req.params.id);
     
-    if (session.title === 'New Conversation' && role === 'user') {
-        session.title = content.substring(0, 30) + (content.length > 30 ? '...' : '');
+    if (index === -1) return res.status(404).json({ error: 'Session not found' });
+
+    db.chatSessions[index].messages.push({ role, content });
+    db.chatSessions[index].updatedAt = new Date().toISOString();
+    
+    if (db.chatSessions[index].title === 'New Conversation' && role === 'user') {
+        db.chatSessions[index].title = content.substring(0, 30) + (content.length > 30 ? '...' : '');
     }
 
-    await session.save();
-    res.json(session);
+    writeDB(db);
+    res.json(db.chatSessions[index]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

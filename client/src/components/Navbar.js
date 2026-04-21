@@ -3,7 +3,7 @@ import { Bell, Sun, Moon, LogOut, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ProfilePopup from './ProfilePopup';
 
-const Navbar = ({ activePage, darkMode, toggleDarkMode }) => {
+const Navbar = ({ activePage, setActivePage, darkMode, toggleDarkMode }) => {
   const { user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -91,7 +91,7 @@ const Navbar = ({ activePage, darkMode, toggleDarkMode }) => {
             )}
           </div>
           
-          <ProfilePopup isOpen={showProfile} onClose={() => setShowProfile(false)} />
+          <ProfilePopup isOpen={showProfile} onClose={() => setShowProfile(false)} setActivePage={setActivePage} />
         </div>
       </div>
     </div>

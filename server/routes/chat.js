@@ -1,75 +1,31 @@
 const express = require('express');
 const router = express.Router();
-const { readDB, writeDB } = require('../services/dbService');
 const { generateChatResponse } = require('../services/aiService');
-const ChatSession = require('../models/ChatSession'); // Keeping for reference/migration if needed
+const { readDB, writeDB } = require('../services/dbService');
 
-// Get all chat sessions
-router.get('/history', async (req, res) => {
-  try {
-    const sessions = await ChatSession.find().sort({ lastMessageAt: -1 });
-    res.json(sessions);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Create/Update session
-router.post('/message', async (req, res) => {
-  try {
-    const { sessionId, message, title } = req.body;
-    
-    let session;
-    if (sessionId) {
-      session = await ChatSession.findById(sessionId);
-    }
-
-    if (!session) {
-      session = new ChatSession({ title: title || 'New Chat', messages: [] });
-    }
-
-    session.messages.push(message);
-    session.lastMessageAt = new Date();
-    await session.save();
-    
-    // Simulate AI response (In real app, call Ollama here)
-    const aiResponse = {
-      role: 'assistant',
-      text: `Pingor processed your request about: "${message.text}". Context from ${message.chips?.length || 0} items analyzed.`,
-      timestamp: new Date()
-    };
-    session.messages.push(aiResponse);
-    await session.save();
-
-    res.json(session);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Context Injection Endpoint (existing)
-router.post('/context', async (req, res) => {
+// Context Injection Endpoint
+router.post('/context', (req, res) => {
   try {
     const { taskIds = [], followUpIds = [] } = req.body;
     let contextParts = [];
+    const db = readDB();
+
     if (taskIds.length > 0) {
-      const db = readDB();
-      const tasks = db.actionItems.filter(t => taskIds.includes(t._id));
+      const tasks = (db.actionItems || []).filter(t => taskIds.includes(t._id));
       if (tasks.length > 0) {
-        contextParts.push('--- TASKS ---');
+        contextParts.push('--- RELEVANT TASKS ---');
         tasks.forEach(t => {
-          contextParts.push(`Task [${t._id}]: ${t.action} - Status: ${t.status} - Priority: ${t.priority} - Deadline: ${t.deadline} - Owner: ${t.owner}`);
+          contextParts.push(`Task: ${t.action}\nStatus: ${t.status}\nPriority: P${t.priority}\nDeadline: ${t.deadline || 'None'}`);
         });
       }
     }
 
     if (followUpIds.length > 0) {
-      const db = readDB();
-      const threads = db.threads.filter(th => followUpIds.includes(th._id));
+      const threads = (db.threads || []).filter(th => followUpIds.includes(th._id));
       if (threads.length > 0) {
-        contextParts.push('--- FOLLOW-UPS ---');
+        contextParts.push('--- RELEVANT EMAIL THREADS ---');
         threads.forEach(th => {
-          contextParts.push(`Follow-up [${th._id}]: ${th.subject} - Status: ${th.status} - Priority: ${th.priority} - Sender: ${th.sender}\nSnippet: ${th.snippet}`);
+          contextParts.push(`Subject: ${th.subject}\nSender: ${th.sender}\nSnippet: ${th.snippet}`);
         });
       }
     }
@@ -83,13 +39,21 @@ router.post('/context', async (req, res) => {
 // Real Chat Endpoint
 router.post('/ask', async (req, res) => {
   try {
-    const { messages } = req.body;
+    const { messages, userId } = req.body;
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'Messages array is required' });
     }
 
-    const response = await generateChatResponse(messages);
-    res.json({ text: response });
+    const aiText = await generateChatResponse(messages);
+    
+    // Optional: Save to chatSessions in JSON DB if userId is provided
+    if (userId) {
+       const db = readDB();
+       if (!db.chatSessions) db.chatSessions = [];
+       // Add logic to save conversation if needed
+    }
+
+    res.json({ text: aiText });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

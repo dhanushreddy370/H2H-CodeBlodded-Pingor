@@ -7,6 +7,7 @@ import Inbox from './pages/Inbox';
 import Tasks from './pages/Tasks';
 import FollowUps from './pages/FollowUps';
 import ChatHistory from './pages/ChatHistory';
+import Contacts from './pages/Contacts';
 import FloatingChat from './components/FloatingChat';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
@@ -59,6 +60,7 @@ function App() {
           }} 
         />
       );
+      case 'Contacts': return <Contacts />;
       case 'Settings': return <Settings darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)} />;
       default: return <Dashboard setActivePage={setActivePage} />;
     }
@@ -84,6 +86,7 @@ function App() {
       <div className="main-content">
         <Navbar 
           activePage={activePage} 
+          setActivePage={setActivePage}
           darkMode={darkMode} 
           toggleDarkMode={() => setDarkMode(!darkMode)} 
         />

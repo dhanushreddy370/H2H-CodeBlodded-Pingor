@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Inbox, CheckSquare, Clock, Bot, Menu, Settings as SettingsIcon } from 'lucide-react';
+import { LayoutDashboard, Inbox, CheckSquare, Clock, Bot, Menu, User, Settings as SettingsIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
@@ -30,6 +30,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
     { name: 'Inbox', icon: <Inbox size={20} /> },
     { name: 'Tasks', icon: <CheckSquare size={20} /> },
     { name: 'Follow-ups', icon: <Clock size={20} />, badge: draftCount > 0 ? draftCount : null },
+    { name: 'Contacts', icon: <User size={20} /> },
     { name: 'Chat History', icon: <Bot size={20} /> },
     { name: 'Settings', icon: <SettingsIcon size={20} /> }
   ];

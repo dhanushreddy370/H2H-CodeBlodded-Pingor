@@ -1,9 +1,8 @@
 const cron = require('node-cron');
 const { google } = require('googleapis');
 const { oauth2Client } = require('../config/gmail');
-const Thread = require('../models/Thread');
-const Task = require('../models/Task');
-const User = require('../models/User');
+const { readDB, writeDB } = require('./dbService');
+const aiService = require('./aiService');
 
 let isSyncing = false;
 
@@ -21,8 +20,7 @@ let currentSyncStatus = {
 const getSyncProgress = () => currentSyncStatus;
 
 /**
- * Fetches the latest threads from Gmail API and upserts them into MongoDB
- * @returns {Promise<void>}
+ * Fetches the latest threads from Gmail API and upserts them into JSON DB
  */
 const syncThreads = async (userId = 'system-sync') => {
   if (isSyncing) {
@@ -57,6 +55,11 @@ const syncThreads = async (userId = 'system-sync') => {
     currentSyncStatus.totalThreads = threads.length;
     currentSyncStatus.processedThreads = 0;
 
+    // Load initial DB
+    const db = readDB();
+    if (!db.threads) db.threads = [];
+    if (!db.actionItems) db.actionItems = [];
+
     for (const t of threads) {
       try {
         // Fetch full thread details
@@ -72,8 +75,9 @@ const syncThreads = async (userId = 'system-sync') => {
         const subject = headers.find(h => h.name.toLowerCase() === 'subject')?.value || '(No Subject)';
         const fromAddress = headers.find(h => h.name.toLowerCase() === 'from')?.value || 'Unknown';
 
-        // Check if thread exists
-        const existingThread = await Thread.findOne({ threadId: t.id });
+        // Check if thread exists in local DB
+        const threadIndex = db.threads.findIndex(item => item.threadId === t.id);
+        const existingThread = threadIndex !== -1 ? db.threads[threadIndex] : null;
         
         let categoryTag = 'unclassified';
         let priority = 3;
@@ -81,8 +85,8 @@ const syncThreads = async (userId = 'system-sync') => {
         // Only classify if new or snippet changed significantly
         if (!existingThread || existingThread.snippet !== snippet) {
           try {
-            categoryTag = await classifyThread(subject, snippet);
-            priority = await assignPriority(subject, snippet);
+            categoryTag = await aiService.classifyThread(subject, snippet);
+            priority = await aiService.assignPriority(subject, snippet);
           } catch (aiError) {
             console.error(`AI Classification failed for thread ${t.id}`);
           }
@@ -92,59 +96,63 @@ const syncThreads = async (userId = 'system-sync') => {
         }
 
         const threadData = {
+          _id: existingThread?._id || `thread-${t.id}`,
           threadId: t.id,
           subject,
           snippet,
           categoryTag,
-          lastUpdated: new Date(),
+          lastUpdated: new Date().toISOString(),
           priority,
           sender: fromAddress,
-          userId
+          userId,
+          status: existingThread?.status || 'open'
         };
 
-        await Thread.findOneAndUpdate(
-          { threadId: t.id },
-          { $set: threadData },
-          { upsert: true, new: true }
-        );
+        if (threadIndex !== -1) {
+          db.threads[threadIndex] = { ...db.threads[threadIndex], ...threadData };
+        } else {
+          db.threads.push(threadData);
+        }
         
         upsertedCount++;
 
         // Process Action Items
         if (categoryTag === 'action-required') {
-          const actions = await extractActionItems(t.id, subject, snippet);
+          const actions = await aiService.extractActionItems(t.id, subject, snippet);
           for (const a of actions) {
             let finalDeadline = null;
             if (a.deadline && a.deadline.toLowerCase() !== 'none') {
               const d = new Date(a.deadline);
-              if (!isNaN(d.valueOf())) finalDeadline = d;
+              if (!isNaN(d.valueOf())) finalDeadline = d.toISOString().split('T')[0];
             }
             
-            await Task.findOneAndUpdate(
-              { userId, action: a.action, threadId: t.id },
-              { 
-                $set: { 
-                  deadline: finalDeadline,
-                  priority,
-                  sender: fromAddress,
-                  updatedAt: new Date()
-                }
-              },
-              { upsert: true }
-            );
+            const taskIndex = db.actionItems.findIndex(item => item.threadId === t.id && item.action === a.action);
+            const taskData = {
+              _id: taskIndex !== -1 ? db.actionItems[taskIndex]._id : `task-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+              userId,
+              action: a.action,
+              threadId: t.id,
+              deadline: finalDeadline,
+              priority,
+              sender: fromAddress,
+              status: taskIndex !== -1 ? db.actionItems[taskIndex].status : 'pending',
+              updatedAt: new Date().toISOString()
+            };
+
+            if (taskIndex !== -1) {
+              db.actionItems[taskIndex] = taskData;
+            } else {
+              db.actionItems.push(taskData);
+            }
           }
         } else if (categoryTag === 'FYI/informational') {
-          const evalRes = await evaluateAcknowledgement(subject, snippet);
+          const evalRes = await aiService.evaluateAcknowledgement(subject, snippet);
           if (evalRes && evalRes.isInformational && evalRes.draftReply) {
-            await Thread.updateOne(
-              { threadId: t.id },
-              { 
-                $set: { 
-                  aiResponse: evalRes.draftReply,
-                  draftStatus: 'pending_approval' 
-                } 
-              }
-            );
+             const idx = db.threads.findIndex(item => item.threadId === t.id);
+             if (idx !== -1) {
+               db.threads[idx].aiResponse = evalRes.draftReply;
+               db.threads[idx].draftStatus = 'pending_approval';
+             }
           }
         }
       } catch (err) {
@@ -153,6 +161,9 @@ const syncThreads = async (userId = 'system-sync') => {
         currentSyncStatus.processedThreads++;
       }
     }
+
+    // Save final DB state
+    writeDB(db);
 
     const duration = Date.now() - startTime;
     console.log(`Sync complete: ${upsertedCount} threads processed in ${duration}ms`);

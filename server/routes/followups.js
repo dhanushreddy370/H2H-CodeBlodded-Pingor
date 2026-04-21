@@ -2,36 +2,31 @@ const express = require('express');
 const router = express.Router();
 const { readDB, writeDB } = require('../services/dbService');
 const { createAutoReplyDraft } = require('../services/gmailService');
-router.get('/', async (req, res) => {
+
+// Get all follow-ups
+router.get('/', (req, res) => {
   try {
-    const { priority, status, type, sender, timeSinceReply, userId } = req.query;
+    const { priority, userId } = req.query;
     const db = readDB();
+    const threads = db.threads || [];
     
-    let filtered = db.threads;
+    // Core filter: All informational emails OR emails that have a generated draft
+    let filtered = threads.filter(t => 
+      t.categoryTag === 'FYI/informational' || (t.draftStatus && t.draftStatus !== 'none')
+    );
     
     if (userId && userId !== 'undefined') {
-      filtered = filtered.filter(t => t.userId === userId || t.userId === "test-user-id");
-    } else {
-      filtered = filtered.filter(t => t.userId === "test-user-id" || !t.userId);
+      filtered = filtered.filter(t => t.userId === userId || t.userId === 'system-sync');
     }
-    if (status) filtered = filtered.filter(t => t.status === status);
-    if (type) filtered = filtered.filter(t => t.type === type);
-    if (sender) {
-      const senderRegex = new RegExp(sender, 'i');
-      filtered = filtered.filter(t => senderRegex.test(t.sender));
-    }
-    
-    filtered.sort((a, b) => {
-      let dateA = a.lastUpdated ? new Date(a.lastUpdated).getTime() : 0;
-      let dateB = b.lastUpdated ? new Date(b.lastUpdated).getTime() : 0;
-      let diff = dateB - dateA;
-      
-      if (priority === 'asc') diff = (a.priority || 3) - (b.priority || 3);
-      if (priority === 'desc') diff = (b.priority || 3) - (a.priority || 3);
-      if (timeSinceReply === 'asc') diff = dateB - dateA;
-      if (timeSinceReply === 'desc') diff = dateA - dateB;
 
-      return diff;
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.lastUpdated || a.createdAt);
+      const dateB = new Date(b.lastUpdated || b.createdAt);
+      
+      if (priority === 'asc') return (a.priority || 3) - (b.priority || 3);
+      if (priority === 'desc') return (b.priority || 3) - (a.priority || 3);
+      
+      return dateB - dateA;
     });
 
     res.json(filtered);
@@ -41,77 +36,74 @@ router.get('/', async (req, res) => {
 });
 
 // Get count of pending drafts
-router.get('/draft-count', async (req, res) => {
+router.get('/draft-count', (req, res) => {
   try {
     const { userId } = req.query;
     const db = readDB();
+    const threads = db.threads || [];
     
-    let filtered = db.threads;
-    if (userId && userId !== 'undefined') {
-      filtered = filtered.filter(t => t.userId === userId || t.userId === "test-user-id");
-    }
+    const count = threads.filter(t => 
+      t.draftStatus === 'pending_approval' && 
+      t.status !== 'done' &&
+      (!userId || userId === 'undefined' || t.userId === userId)
+    ).length;
     
-    const count = filtered.filter(t => t.draftStatus === 'pending_approval' && t.status !== 'done').length;
     res.json({ count });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Update thread
-router.patch('/:id/status', async (req, res) => {
+// Update thread status
+router.patch('/:id/status', (req, res) => {
   try {
     const { status } = req.body;
     const db = readDB();
-    const tIndex = db.threads.findIndex(t => t._id === req.params.id);
+    const index = (db.threads || []).findIndex(t => t._id === req.params.id);
     
-    if (tIndex === -1) {
-      return res.status(404).json({ error: 'Thread not found' });
-    }
+    if (index === -1) return res.status(404).json({ error: 'Thread not found' });
     
-    db.threads[tIndex].status = status;
-    db.threads[tIndex].updatedAt = new Date().toISOString();
+    db.threads[index].status = status;
+    db.threads[index].updatedAt = new Date().toISOString();
+    
     writeDB(db);
-    
-    res.json(db.threads[tIndex]);
+    res.json(db.threads[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Update the draft content (before approval)
-router.patch('/:id/draft', async (req, res) => {
+// Update the draft content
+router.patch('/edit/:id', (req, res) => {
   try {
-    const { draftText } = req.body;
+    const { aiResponse } = req.body;
     const db = readDB();
-    const tIndex = db.threads.findIndex(t => t._id === req.params.id);
+    const index = (db.threads || []).findIndex(t => t._id === req.params.id);
     
-    if (tIndex === -1) {
-      return res.status(404).json({ error: 'Thread not found' });
-    }
+    if (index === -1) return res.status(404).json({ error: 'Thread not found' });
     
-    db.threads[tIndex].aiResponse = draftText;
-    db.threads[tIndex].updatedAt = new Date().toISOString();
+    db.threads[index].aiResponse = aiResponse;
+    db.threads[index].updatedAt = new Date().toISOString();
+    
     writeDB(db);
-    
-    res.json(db.threads[tIndex]);
+    res.json(db.threads[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Approve and push the draft to Gmail
-router.post('/:id/approve-draft', async (req, res) => {
+// Approve and push draft to Gmail
+router.post('/approve/:id', async (req, res) => {
   try {
     const db = readDB();
-    const tIndex = db.threads.findIndex(t => t._id === req.params.id);
+    const index = (db.threads || []).findIndex(t => t._id === req.params.id);
     
-    if (tIndex === -1) return res.status(404).json({ error: 'Thread not found' });
+    if (index === -1) return res.status(404).json({ error: 'Thread not found' });
+    const thread = db.threads[index];
     
-    const thread = db.threads[tIndex];
     if (!thread.aiResponse) return res.status(400).json({ error: 'No draft content found' });
 
-    // Actually create the draft in Gmail
+    // Push to Gmail API
     const draftCreated = await createAutoReplyDraft(
       thread.threadId, 
       thread.sender, 
@@ -120,11 +112,11 @@ router.post('/:id/approve-draft', async (req, res) => {
     );
 
     if (draftCreated) {
-      db.threads[tIndex].draftStatus = 'approved';
-      db.threads[tIndex].status = 'done'; // Automatically close as handled
-      db.threads[tIndex].updatedAt = new Date().toISOString();
+      db.threads[index].draftStatus = 'approved';
+      db.threads[index].status = 'done';
+      db.threads[index].updatedAt = new Date().toISOString();
       writeDB(db);
-      res.json({ success: true, message: 'Draft pushed to Gmail and status updated' });
+      res.json({ success: true, thread: db.threads[index] });
     } else {
       res.status(500).json({ error: 'Failed to create draft in Gmail' });
     }
@@ -133,20 +125,20 @@ router.post('/:id/approve-draft', async (req, res) => {
   }
 });
 
-// Reject and discard the suggested draft
-router.post('/:id/reject-draft', async (req, res) => {
+// Reject and discard draft
+router.post('/reject/:id', (req, res) => {
   try {
     const db = readDB();
-    const tIndex = db.threads.findIndex(t => t._id === req.params.id);
+    const index = (db.threads || []).findIndex(t => t._id === req.params.id);
     
-    if (tIndex === -1) return res.status(404).json({ error: 'Thread not found' });
+    if (index === -1) return res.status(404).json({ error: 'Thread not found' });
     
-    db.threads[tIndex].draftStatus = 'rejected';
-    db.threads[tIndex].handledByAI = false; // Mark as unhandled so user can handle manually
-    db.threads[tIndex].updatedAt = new Date().toISOString();
+    db.threads[index].draftStatus = 'rejected';
+    db.threads[index].handledByAI = false;
+    db.threads[index].updatedAt = new Date().toISOString();
+    
     writeDB(db);
-    
-    res.json({ success: true, message: 'AI suggestion discarded' });
+    res.json({ success: true, thread: db.threads[index] });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

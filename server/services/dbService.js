@@ -16,7 +16,8 @@ const initDB = () => {
       threads: [],
       chatSessions: [],
       syncLogs: [],
-      filters: []
+      filters: [],
+      contacts: []
     };
     fs.writeFileSync(DB_PATH, JSON.stringify(initialSchema, null, 2));
   }
@@ -26,7 +27,9 @@ const readDB = () => {
   initDB();
   const rawData = fs.readFileSync(DB_PATH, 'utf8');
   try {
-    return JSON.parse(rawData);
+    const data = JSON.parse(rawData);
+    if (!data.contacts) data.contacts = [];
+    return data;
   } catch (err) {
     console.error("DB file corrupted, returning empty schema:", err);
     return {

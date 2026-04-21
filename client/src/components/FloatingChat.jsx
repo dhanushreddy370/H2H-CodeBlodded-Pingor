@@ -27,17 +27,25 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
   };
 
   useEffect(() => {
-    if (isOpen && user?.sub) {
+    if (isOpen && user?.id) {
       scrollToBottom();
-      fetch(`http://localhost:5000/api/tasks?userId=${user.sub}`).then(r => r.json()).then(setTasks).catch(console.error);
-      fetch(`http://localhost:5000/api/followups?userId=${user.sub}`).then(r => r.json()).then(setFollowUps).catch(console.error);
+      fetch(`http://localhost:5000/api/tasks?userId=${user.id}`).then(r => r.json()).then(setTasks).catch(console.error);
+      fetch(`http://localhost:5000/api/followups?userId=${user.id}`).then(r => r.json()).then(setFollowUps).catch(console.error);
       
       if (chatId) {
         loadSession(chatId);
       } else if (initialContext) {
+        // Automatically add the thread context as a chip
+        setContextChips([{
+          id: initialContext.threadId,
+          label: initialContext.subject,
+          type: 'followup',
+          icon: <Paperclip size={14}/>
+        }]);
+        
         setMessages([
-          { id: 1, role: 'assistant', text: `Hi! I'm ready to help you reply to ${initialContext.sender} about "${initialContext.subject}".` },
-          { id: 2, role: 'assistant', text: "How would you like to respond? (e.g. 'Keep it brief', 'Ask for more info', 'Approve the quote')" }
+          { id: 1, role: 'assistant', text: `Hi! I'm ready to help you analyze this thread from ${initialContext.sender}.` },
+          { id: 2, role: 'assistant', text: "How would you like to respond?" }
         ]);
       } else {
         setMessages([
@@ -51,7 +59,9 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
     try {
       const res = await fetch(`http://localhost:5000/api/history/${id}`);
       const data = await res.json();
-      setMessages(data.messages.map(m => ({ id: Date.now() + Math.random(), role: m.role, text: m.content })));
+      if (data.messages) {
+        setMessages(data.messages.map(m => ({ id: Date.now() + Math.random(), role: m.role, text: m.content })));
+      }
     } catch(err) {
       console.error(err);
     }
@@ -129,35 +139,80 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
     setContextChips(contextChips.filter(c => c.id !== id));
   };
 
+  const [currentChatId, setCurrentChatId] = useState(chatId);
+
+  useEffect(() => {
+    setCurrentChatId(chatId);
+  }, [chatId]);
+
   const sendMessage = async () => {
     if (!inputVal.trim() && contextChips.length === 0) return;
     
-    const userMsg = { id: Date.now(), role: 'user', text: inputVal, chips: [...contextChips] };
+    const userId = user?.id || user?.sub;
+    const userText = inputVal;
+    const userMsg = { id: Date.now(), role: 'user', text: userText, chips: [...contextChips] };
+    
     setMessages(prev => [...prev, userMsg]);
     setInputVal('');
     setContextChips([]);
     setShowCommandPalette(false);
     
-    // Call real backend
     try {
+      // 1. Get/Create Session
+      let sessionId = currentChatId;
+      if (!sessionId && userId) {
+        const sessionRes = await fetch('http://localhost:5000/api/history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            userId, 
+            title: userText.substring(0, 30) || 'New Conversation',
+            initialMessage: { role: 'user', content: userText }
+          })
+        });
+        const sessionData = await sessionRes.json();
+        sessionId = sessionData._id;
+        setCurrentChatId(sessionId);
+      } else if (sessionId) {
+        // Save user message to existing session
+        await fetch(`http://localhost:5000/api/history/${sessionId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'user', content: userText })
+        });
+      }
+
+      // 2. Call AI for response
       const response = await fetch('http://localhost:5000/api/chat/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId,
           messages: [
             ...messages.map(m => ({ role: m.role, content: m.text })),
-            { role: 'user', content: inputVal }
+            { role: 'user', content: userText }
           ]
         })
       });
       
       const data = await response.json();
+      const aiText = data.text;
       
       setMessages(prev => [...prev, { 
         id: Date.now() + 1, 
         role: 'assistant', 
-        text: data.text 
+        text: aiText 
       }]);
+
+      // 3. Save AI response to session
+      if (sessionId) {
+        await fetch(`http://localhost:5000/api/history/${sessionId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'assistant', content: aiText })
+        });
+      }
+
     } catch(err) {
       console.error('Chat error:', err);
       setMessages(prev => [...prev, { 
@@ -227,7 +282,7 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
           </div>
           <div>
             <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>Pingor Intelligence</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{isMinimized ? 'Minimized' : 'Gemma:2B • Local Instance'}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{isMinimized ? 'Minimized' : 'Local AI Model • Ollama'}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
@@ -341,6 +396,14 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
           )}
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              className="icon-container" 
+              onClick={() => fileInputRef.current?.click()}
+              style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text-muted)' }}
+              title="Attach media or files"
+            >
+              <Paperclip size={18} />
+            </button>
             <input 
               ref={inputRef}
               type="text" 

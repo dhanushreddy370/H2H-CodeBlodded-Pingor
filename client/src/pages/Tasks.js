@@ -195,6 +195,7 @@ const Tasks = () => {
         onClose={() => setIsModalOpen(false)} 
         data={selectedTask}
         onUpdate={handleUpdate}
+        type="task"
       />
     </div>
   );

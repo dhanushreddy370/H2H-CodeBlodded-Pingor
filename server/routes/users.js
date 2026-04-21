@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
+const { readDB, writeDB } = require('../services/dbService');
 
 // Get all users (for assignment dropdowns)
-router.get('/', async (req, res) => {
+router.get('/', (req, res) => {
   try {
-    const users = await User.find().sort({ name: 1 });
+    const db = readDB();
+    const users = (db.users || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -13,35 +14,58 @@ router.get('/', async (req, res) => {
 });
 
 // Get/Create current user profile
-router.post('/profile', async (req, res) => {
+router.post('/profile', (req, res) => {
   try {
     const { userId, email, name, picture } = req.body;
-    let user = await User.findOne({ userId });
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+
+    const db = readDB();
+    if (!db.users) db.users = [];
+
+    let index = db.users.findIndex(u => u.userId === userId);
     
-    if (!user) {
-      user = new User({ userId, email, name, picture });
+    if (index === -1) {
+      const newUser = {
+        _id: `user-${Date.now()}`,
+        userId,
+        email,
+        name,
+        picture,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      db.users.push(newUser);
+      index = db.users.length - 1;
     } else {
-      user.name = name || user.name;
-      user.picture = picture || user.picture;
+      db.users[index] = {
+        ...db.users[index],
+        name: name || db.users[index].name,
+        picture: picture || db.users[index].picture,
+        updatedAt: new Date().toISOString()
+      };
     }
     
-    await user.save();
-    res.json(user);
+    writeDB(db);
+    res.json(db.users[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // Update settings
-router.patch('/settings', async (req, res) => {
+router.patch('/settings', (req, res) => {
   try {
     const { userId, settings } = req.body;
-    const user = await User.findOneAndUpdate(
-      { userId },
-      { $set: { settings, updatedAt: new Date() } },
-      { new: true }
-    );
-    res.json(user);
+    const db = readDB();
+    const index = (db.users || []).findIndex(u => u.userId === userId);
+    
+    if (index === -1) return res.status(404).json({ error: 'User not found' });
+    
+    db.users[index].settings = settings;
+    db.users[index].updatedAt = new Date().toISOString();
+    
+    writeDB(db);
+    res.json(db.users[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

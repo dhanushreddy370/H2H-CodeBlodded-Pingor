@@ -1,21 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const mongoose = require('mongoose');
 const { initHeartbeat, syncThreads, getSyncProgress } = require('./services/syncService');
 const { loadSavedTokens } = require('./config/gmail');
-const Thread = require('./models/Thread');
-const User = require('./models/User');
+
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB Atlas'))
-  .catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware
 app.use(cors());
@@ -23,7 +16,7 @@ app.use(express.json());
 
 // Basic Route
 app.get('/', (req, res) => {
-  res.send('Pingor Server is Running');
+  res.send('Pingor Server is Running (JSON DB Mode)');
 });
 
 // Import Routes
@@ -35,6 +28,7 @@ const historyRoute = require('./routes/history');
 const threadsRoute = require('./routes/threads');
 const authRoute = require('./routes/auth');
 const usersRoute = require('./routes/users');
+const contactsRoute = require('./routes/contacts');
 
 app.use('/api/tasks', tasksRoute);
 app.use('/api/followups', followupsRoute);
@@ -44,21 +38,25 @@ app.use('/api/history', historyRoute);
 app.use('/api/threads', threadsRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/users', usersRoute);
+app.use('/api/contacts', contactsRoute);
 
 // API endpoint to fetch sync status and latest threads
-// API endpoint to fetch sync status and latest threads
-app.get('/api/sync/status', async (req, res) => {
+app.get('/api/sync/status', (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ error: 'userId is required' });
 
-    const latestThreads = await Thread.find({ userId })
-      .sort({ lastUpdated: -1 })
-      .limit(10);
+    const { readDB } = require('./services/dbService');
+    const db = readDB();
+    
+    // Filter threads for the user from local DB
+    const latestThreads = (db.threads || [])
+      .filter(t => t.userId === userId)
+      .sort((a, b) => new Date(b.lastUpdated || b.createdAt) - new Date(a.lastUpdated || a.createdAt))
+      .slice(0, 10);
       
-    // Since syncLogs logic is being refactored, we'll return a basic status for now
     res.json({
-      status: 'Ready',
+      status: 'Ready (Offline)',
       threads: latestThreads
     });
   } catch (err) {
@@ -86,9 +84,7 @@ loadSavedTokens();
 // Initialize heartbeat
 initHeartbeat();
 
-// MongoDB features stripped in favor of local JSON DB
-
 // Start Server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT} (IPv4 force)`);
 });

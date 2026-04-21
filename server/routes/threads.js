@@ -1,20 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const Thread = require('../models/Thread');
+const { readDB, writeDB } = require('../services/dbService');
 const { google } = require('googleapis');
 const { oauth2Client } = require('../config/gmail');
 
-router.get('/', async (req, res) => {
+router.get('/', (req, res) => {
   try {
     const { userId } = req.query;
+    const db = readDB();
+    const threads = db.threads || [];
     
-    let query = {};
+    let filtered = threads;
     if (userId && userId !== 'undefined') {
-      query = { $or: [{ userId }, { userId: 'system-sync' }] };
+      filtered = threads.filter(t => t.userId === userId || t.userId === 'system-sync');
     }
 
-    const threads = await Thread.find(query).sort({ lastUpdated: -1 });
-    res.json(threads);
+    filtered.sort((a, b) => new Date(b.lastUpdated || b.createdAt) - new Date(a.lastUpdated || a.createdAt));
+    res.json(filtered);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -24,8 +26,11 @@ router.get('/', async (req, res) => {
 router.post('/:id/sync-gmail', async (req, res) => {
   try {
     const { action } = req.body; // 'archive' or 'trash'
-    const thread = await Thread.findById(req.params.id);
-    if (!thread) return res.status(404).json({ error: 'Thread not found' });
+    const db = readDB();
+    const index = (db.threads || []).findIndex(t => t._id === req.params.id);
+    
+    if (index === -1) return res.status(404).json({ error: 'Thread not found' });
+    const thread = db.threads[index];
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
@@ -35,17 +40,19 @@ router.post('/:id/sync-gmail', async (req, res) => {
         id: thread.threadId,
         requestBody: { removeLabelIds: ['INBOX'] }
       });
-      thread.archived = true;
+      db.threads[index].archived = true;
     } else if (action === 'trash') {
       await gmail.users.threads.trash({
         userId: 'me',
         id: thread.threadId
       });
-      thread.trashed = true;
-      thread.status = 'ignored';
+      db.threads[index].trashed = true;
+      db.threads[index].status = 'ignored';
     }
 
-    await thread.save();
+    db.threads[index].updatedAt = new Date().toISOString();
+    writeDB(db);
+    
     res.json({ success: true, message: `Email ${action}d in Gmail account.` });
   } catch (err) {
     console.error('Gmail sync error:', err);
