@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, CheckCircle, CheckSquare, Clock, AlertTriangle, TrendingUp, ArrowRight, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
+import { Mail, CheckCircle, CheckSquare, Clock, AlertTriangle, TrendingUp, ArrowRight, RefreshCw, Sparkles, Loader2, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const Dashboard = ({ setActivePage = () => {} }) => {
+const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
   const { user } = useAuth();
   const [data, setData] = useState({
     stats: [
@@ -325,7 +325,36 @@ const Dashboard = ({ setActivePage = () => {} }) => {
                     <span style={{ maxWidth: '70%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{thread.subject}</span>
                     <span className={`badge ${thread.priority >= 4 ? 'high' : 'pending'}`} style={{ fontSize: '0.65rem' }}>P{thread.priority}</span>
                   </div>
-                  <div className="timeline-time">{thread.sender || 'Unknown'} &bull; {new Date(thread.lastUpdated).toLocaleDateString()}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <div className="timeline-time">{thread.sender || 'Unknown'} &bull; {new Date(thread.lastUpdated).toLocaleDateString()}</div>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenChat({ 
+                          sender: thread.sender, 
+                          subject: thread.subject,
+                          snippet: thread.snippet,
+                          threadId: thread._id
+                        });
+                      }}
+                      style={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        color: 'var(--primary)', 
+                        cursor: 'pointer',
+                        padding: '4px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'background 0.2s'
+                      }}
+                      className="hover-bg-primary-light"
+                      title="Chat with Pingor"
+                    >
+                      <MessageSquare size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             )) : (

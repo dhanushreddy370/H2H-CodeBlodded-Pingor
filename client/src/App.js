@@ -22,6 +22,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeChatId, setActiveChatId] = useState(null);
+  const [initialChatContext, setInitialChatContext] = useState(null);
   
   useRipple();
 
@@ -35,13 +36,17 @@ function App() {
 
   const renderContent = () => {
     switch(activePage) {
-      case 'Dashboard': return <Dashboard setActivePage={setActivePage} />;
+      case 'Dashboard': return <Dashboard setActivePage={setActivePage} onOpenChat={(context) => {
+        setInitialChatContext(context);
+        setIsChatOpen(true);
+      }} />;
       case 'Inbox': return <Inbox />;
       case 'Tasks': return <Tasks />;
       case 'Follow-ups': return (
         <FollowUps 
-          onOpenChat={() => {
+          onOpenChat={(context) => {
             setActiveChatId(null);
+            setInitialChatContext(context);
             setIsChatOpen(true);
           }} 
         />
@@ -97,8 +102,12 @@ function App() {
         
         <FloatingChat 
           isOpen={isChatOpen} 
-          onClose={() => setIsChatOpen(false)} 
+          onClose={() => {
+            setIsChatOpen(false);
+            setInitialChatContext(null);
+          }} 
           chatId={activeChatId}
+          initialContext={initialChatContext}
         />
       </div>
     </div>

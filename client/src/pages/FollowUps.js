@@ -3,6 +3,8 @@ import { Mail, Clock, MessageSquare, Check, X, Edit2, Send, Bot, Sparkles, Filte
 import { useAuth } from '../context/AuthContext';
 import DetailModal from '../components/DetailModal';
 
+import CustomSelect from '../components/ui/CustomSelect';
+
 const FollowUps = ({ onOpenChat }) => {
   const { user } = useAuth();
   const [threads, setThreads] = useState([]);
@@ -87,20 +89,30 @@ const FollowUps = ({ onOpenChat }) => {
 
   return (
     <div className="followups-page">
-      <div className="card" style={{ padding: '16px', marginBottom: '24px' }}>
+      <div className="card" style={{ padding: '16px', marginBottom: '24px', zIndex: 10, overflow: 'visible' }}>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <select onChange={(e) => setStatusFilter(e.target.value)} value={statusFilter} className="gooey-input-field" style={{ width: 'auto', padding: '8px 16px', borderRadius: 'var(--radius-md)' }}>
-              <option value="">Status</option>
-              <option value="open">Open</option>
-              <option value="done">Done</option>
-            </select>
+            <CustomSelect 
+              value={statusFilter} 
+              onChange={setStatusFilter} 
+              options={[
+                { value: '', label: 'Status' },
+                { value: 'open', label: 'Open' },
+                { value: 'done', label: 'Done' }
+              ]}
+              placeholder="Status"
+            />
             
-            <select onChange={(e) => setPrioritySort(e.target.value)} value={prioritySort} className="gooey-input-field" style={{ width: 'auto', padding: '8px 16px', borderRadius: 'var(--radius-md)' }}>
-              <option value="">Priority</option>
-              <option value="desc">High to Low</option>
-              <option value="asc">Low to High</option>
-            </select>
+            <CustomSelect 
+              value={prioritySort} 
+              onChange={setPrioritySort} 
+              options={[
+                { value: '', label: 'Priority' },
+                { value: 'desc', label: 'High to Low' },
+                { value: 'asc', label: 'Low to High' }
+              ]}
+              placeholder="Priority"
+            />
           </div>
         </div>
       </div>
@@ -120,10 +132,11 @@ const FollowUps = ({ onOpenChat }) => {
             <table className="tasks-table">
               <thead>
                 <tr>
-                  <th>Priority</th>
+                  <th style={{ width: '40px' }}>P</th>
                   <th>Communication Details</th>
                   <th>AI Intelligence / Draft</th>
-                  <th style={{ width: '60px' }}></th>
+                  <th style={{ width: '80px' }}>AI Agent</th>
+                  <th style={{ width: '40px' }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -184,6 +197,24 @@ const FollowUps = ({ onOpenChat }) => {
                       ) : (
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No automated draft required. Thread marked as FYI.</div>
                       )}
+                    </td>
+                    <td>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenChat({ 
+                            sender: thread.sender, 
+                            subject: thread.subject,
+                            snippet: thread.snippet,
+                            threadId: thread._id
+                          });
+                        }}
+                        className="icon-container"
+                        style={{ background: 'var(--primary-light)', color: 'var(--primary)', border: 'none', cursor: 'pointer' }}
+                        title="Chat with Pingor"
+                      >
+                        <MessageSquare size={18} />
+                      </button>
                     </td>
                     <td>
                        <ChevronRight size={18} color="var(--text-muted)" />

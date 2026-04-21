@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bot, CheckSquare, Filter, Archive, Trash2, Reply, Inbox as InboxIcon, Search, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Bot, CheckSquare, Filter, Archive, Trash2, Reply, Inbox as InboxIcon, Search, CheckCircle, XCircle, Loader2, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { GooeyInput } from '../components/ui/GooeyInput';
 
 const Inbox = () => {
   const { user } = useAuth();
@@ -116,6 +117,10 @@ const Inbox = () => {
           </div>
         </div>
       )}
+
+      <div style={{ marginBottom: '16px' }}>
+        <GooeyInput placeholder="Search messages..." className="search-expand-container" />
+      </div>
 
       <div className="inbox-layout">
         <div className="inbox-sidebar card" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>

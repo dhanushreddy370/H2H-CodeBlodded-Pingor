@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, Hash, AtSign, Paperclip, X, Bot, User, Minimize2, Sparkles, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const FloatingChat = ({ isOpen, onClose, chatId }) => {
+const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
   const { user } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([
-    { id: 1, role: 'assistant', text: "Hello! I am Pingor, your AI communication assistant. I've analyzed your inbox and I'm ready to help. You can ask me to summarize threads, draft replies, or filter tasks using context." }
+    { id: 1, role: 'assistant', text: "Hello! I am Pingor, your AI communication assistant. How can I help you today?" }
   ]);
   const [inputVal, setInputVal] = useState('');
   const [showCommandPalette, setShowCommandPalette] = useState(false);
@@ -34,13 +34,18 @@ const FloatingChat = ({ isOpen, onClose, chatId }) => {
       
       if (chatId) {
         loadSession(chatId);
+      } else if (initialContext) {
+        setMessages([
+          { id: 1, role: 'assistant', text: `Hi! I'm ready to help you reply to ${initialContext.sender} about "${initialContext.subject}".` },
+          { id: 2, role: 'assistant', text: "How would you like to respond? (e.g. 'Keep it brief', 'Ask for more info', 'Approve the quote')" }
+        ]);
       } else {
         setMessages([
           { id: 1, role: 'assistant', text: "Hello! I am Pingor, your AI communication assistant. How can I help you today?" }
         ]);
       }
     }
-  }, [isOpen, chatId, user]);
+  }, [isOpen, chatId, user, initialContext]);
 
   const loadSession = async (id) => {
     try {
