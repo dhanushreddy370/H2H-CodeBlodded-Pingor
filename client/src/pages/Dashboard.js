@@ -16,15 +16,38 @@ const Dashboard = ({ setActivePage = () => {} }) => {
   });
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState({ processedThreads: 0, totalThreads: 0 });
 
   useEffect(() => {
-    const fetchData = async () => {
-      // Return early if user is still loading
-      // Fetch data regardless to ensure dummy data shows
-      // if (!user?.sub) return;
+    let pollInterval;
+    if (isSyncing) {
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch('http://localhost:5000/api/sync/progress');
+          const progress = await res.json();
+          setSyncProgress(progress);
+        } catch (err) {
+          console.error('Failed to poll progress:', err);
+        }
+      }, 1000);
+    }
+    return () => clearInterval(pollInterval);
+  }, [isSyncing]);
 
+  useEffect(() => {
+    // Immediate sync on first mount if directed from login
+    const shouldSync = new URLSearchParams(window.location.search).get('sync') === 'true';
+    if (shouldSync) {
+      handleManualSync();
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        const userId = user?.sub || 'test-user-id';
+        const userId = user?.id || user?.sub;
+        if (!userId) return;
         const [tasksRes, followupsRes, threadsRes] = await Promise.all([
           fetch(`http://localhost:5000/api/tasks?userId=${userId}`),
           fetch(`http://localhost:5000/api/followups?userId=${userId}`),
@@ -59,14 +82,19 @@ const Dashboard = ({ setActivePage = () => {} }) => {
 
   const handleManualSync = async () => {
     setIsSyncing(true);
+    setSyncProgress({ processedThreads: 0, totalThreads: 0 });
+    
     try {
-      const res = await fetch('http://localhost:5000/api/sync/manual', { method: 'POST' });
+      const userId = user?.id || user?.sub;
+      const res = await fetch(`http://localhost:5000/api/sync/manual?userId=${userId}`, { method: 'POST' });
       if (res.ok) {
         // Re-run fetchData logic manually
+        const userId = user?.id || user?.sub;
+        if (!userId) return;
         const [tasksRes, followupsRes, threadsRes] = await Promise.all([
-          fetch(`http://localhost:5000/api/tasks?userId=${user?.sub}`),
-          fetch(`http://localhost:5000/api/followups?userId=${user?.sub}`),
-          fetch(`http://localhost:5000/api/threads?userId=${user?.sub}`)
+          fetch(`http://localhost:5000/api/tasks?userId=${userId}`),
+          fetch(`http://localhost:5000/api/followups?userId=${userId}`),
+          fetch(`http://localhost:5000/api/threads?userId=${userId}`)
         ]);
         const tasks = await tasksRes.json();
         const followups = await followupsRes.json();
@@ -115,8 +143,8 @@ const Dashboard = ({ setActivePage = () => {} }) => {
           left: 0,
           width: '100vw',
           height: '100vh',
-          background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(12px)',
+          background: 'rgba(0,0,0,0.92)',
+          backdropFilter: 'blur(20px)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -125,25 +153,29 @@ const Dashboard = ({ setActivePage = () => {} }) => {
           color: 'white',
           animation: 'fadeIn 0.5s ease-out'
         }}>
-          <div style={{ position: 'relative', marginBottom: '32px' }}>
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '120px',
-              height: '120px',
-              borderRadius: '50%',
-              border: '4px dashed var(--primary)',
-              animation: 'spin 4s linear infinite',
-              opacity: 0.3
-            }}></div>
-            <RefreshCw size={64} className="animate-spin" style={{ color: 'var(--primary)', position: 'relative', zIndex: 1 }} />
+          <div style={{ position: 'relative', marginBottom: '48px' }}>
+            <div className="pulse-ring"></div>
+            <RefreshCw size={80} className="animate-spin" style={{ color: 'var(--primary)', position: 'relative', zIndex: 1 }} />
           </div>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '12px', letterSpacing: '-0.03em' }}>Syncing Intelligence</h2>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.2rem', textAlign: 'center', maxWidth: '500px' }}>
-            Updating your inbox, prioritizing tasks, and generating AI insights across all communication channels.
+          
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', letterSpacing: '-0.03em' }}>Syncing Intelligence</h2>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.1rem', textAlign: 'center', maxWidth: '500px', marginBottom: '40px' }}>
+            Our AI agents are analyzing your communications to prioritize tasks and extract insights.
           </p>
+
+          <div style={{ width: '400px', background: 'rgba(255,255,255,0.1)', height: '8px', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ 
+              width: `${syncProgress.totalThreads > 0 ? (syncProgress.processedThreads / syncProgress.totalThreads) * 100 : 0}%`, 
+              background: 'var(--primary)', 
+              height: '100%', 
+              transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 0 20px var(--primary)'
+            }}></div>
+          </div>
+          
+          <div style={{ marginTop: '16px', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', fontWeight: '600', letterSpacing: '0.05em' }}>
+            {syncProgress.processedThreads} / {syncProgress.totalThreads} THREADS PROCESSED
+          </div>
         </div>
       )}
 

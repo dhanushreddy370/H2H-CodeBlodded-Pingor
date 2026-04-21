@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { readDB, writeDB } = require('../services/dbService');
+const { createAutoReplyDraft } = require('../services/gmailService');
 router.get('/', async (req, res) => {
   try {
     const { priority, status, type, sender, timeSinceReply, userId } = req.query;
@@ -39,6 +40,24 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get count of pending drafts
+router.get('/draft-count', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const db = readDB();
+    
+    let filtered = db.threads;
+    if (userId && userId !== 'undefined') {
+      filtered = filtered.filter(t => t.userId === userId || t.userId === "test-user-id");
+    }
+    
+    const count = filtered.filter(t => t.draftStatus === 'pending_approval' && t.status !== 'done').length;
+    res.json({ count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Update thread
 router.patch('/:id/status', async (req, res) => {
   try {
@@ -55,6 +74,79 @@ router.patch('/:id/status', async (req, res) => {
     writeDB(db);
     
     res.json(db.threads[tIndex]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update the draft content (before approval)
+router.patch('/:id/draft', async (req, res) => {
+  try {
+    const { draftText } = req.body;
+    const db = readDB();
+    const tIndex = db.threads.findIndex(t => t._id === req.params.id);
+    
+    if (tIndex === -1) {
+      return res.status(404).json({ error: 'Thread not found' });
+    }
+    
+    db.threads[tIndex].aiResponse = draftText;
+    db.threads[tIndex].updatedAt = new Date().toISOString();
+    writeDB(db);
+    
+    res.json(db.threads[tIndex]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Approve and push the draft to Gmail
+router.post('/:id/approve-draft', async (req, res) => {
+  try {
+    const db = readDB();
+    const tIndex = db.threads.findIndex(t => t._id === req.params.id);
+    
+    if (tIndex === -1) return res.status(404).json({ error: 'Thread not found' });
+    
+    const thread = db.threads[tIndex];
+    if (!thread.aiResponse) return res.status(400).json({ error: 'No draft content found' });
+
+    // Actually create the draft in Gmail
+    const draftCreated = await createAutoReplyDraft(
+      thread.threadId, 
+      thread.sender, 
+      thread.subject, 
+      thread.aiResponse
+    );
+
+    if (draftCreated) {
+      db.threads[tIndex].draftStatus = 'approved';
+      db.threads[tIndex].status = 'done'; // Automatically close as handled
+      db.threads[tIndex].updatedAt = new Date().toISOString();
+      writeDB(db);
+      res.json({ success: true, message: 'Draft pushed to Gmail and status updated' });
+    } else {
+      res.status(500).json({ error: 'Failed to create draft in Gmail' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Reject and discard the suggested draft
+router.post('/:id/reject-draft', async (req, res) => {
+  try {
+    const db = readDB();
+    const tIndex = db.threads.findIndex(t => t._id === req.params.id);
+    
+    if (tIndex === -1) return res.status(404).json({ error: 'Thread not found' });
+    
+    db.threads[tIndex].draftStatus = 'rejected';
+    db.threads[tIndex].handledByAI = false; // Mark as unhandled so user can handle manually
+    db.threads[tIndex].updatedAt = new Date().toISOString();
+    writeDB(db);
+    
+    res.json({ success: true, message: 'AI suggestion discarded' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

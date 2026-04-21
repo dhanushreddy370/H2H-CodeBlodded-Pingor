@@ -8,6 +8,7 @@ import Tasks from './pages/Tasks';
 import FollowUps from './pages/FollowUps';
 import ChatHistory from './pages/ChatHistory';
 import LoginPage from './pages/LoginPage';
+import AuthCallback from './pages/AuthCallback';
 import ChatPopup from './components/ChatPopup';
 import { Bot, MessageSquare } from 'lucide-react';
 import { useRipple } from './utils/useRipple';
@@ -44,49 +45,56 @@ function App() {
     }
   };
 
-  if (!user) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
+  const renderMain = () => {
+    // Check if we are on the auth callback path
+    if (window.location.search.includes('code=')) {
+      return <AuthCallback onLogin={handleLogin} />;
+    }
 
-  return (
-    <div className="app-container">
-      <Sidebar 
-        activePage={activePage} 
-        setActivePage={setActivePage} 
-        isOpen={isSidebarOpen} 
-        setIsOpen={setIsSidebarOpen} 
-      />
-      
-      <div className="main-content">
-        <Navbar 
+    if (!user) {
+      return <LoginPage onLogin={handleLogin} />;
+    }
+
+    return (
+      <div className="app-container">
+        <Sidebar 
           activePage={activePage} 
-          darkMode={darkMode} 
-          toggleDarkMode={() => setDarkMode(!darkMode)} 
-          user={user}
+          setActivePage={setActivePage} 
+          isOpen={isSidebarOpen} 
+          setIsOpen={setIsSidebarOpen} 
         />
         
-        <div className="content-area">
-          <div key={activePage} className="fade-enter fade-enter-active">
-            {renderContent()}
+        <div className="main-content">
+          <Navbar 
+            activePage={activePage} 
+            darkMode={darkMode} 
+            toggleDarkMode={() => setDarkMode(!darkMode)} 
+            user={user}
+          />
+          
+          <div className="content-area">
+            <div key={activePage} className="fade-enter fade-enter-active">
+              {renderContent()}
+            </div>
           </div>
+
+          <ChatPopup 
+            isOpen={isChatOpen} 
+            onClose={() => setIsChatOpen(false)} 
+            user={user}
+          />
+
+          {!isChatOpen && (
+            <div className="fab" onClick={() => setIsChatOpen(true)} title="Chat with Pingor">
+              <MessageSquare size={28} />
+            </div>
+          )}
         </div>
-
-        {/* Floating Chat Popup */}
-        <ChatPopup 
-          isOpen={isChatOpen} 
-          onClose={() => setIsChatOpen(false)} 
-          user={user}
-        />
-
-        {/* FAB Button */}
-        {!isChatOpen && (
-          <div className="fab" onClick={() => setIsChatOpen(true)} title="Chat with Pingor">
-            <MessageSquare size={28} />
-          </div>
-        )}
       </div>
-    </div>
-  );
+    );
+  };
+
+  return renderMain();
 }
 
 export default App;

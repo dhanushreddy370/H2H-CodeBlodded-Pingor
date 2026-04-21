@@ -654,6 +654,7 @@ select.gooey-input-field {
   animation: animate-spin-basic 1.5s linear infinite;
 }
 
+
 .loading-overlay {
   display: flex;
   flex-direction: column;
@@ -661,5 +662,34 @@ select.gooey-input-field {
   justify-content: center;
   gap: 16px;
   height: 200px;
+}
+
+/* Premium Sync Overlay Animations */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.3); opacity: 0.2; }
+  100% { transform: scale(1); opacity: 0.5; }
+}
+
+.pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 140px;
+  border: 4px solid var(--primary);
+  border-radius: 50%;
+  animation: pulse 2.5s ease-in-out infinite;
+  box-shadow: 0 0 30px var(--primary);
+}
+
+.animate-spin {
+  animation: animate-spin-basic 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 

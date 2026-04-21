@@ -2,17 +2,17 @@ import React from 'react';
 import { Bot, Mail, ShieldCheck } from 'lucide-react';
 
 const LoginPage = ({ onLogin }) => {
-  const handleGoogleLogin = () => {
-    // Simulate Google Login
-    console.log("Redirecting to Google Auth...");
-    setTimeout(() => {
-      onLogin({
-        id: 'google_123',
-        name: 'Rithika',
-        email: 'rithika@gmail.com',
-        avatar: 'R'
-      });
-    }, 1000);
+  const handleGoogleLogin = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/url');
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Failed to get auth URL:', error);
+      alert('Failed to connect to authentication server. Please ensure the backend is running.');
+    }
   };
 
   return (

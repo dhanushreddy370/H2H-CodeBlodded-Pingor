@@ -31,6 +31,23 @@ if (-not $npmCheck) {
 }
 Write-Host "✅ [DETECTED] Local Engine Ready.`n" -ForegroundColor Green
 
+# 2.5 Port Stabilizer (Clear 3000 & 5000)
+Write-Host "[SYSTEM] Clearing legacy port bindings (3000, 5000)..." -ForegroundColor White
+$ports = @(3000, 5000)
+foreach ($port in $ports) {
+    try {
+        $conns = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+        if ($conns) {
+            foreach ($c in $conns) {
+                Stop-Process -Id $c.OwningProcess -Force -ErrorAction SilentlyContinue
+            }
+            Write-Host "✅ Released Port $port" -ForegroundColor Green
+        }
+    } catch {
+        # Port already clear or access denied
+    }
+}
+
 # 3. Environmental Sync Backend
 if (-not (Test-Path (Join-Path $APP_DIR "node_modules"))) {
     Write-Host "`n[BACKEND] node_modules not found. Running installation..." -ForegroundColor Yellow

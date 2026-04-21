@@ -27,7 +27,11 @@ const Tasks = ({ setActivePage }) => {
 
   const fetchTasks = async () => {
     setLoading(true);
-    const userId = user?.sub || 'test-user-id';
+    const userId = user?.id || user?.sub;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     let url = `http://localhost:5000/api/tasks?userId=${userId}&`;
     if (statusFilter) url += `status=${statusFilter}&`;
     if (prioritySort) url += `priority=${prioritySort}&`;

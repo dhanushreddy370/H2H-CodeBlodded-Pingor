@@ -6,13 +6,42 @@ const { classifyThread, extractActionItems, evaluateAcknowledgement, assignPrior
 const { createAutoReplyDraft } = require('./gmailService');
 const { v4: uuidv4 } = require('uuid');
 
+let isSyncing = false;
+
+let currentSyncStatus = {
+  inProgress: false,
+  totalThreads: 0,
+  processedThreads: 0,
+  lastError: null,
+  lastSyncTime: null
+};
+
+/**
+ * Gets the current sync progress
+ */
+const getSyncProgress = () => currentSyncStatus;
+
 /**
  * Fetches the latest threads from Gmail API and upserts them into MongoDB
  * @returns {Promise<void>}
  */
-const syncThreads = async () => {
+const syncThreads = async (userId = 'system-sync') => {
+  if (isSyncing) {
+    console.log('Sync already in progress. Skipping...');
+    return;
+  }
+  
+  isSyncing = true;
   const startTime = Date.now();
   console.log('Starting thread sync heartbeat...');
+  
+  currentSyncStatus = {
+    inProgress: true,
+    totalThreads: 0,
+    processedThreads: 0,
+    lastError: null,
+    lastSyncTime: new Date().toISOString()
+  };
   
   try {
     // If there's no auth credential, we skip or error out
@@ -69,19 +98,26 @@ const syncThreads = async () => {
       
       writeDB(db);
       console.log(`[DEV MODE] Sync finish. Processed ${processedCount} threads with AI.`);
+      currentSyncStatus.inProgress = false;
+      currentSyncStatus.processedThreads = processedCount;
+      currentSyncStatus.totalThreads = processedCount;
+      isSyncing = false;
       return;
     }
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
     
-    // Fetch latest 50-100 threads (using 100 as the max page size here)
+    // Fetch latest 25 threads (reduced from 100 to avoid unnecessary processing)
     const response = await gmail.users.threads.list({
       userId: 'me',
-      maxResults: 100,
+      maxResults: 25,
     });
 
     const threads = response.data.threads || [];
     let upsertedCount = 0;
+
+    currentSyncStatus.totalThreads = threads.length;
+    currentSyncStatus.processedThreads = 0;
 
     for (const t of threads) {
       try {
@@ -122,7 +158,8 @@ const syncThreads = async () => {
           lastUpdated: new Date().toISOString(),
           priority: priority,
           sender: fromAddress,
-          type: categoryTag
+          type: categoryTag,
+          userId: userId
         };
 
         if (threadIndex > -1) {
@@ -154,7 +191,8 @@ const syncThreads = async () => {
               status: 'pending',
               priority: priority,
               sender: fromAddress,
-              type: categoryTag
+              type: categoryTag,
+              userId: userId
             };
             
             if (actionIndex > -1) {
@@ -167,22 +205,29 @@ const syncThreads = async () => {
         } else if (categoryTag === 'FYI/informational') {
           const evalRes = await evaluateAcknowledgement(subject, snippet);
           if (evalRes && evalRes.isInformational && evalRes.draftReply) {
-            // Create a draft
-            const draftCreated = await createAutoReplyDraft(t.id, fromAddress, subject, evalRes.draftReply);
+            // STOP: We no longer auto-create drafts in Gmail. 
+            // We store them locally for user review first.
             
-            if (draftCreated) {
-              // Alert user in console
-              console.log(`\n[ALERT] A new FYI email was received.`);
+            const tdb = readDB();
+            const tIdx = tdb.threads.findIndex(th => th.threadId === t.id);
+            if (tIdx > -1) {
+              tdb.threads[tIdx].aiResponse = evalRes.draftReply;
+              tdb.threads[tIdx].handledByAI = true;
+              tdb.threads[tIdx].draftStatus = 'pending_approval';
+              writeDB(tdb);
+              
+              console.log(`\n[AI SUGGESTION] New draft cached for review.`);
               console.log(`From: ${fromAddress}`);
               console.log(`Subject: ${subject}`);
-              console.log(`I am going to respond in the following way:`);
-              console.log(`${evalRes.draftReply}\n`);
+              console.log(`Review here: http://localhost:3000/follow-ups\n`);
             }
           }
         }
       } catch (err) {
         console.error(`Error processing thread ${t.id}:`, err.message);
         // Continue with the next thread despite an error
+      } finally {
+        currentSyncStatus.processedThreads++;
       }
     }
 
@@ -199,6 +244,8 @@ const syncThreads = async () => {
     writeDB(db);
     
     console.log(`Sync complete: ${upsertedCount} threads upserted in ${duration}ms`);
+    currentSyncStatus.inProgress = false;
+    isSyncing = false;
   } catch (error) {
     const duration = Date.now() - startTime;
     const db = readDB();
@@ -211,6 +258,9 @@ const syncThreads = async () => {
     });
     writeDB(db);
     console.error('Heartbeat Sync Error:', error.message);
+    currentSyncStatus.inProgress = false;
+    currentSyncStatus.lastError = error.message;
+    isSyncing = false;
   }
 };
 
@@ -227,5 +277,6 @@ const initHeartbeat = () => {
 
 module.exports = {
   syncThreads,
-  initHeartbeat
+  initHeartbeat,
+  getSyncProgress
 };

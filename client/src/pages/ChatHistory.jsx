@@ -8,15 +8,16 @@ const ChatHistory = ({ onOpenChat }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.sub) {
-      fetchSessions();
+    const userId = user?.id || user?.sub;
+    if (userId) {
+      fetchSessions(userId);
     }
   }, [user]);
 
-  const fetchSessions = async () => {
+  const fetchSessions = async (userId) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/history?userId=${user.sub}`);
+      const res = await fetch(`http://localhost:5000/api/history?userId=${userId}`);
       const data = await res.json();
       setSessions(data);
     } catch(err) {

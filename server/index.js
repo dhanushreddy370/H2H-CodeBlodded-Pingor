@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { initHeartbeat, syncThreads } = require('./services/syncService');
+const { initHeartbeat, syncThreads, getSyncProgress } = require('./services/syncService');
 const { readDB } = require('./services/dbService');
+const { loadSavedTokens } = require('./config/gmail');
 // Load environment variables
 dotenv.config();
 
@@ -25,6 +26,7 @@ const filtersRoute = require('./routes/filters');
 const chatRoute = require('./routes/chat');
 const historyRoute = require('./routes/history');
 const threadsRoute = require('./routes/threads');
+const authRoute = require('./routes/auth');
 
 app.use('/api/tasks', tasksRoute);
 app.use('/api/followups', followupsRoute);
@@ -32,6 +34,7 @@ app.use('/api/filters', filtersRoute);
 app.use('/api/chat', chatRoute);
 app.use('/api/history', historyRoute);
 app.use('/api/threads', threadsRoute);
+app.use('/api/auth', authRoute);
 
 // API endpoint to fetch sync status and latest threads
 // API endpoint to fetch sync status and latest threads
@@ -58,14 +61,20 @@ app.get('/api/sync/status', async (req, res) => {
 
 app.post('/api/sync/manual', async (req, res) => {
   try {
-    await syncThreads();
-    const db = readDB();
-    const latestLog = db.syncLogs[db.syncLogs.length - 1];
-    res.json({ success: true, log: latestLog });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const userId = req.query.userId || req.body.userId;
+    await syncThreads(userId);
+    res.json({ success: true, message: 'Sync triggered successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
+
+app.get('/api/sync/progress', (req, res) => {
+  res.json(getSyncProgress());
+});
+
+// Load saved tokens if any
+loadSavedTokens();
 
 // Initialize heartbeat
 initHeartbeat();

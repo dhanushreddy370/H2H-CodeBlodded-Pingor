@@ -4,7 +4,9 @@
 
 - **Day 1:** Set up the basic structural foundations. Created the React frontend and Node/Express backend. Configured Google OAuth2 for Gmail API access.
 - **Day 2:** Created MongoDB data models (Thread, SyncLog, ActionItem). Implemented `node-cron` for an automated hourly heartbeat sync that fetches the latest threads and upserts them into the database.
-- **Day 3:** Integrated the local LLM (Ollama) into the sync pipeline. Created `aiService.js` to categorize threads automatically. Built an interactive CLI app (`terminalChat.js`) that handles OAuth authentication and fetches live emails. Transformed this basic LLM chat into an autonomous LangChain Agent using `createToolCallingAgent`. Built dynamic tools (`gmailTools.js`) giving Pingor the ability to autonomously search emails, read specific threads, and create email drafts directly in the user's Gmail. Additionally, implemented persistent OAuth token caching to streamline development!
+- **Day 3:** Integrated the local LLM (Ollama) into the sync pipeline. Created `aiService.js` to categorize threads automatically. Built an interactive CLI app (`terminalChat.js`) that handles OAuth authentication and fetches live emails. Transformed this basic LLM chat into an autonomous LangChain Agent using `createToolCallingAgent`. Built dynamic tools (`gmailTools.js`) giving Pingor the ability to autonomously search emails, read specific threads, and create email draft suggestions directly in the user's Gmail. Additionally, implemented persistent OAuth token caching to streamline development!
+- **Day 4:** Accelerated frontend development. Built the central Dashboard, Tasks, and Follow-up pages with advanced filtering/sorting. Implemented a "Context Injection" system using `/` and `@` triggers in the chat window. Developed the "Draft Approval" logic where the AI proposes a complex email body based on user prompts, which the user reviews and edits before sending.
+- **Day 5:** Achieved end-to-end integration. Connected the visual dashboard to the backend REST APIs, replacing mock data with real Gmail intelligence. Implemented premium UI enhancements including glassmorphism effects and high-fidelity animations. Created the **Master Bootstrap Script** (`start_pingor.ps1`) to automate the entire multi-terminal launch process. Pivoted from MongoDB to a fully **Local JSON Database** for enhanced privacy-first portability.
 
 ---
 
@@ -24,7 +26,7 @@ Pingor is a local-first Agentic Assistant that automates email management withou
 
 - **Frontend:** React.js, Lucide Icons, Vanilla CSS
 - **Backend:** Node.js, Express.js
-- **Database:** MongoDB
+- **Database:** Local JSON Storage (Privacy-focused, offline-first)
 - **AI Engine:** Ollama (Local LLM - Llama 3.2 / Mistral)
 - **Agent Framework:** LangChain (ReAct Tool Calling Architecture)
 - **APIs:** Gmail API (OAuth2)
