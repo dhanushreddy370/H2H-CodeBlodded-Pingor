@@ -20,6 +20,7 @@ const FloatingChat = ({ isOpen, onClose, chatId }) => {
   
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -170,13 +171,14 @@ const FloatingChat = ({ isOpen, onClose, chatId }) => {
     { label: "Urgent Emails", icon: <Sparkles size={14}/> }
   ];
 
+
   return (
     <div style={{ 
       position: 'fixed', 
       bottom: '24px', 
       right: '24px', 
-      width: '580px', 
-      height: isMinimized ? '70px' : '600px', 
+      width: '800px', 
+      height: isMinimized ? '70px' : '750px', 
       maxHeight: 'calc(100vh - 48px)',
       background: 'var(--bg-card)', 
       borderRadius: '24px', 
@@ -186,8 +188,22 @@ const FloatingChat = ({ isOpen, onClose, chatId }) => {
       zIndex: 1000, 
       border: '1px solid var(--border)',
       overflow: 'hidden',
-      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+      transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
     }}>
+      {/* Hidden file input */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        style={{ display: 'none' }} 
+        onChange={(e) => {
+          const file = e.target.files[0];
+          if (file) {
+            // Simplified: Add a chip to context to show it's "attached"
+            setContextChips([...contextChips, { id: Date.now(), label: file.name, type: 'file', icon: <Paperclip size={14}/> }]);
+          }
+        }}
+      />
+      {/* ... rest of existing header ... */}
       {/* Header */}
       <div style={{ 
         background: 'var(--bg-card)', 
@@ -320,7 +336,12 @@ const FloatingChat = ({ isOpen, onClose, chatId }) => {
           )}
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Paperclip size={18} className="icon-container" style={{ cursor: 'pointer', color: 'var(--text-muted)' }} />
+            <Paperclip 
+              size={18} 
+              className="icon-container" 
+              style={{ cursor: 'pointer', color: 'var(--text-muted)' }} 
+              onClick={() => fileInputRef.current?.click()}
+            />
             <input 
               ref={inputRef}
               type="text" 

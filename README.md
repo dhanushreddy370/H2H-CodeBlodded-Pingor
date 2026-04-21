@@ -6,43 +6,43 @@
 - **Day 2:** Created MongoDB data models (Thread, SyncLog, ActionItem). Implemented `node-cron` for an automated hourly heartbeat sync that fetches the latest threads and upserts them into the database.
 - **Day 3:** Integrated the local LLM (Ollama) into the sync pipeline. Created `aiService.js` to categorize threads automatically. Built an interactive CLI app (`terminalChat.js`) that handles OAuth authentication and fetches live emails. Transformed this basic LLM chat into an autonomous LangChain Agent using `createToolCallingAgent`. Built dynamic tools (`gmailTools.js`) giving Pingor the ability to autonomously search emails, read specific threads, and create email draft suggestions directly in the user's Gmail. Additionally, implemented persistent OAuth token caching to streamline development!
 - **Day 4:** Accelerated frontend development. Built the central Dashboard, Tasks, and Follow-up pages with advanced filtering/sorting. Implemented a "Context Injection" system using `/` and `@` triggers in the chat window. Developed the "Draft Approval" logic where the AI proposes a complex email body based on user prompts, which the user reviews and edits before sending.
-- **Day 5:** Achieved end-to-end integration. Connected the visual dashboard to the backend REST APIs, replacing mock data with real Gmail intelligence. Implemented premium UI enhancements including glassmorphism effects and high-fidelity animations. Created the **Master Bootstrap Script** (`start_pingor.ps1`) to automate the entire multi-terminal launch process. Pivoted from MongoDB to a fully **Local JSON Database** for enhanced privacy-first portability.
+- **Day 5:** Achieved production-grade scalability. Migrated the entire persistence layer to **MongoDB Atlas**, enabling persistent user profiles, global settings, and multi-user association. Implemented a 3/4-screen **Detail Modal** for deep task management with persistent comments and file attachments. Synchronized the platform with Gmail for real-time **Archive** and **Trash** actions, including a toast notification system for instant user feedback. Resized the Floating Chat to a premium 800x750 window with functional file attachment support.
 
 ---
 
 ## 1. Project Title & Tagline
 
-**Pingor** - Your Privacy-First Intelligent Email Sidekick.
+**Pingor** - Your Production-Grade Intelligent Communication Sidekick.
 
 ## 2. Problem Statement
 
-In the modern workplace, email overload is a productivity killer. Users spend hours sorting through low-priority messages and identifying critical action items. Most AI solutions for this problem compromise privacy by processing sensitive communications on public clouds.
+In the modern workplace, email overload is a productivity killer. Users spend hours sorting through low-priority messages and identifying critical action items. Scalable, persistent tracking and collaborative task management are essential for modern teams.
 
 ## 3. Proposed Solution
 
-Pingor is a local-first Agentic Assistant that automates email management without sacrificing privacy. By utilizing **Ollama (Llama 3.2/Mistral)** locally, Pingor categorizes threads, extracts action items, and handles low-priority replies entirely on your own machine.
+Pingor is a production-ready Agentic Assistant that automates email management and task tracking. By integrating **MongoDB Atlas** for persistence and **Ollama (Llama 3.2)** locally, Pingor categorizes threads, extracts action items, and handles communication entirely with a high-fidelity user experience.
 
 ## 4. Tech Stack
 
 - **Frontend:** React.js, Lucide Icons, Vanilla CSS
-- **Backend:** Node.js, Express.js
-- **Database:** Local JSON Storage (Privacy-focused, offline-first)
-- **AI Engine:** Ollama (Local LLM - Llama 3.2 / Mistral)
+- **Backend:** Node.js, Express.js, Mongoose
+- **Database:** MongoDB Atlas (Cloud-based, persistent, scalable)
+- **AI Engine:** Ollama (Local LLM - Llama 3.2 / Gemma)
 - **Agent Framework:** LangChain (ReAct Tool Calling Architecture)
 - **APIs:** Gmail API (OAuth2)
-- **Scheduling:** Node-Cron for hourly heartbeat sync
+- **Scheduling:** Node-Cron for synchronized heartbeat tracking
 
 ## 5. Features
 
-- **Hourly Heartbeat Sync:** Automatically polls Gmail every hour to fetch new threads.
-- **Local AI Tagging:** Uses local LLMs to categorize emails (Urgent, Work, Promotion, Spam) and extract tasks.
-- **AI Chat Interface:** Natural language interface to query your communications (e.g., "What are my deadlines for this week?").
-- **Auto-Reply System:** Automated 'Thank You' responses for low-priority/acknowledgment-only emails.
-- **Privacy-First:** All AI processing happens locally; no email content leaves your system for training or inference.
+- **MongoDB Persistence:** Full CRUD operations for tasks, threads, and chat history with cloud-backed reliability.
+- **Human-in-the-Loop:** Dedicated communication center for reviewing, editing, and approving AI drafts before they hit Gmail.
+- **Gmail Synchronization:** Native Archive and Trash actions from the Pingor UI that reflect instantly in your Gmail inbox.
+- **Premium Detail Modal:** A spacious 3/4 screen interface for deep-task editing, including multi-user assignment and comment threads.
+- **Intelligent Chat:** Resizable 800x750 AI chat window with "Context Injection" and functional file attachments.
 
 ## 6. Architecture & Flow
 
-`Gmail API` -> `Node-Cron (Heartbeat)` -> `Local AI (Ollama)` -> `MongoDB` -> `React Frontend`
+`Gmail API` -> `Node-Cron (Heartbeat)` -> `Local AI (Ollama)` -> `MongoDB Atlas` -> `React Frontend`
 
 1. **Poll:** Node server triggers a Gmail API fetch.
 2. **Analyze:** Content is sent to the local Ollama instance for tagging and extraction.

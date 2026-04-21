@@ -36,8 +36,15 @@ function App() {
     switch(activePage) {
       case 'Dashboard': return <Dashboard setActivePage={setActivePage} />;
       case 'Inbox': return <Inbox />;
-      case 'Tasks': return <Tasks setActivePage={setActivePage} />;
-      case 'Follow-ups': return <FollowUps setActivePage={setActivePage} />;
+      case 'Tasks': return <Tasks />;
+      case 'Follow-ups': return (
+        <FollowUps 
+          onOpenChat={() => {
+            setActiveChatId(null);
+            setIsChatOpen(true);
+          }} 
+        />
+      );
       case 'Chat History': return (
         <ChatHistory 
           onOpenChat={(id) => {
@@ -46,7 +53,7 @@ function App() {
           }} 
         />
       );
-      case 'Settings': return <Settings />;
+      case 'Settings': return <Settings darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)} />;
       default: return <Dashboard setActivePage={setActivePage} />;
     }
   };

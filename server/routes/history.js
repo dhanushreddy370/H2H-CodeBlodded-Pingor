@@ -1,35 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const { readDB, writeDB } = require('../services/dbService');
-const { v4: uuidv4 } = require('uuid');
+const ChatHistory = require('../models/ChatHistory');
 
 router.get('/', async (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ error: 'userId is required' });
 
-    const db = readDB();
-    const sessions = db.chatSessions.filter(s => s.userId === userId).sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    const sessions = await ChatHistory.find({ userId })
+      .sort({ updatedAt: -1 })
+      .select('title updatedAt updatedAt');
     
-    // Return only metadata
-    const metadata = sessions.map(s => ({
-      _id: s._id,
-      title: s.title,
-      updatedAt: s.updatedAt,
-      messageCount: s.messages ? s.messages.length : 0
-    }));
-
-    res.json(metadata);
+    res.json(sessions);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get a specific chat session with its messages
 router.get('/:id', async (req, res) => {
   try {
-    const db = readDB();
-    const session = db.chatSessions.find(s => s._id === req.params.id);
+    const session = await ChatHistory.findById(req.params.id);
     if (!session) return res.status(404).json({ error: 'Session not found' });
     res.json(session);
   } catch (error) {
@@ -37,56 +27,36 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create a new chat session
 router.post('/', async (req, res) => {
   try {
     const { userId, title, initialMessage } = req.body;
-    if (!userId) return res.status(400).json({ error: 'userId is required' });
-
-    const db = readDB();
-    const newSession = {
-      _id: uuidv4(),
+    const newSession = new ChatHistory({
       userId,
       title: title || 'New Conversation',
-      messages: initialMessage ? [initialMessage] : [],
-      updatedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString()
-    };
-    
-    db.chatSessions.push(newSession);
-    writeDB(db);
-
+      messages: initialMessage ? [initialMessage] : []
+    });
+    await newSession.save();
     res.status(201).json(newSession);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Add a message to an existing session
 router.post('/:id/messages', async (req, res) => {
   try {
-    const { role, content, actionType } = req.body;
-    if (!role || !content) return res.status(400).json({ error: 'role and content are required' });
+    const { role, content } = req.body;
+    const session = await ChatHistory.findById(req.params.id);
+    if (!session) return res.status(404).json({ error: 'Session not found' });
 
-    const db = readDB();
-    const sIndex = db.chatSessions.findIndex(s => s._id === req.params.id);
-    if (sIndex === -1) return res.status(404).json({ error: 'Session not found' });
-
-    db.chatSessions[sIndex].messages.push({
-      role,
-      content,
-      actionType,
-      timestamp: new Date().toISOString()
-    });
-    db.chatSessions[sIndex].updatedAt = new Date().toISOString();
+    session.messages.push({ role, content });
+    session.updatedAt = new Date();
     
-    // Auto-generate title based on first user message if title is still 'New Conversation'
-    if (db.chatSessions[sIndex].title === 'New Conversation' && role === 'user') {
-        db.chatSessions[sIndex].title = content.substring(0, 30) + (content.length > 30 ? '...' : '');
+    if (session.title === 'New Conversation' && role === 'user') {
+        session.title = content.substring(0, 30) + (content.length > 30 ? '...' : '');
     }
 
-    writeDB(db);
-    res.json(db.chatSessions[sIndex]);
+    await session.save();
+    res.json(session);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

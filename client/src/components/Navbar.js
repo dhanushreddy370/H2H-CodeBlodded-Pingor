@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Sun, Moon, Search, LogOut } from 'lucide-react';
+import { Bell, Sun, Moon, Search, LogOut, User as UserIcon } from 'lucide-react';
 import { GooeyInput } from './ui/GooeyInput';
 import { useAuth } from '../context/AuthContext';
+import ProfilePopup from './ProfilePopup';
 
 const Navbar = ({ activePage, darkMode, toggleDarkMode }) => {
   const { user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [scrollWidth, setScrollWidth] = useState(0);
   const [notifications, setNotifications] = useState([]);
 
@@ -86,16 +88,20 @@ const Navbar = ({ activePage, darkMode, toggleDarkMode }) => {
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '10px' }}>
-          <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{user?.name || 'User'}</span>
-          {user?.picture ? (
-            <img src={user.picture} alt="Profile" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
-          ) : (
-            <div className="avatar" style={{ background: 'var(--primary)', color: 'white' }}>{(user?.name || 'U').charAt(0).toUpperCase()}</div>
-          )}
-          <div onClick={logout} style={{ cursor: 'pointer', color: 'var(--text-muted)', marginLeft: '8px' }} title="Logout">
-            <LogOut size={18} />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '10px' }}>
+          <div 
+            onClick={() => setShowProfile(!showProfile)} 
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+          >
+            <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{user?.name || 'User'}</span>
+            {user?.picture ? (
+              <img src={user.picture} alt="Profile" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
+            ) : (
+              <div className="avatar" style={{ background: 'var(--primary)', color: 'white' }}>{(user?.name || 'U').charAt(0).toUpperCase()}</div>
+            )}
           </div>
+          
+          <ProfilePopup isOpen={showProfile} onClose={() => setShowProfile(false)} />
         </div>
       </div>
     </div>

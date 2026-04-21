@@ -1,14 +1,21 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const mongoose = require('mongoose');
 const { initHeartbeat, syncThreads, getSyncProgress } = require('./services/syncService');
-const { readDB } = require('./services/dbService');
 const { loadSavedTokens } = require('./config/gmail');
+const Thread = require('./models/Thread');
+const User = require('./models/User');
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB Atlas'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware
 app.use(cors());
@@ -27,6 +34,7 @@ const chatRoute = require('./routes/chat');
 const historyRoute = require('./routes/history');
 const threadsRoute = require('./routes/threads');
 const authRoute = require('./routes/auth');
+const usersRoute = require('./routes/users');
 
 app.use('/api/tasks', tasksRoute);
 app.use('/api/followups', followupsRoute);
@@ -35,23 +43,22 @@ app.use('/api/chat', chatRoute);
 app.use('/api/history', historyRoute);
 app.use('/api/threads', threadsRoute);
 app.use('/api/auth', authRoute);
+app.use('/api/users', usersRoute);
 
 // API endpoint to fetch sync status and latest threads
 // API endpoint to fetch sync status and latest threads
 app.get('/api/sync/status', async (req, res) => {
   try {
-    const db = readDB();
-    const sortedSyncs = [...db.syncLogs].sort((a, b) => new Date(b.executionTime) - new Date(a.executionTime));
-    const latestLog = sortedSyncs[0];
-    
-    const latestThreads = [...db.threads]
-      .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
-      .slice(0, 10);
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+
+    const latestThreads = await Thread.find({ userId })
+      .sort({ lastUpdated: -1 })
+      .limit(10);
       
+    // Since syncLogs logic is being refactored, we'll return a basic status for now
     res.json({
-      status: latestLog ? latestLog.status : 'No syncs yet',
-      lastSync: latestLog ? latestLog.executionTime : null,
-      latestLog,
+      status: 'Ready',
       threads: latestThreads
     });
   } catch (err) {
