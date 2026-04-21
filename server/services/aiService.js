@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434/api/generate';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'gemma:2b';
 
 /**
  * Classify a thread using local Ollama instance
@@ -146,7 +146,99 @@ User Prompt: "${userPrompt}"
 Respond ONLY with a valid JSON object representing the MongoDB query. Do not include any explanations or markdown.
 `;
 
+  try {
+    const response = await axios.post(OLLAMA_URL, {
+      model: OLLAMA_MODEL,
+      prompt: prompt,
+      stream: false,
+      format: 'json'
+    });
+
+    const responseText = response.data.response;
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    return jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(responseText);
+  } catch (err) {
+    console.error('Error generating filter query:', err.message);
+    return {};
+  }
 }
+
+/**
+ * Extract action items from an email thread
+ * @param {string} threadId 
+ * @param {string} subject 
+ * @param {string} snippet 
+ * @returns {Promise<Array>} List of action items
+ */
+async function extractActionItems(threadId, subject, snippet) {
+  const prompt = `
+Analyze the following email and extract specific, actionable tasks.
+Subject: ${subject}
+Snippet: ${snippet}
+
+Return a JSON array of objects, each with:
+- action: A concise description of the task
+- owner: Who is responsible (if known, else 'user')
+- deadline: 'none' or an ISO date if mentioned
+- source_email: The subject line of the email
+
+JSON format only. No extra text.
+`;
+
+  try {
+    const response = await axios.post(OLLAMA_URL, {
+      model: OLLAMA_MODEL,
+      prompt: prompt,
+      stream: false,
+      format: 'json'
+    });
+
+    const responseText = response.data.response;
+    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+    const actions = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(responseText);
+    return Array.isArray(actions) ? actions : [];
+  } catch (err) {
+    console.error('Error extracting action items:', err.message);
+    return [];
+  }
+}
+
+/**
+ * Evaluate if an FYI email needs a quick acknowledgement
+ * @param {string} subject 
+ * @param {string} snippet 
+ * @returns {Promise<Object>}
+ */
+async function evaluateAcknowledgement(subject, snippet) {
+  const prompt = `
+Is the following email just an informational update (FYI) that would benefit from a polite, professional acknowledgement?
+Subject: ${subject}
+Snippet: ${snippet}
+
+Respond with a JSON object:
+{
+  "isInformational": true/false,
+  "draftReply": "A one-sentence professional reply or null"
+}
+`;
+
+  try {
+    const response = await axios.post(OLLAMA_URL, {
+      model: OLLAMA_MODEL,
+      prompt: prompt,
+      stream: false,
+      format: 'json'
+    });
+
+    const responseText = response.data.response;
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    return jsonMatch ? JSON.parse(jsonMatch[0]) : { isInformational: false, draftReply: null };
+  } catch (err) {
+    console.error('Error evaluating acknowledgement:', err.message);
+    return { isInformational: false, draftReply: null };
+  }
+}
+
 /**
  * Generate a full chat response using local Ollama llama3.2
  * @param {Array} messages - Array of {role, content} objects
@@ -163,7 +255,7 @@ async function generateChatResponse(messages) {
     return response.data.message.content;
   } catch (error) {
     console.error('Error with generateChatResponse:', error.message);
-    return "I'm sorry, my local brain (Ollama) is currently unreachable. Please ensure it's running with llama3.2.";
+    return "I'm sorry, my local brain (Ollama) is currently unreachable. Please ensure it's running with gemma:2b.";
   }
 }
 
@@ -171,5 +263,7 @@ module.exports = {
   classifyThread,
   assignPriority,
   generateFilterQuery,
-  generateChatResponse
+  generateChatResponse,
+  extractActionItems,
+  evaluateAcknowledgement
 };

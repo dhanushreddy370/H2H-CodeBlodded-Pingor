@@ -20,22 +20,26 @@ const Dashboard = ({ setActivePage = () => {} }) => {
   useEffect(() => {
     const fetchData = async () => {
       // Return early if user is still loading
-      if (!user?.sub) return;
+      // Fetch data regardless to ensure dummy data shows
+      // if (!user?.sub) return;
 
       try {
-        const [tasksRes, followupsRes] = await Promise.all([
-          fetch(`http://localhost:5000/api/tasks?userId=${user.sub}`),
-          fetch(`http://localhost:5000/api/followups?userId=${user.sub}`)
+        const userId = user?.sub || 'test-user-id';
+        const [tasksRes, followupsRes, threadsRes] = await Promise.all([
+          fetch(`http://localhost:5000/api/tasks?userId=${userId}`),
+          fetch(`http://localhost:5000/api/followups?userId=${userId}`),
+          fetch(`http://localhost:5000/api/threads?userId=${userId}`)
         ]);
         
         const tasks = await tasksRes.json();
         const followups = await followupsRes.json();
+        const threads = await threadsRes.json();
         
         const urgentCount = [...tasks, ...followups].filter(i => i.priority >= 4).length;
 
         setData({
           stats: [
-            { label: 'Emails', value: '0', icon: <Mail size={18} />, color: '#2563eb' },
+            { label: 'Emails', value: threads.length || '0', icon: <Mail size={18} />, color: '#2563eb' },
             { label: 'Tasks', value: tasks.length || '0', icon: <CheckCircle size={18} />, color: '#166534' },
             { label: 'Followups', value: followups.length || '0', icon: <Clock size={18} />, color: '#b45309' },
             { label: 'Urgent', value: urgentCount, icon: <AlertTriangle size={18} />, color: '#b91c1c' }
@@ -59,17 +63,19 @@ const Dashboard = ({ setActivePage = () => {} }) => {
       const res = await fetch('http://localhost:5000/api/sync/manual', { method: 'POST' });
       if (res.ok) {
         // Re-run fetchData logic manually
-        const [tasksRes, followupsRes] = await Promise.all([
+        const [tasksRes, followupsRes, threadsRes] = await Promise.all([
           fetch(`http://localhost:5000/api/tasks?userId=${user?.sub}`),
-          fetch(`http://localhost:5000/api/followups?userId=${user?.sub}`)
+          fetch(`http://localhost:5000/api/followups?userId=${user?.sub}`),
+          fetch(`http://localhost:5000/api/threads?userId=${user?.sub}`)
         ]);
         const tasks = await tasksRes.json();
         const followups = await followupsRes.json();
+        const threads = await threadsRes.json();
         const urgentCount = [...tasks, ...followups].filter(i => i.priority >= 4).length;
 
         setData({
           stats: [
-            { label: 'Emails', value: '0', icon: <Mail size={18} />, color: '#2563eb' },
+            { label: 'Emails', value: threads.length || '0', icon: <Mail size={18} />, color: '#2563eb' },
             { label: 'Tasks', value: tasks.length || '0', icon: <CheckCircle size={18} />, color: '#166534' },
             { label: 'Followups', value: followups.length || '0', icon: <Clock size={18} />, color: '#b45309' },
             { label: 'Urgent', value: urgentCount, icon: <AlertTriangle size={18} />, color: '#b91c1c' }
@@ -96,7 +102,6 @@ const Dashboard = ({ setActivePage = () => {} }) => {
           loop
           autoplay
         ></dotlottie-player>
-        <p style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Syncing with Pingor Backend...</p>
       </div>
     );
   }

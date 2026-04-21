@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 const FloatingChat = ({ isOpen, onClose, chatId }) => {
   const { user } = useAuth();
+  const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([
     { id: 1, role: 'assistant', text: "Hello! I am Pingor, your AI communication assistant. I've analyzed your inbox and I'm ready to help. You can ask me to summarize threads, draft replies, or filter tasks using context." }
   ]);
@@ -175,43 +176,57 @@ const FloatingChat = ({ isOpen, onClose, chatId }) => {
       bottom: '24px', 
       right: '24px', 
       width: '580px', 
-      height: '750px', 
-      background: 'var(--bg-main)', 
+      height: isMinimized ? '70px' : '600px', 
+      maxHeight: 'calc(100vh - 48px)',
+      background: 'var(--bg-card)', 
       borderRadius: '24px', 
-      boxShadow: '0 20px 60px rgba(0,0,0,0.3)', 
+      boxShadow: '0 20px 60px rgba(0,0,0,0.5)', 
       display: 'flex', 
       flexDirection: 'column', 
       zIndex: 1000, 
       border: '1px solid var(--border)',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
     }}>
       {/* Header */}
       <div style={{ 
         background: 'var(--bg-card)', 
         color: 'var(--text-main)', 
-        padding: '20px 24px', 
-        borderBottom: '1px solid var(--border)',
+        padding: '12px 24px', 
+        borderBottom: isMinimized ? 'none' : '1px solid var(--border)',
         display: 'flex', 
         justifyContent: 'space-between', 
-        alignItems: 'center' 
-      }}>
+        alignItems: 'center',
+        cursor: 'pointer',
+        minHeight: '70px'
+      }} onClick={() => isMinimized && setIsMinimized(false)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div className="icon-container" style={{ background: 'var(--primary)', color: 'white', width: '36px', height: '36px' }}>
             <Bot size={20} />
           </div>
           <div>
             <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>Pingor Intelligence</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Llama 3.2 • Local Instance</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{isMinimized ? 'Minimized' : 'Gemma:2B • Local Instance'}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <div className="icon-container" style={{ cursor: 'pointer', color: 'var(--text-muted)' }}><Trash2 size={18} /></div>
-          <div className="icon-container" style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={onClose}><X size={20} /></div>
+          <div className="icon-container" 
+               style={{ cursor: 'pointer', color: 'var(--text-muted)' }} 
+               onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }}>
+            <Minimize2 size={18} style={{ transform: isMinimized ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
+          </div>
+          <div className="icon-container" 
+               style={{ cursor: 'pointer', color: 'var(--text-muted)' }} 
+               onClick={(e) => { e.stopPropagation(); onClose(); }}>
+            <X size={20} />
+          </div>
         </div>
       </div>
 
-      {/* Messages Area */}
-      <div className="chat-history" style={{ flex: 1, padding: '16px', overflowY: 'auto', background: 'var(--bg-main)' }}>
+      {!isMinimized && (
+        <>
+          {/* Messages Area */}
+          <div className="chat-history" style={{ flex: 1, padding: '16px', overflowY: 'auto', background: 'var(--bg-primary)' }}>
         {messages.map(msg => (
           <div key={msg.id} style={{ marginBottom: '16px', display: 'flex', gap: '12px', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row' }}>
             <div className="icon-container" style={{ background: msg.role === 'user' ? 'var(--primary)' : 'var(--primary-light)', color: msg.role === 'user' ? 'white' : 'var(--primary)', width: '32px', height: '32px' }}>
@@ -322,7 +337,9 @@ const FloatingChat = ({ isOpen, onClose, chatId }) => {
           </div>
         </div>
       </div>
-    </div>
+    </>
+  )}
+</div>
   );
 };
 

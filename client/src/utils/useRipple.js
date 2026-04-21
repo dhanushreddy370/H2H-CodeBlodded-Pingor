@@ -3,8 +3,8 @@ import { useEffect } from "react";
 export const useRipple = () => {
   useEffect(() => {
     const handleClick = (e) => {
-      const target = e.target.closest(".button, .btn, .nav-item, .fab, .card.clickable");
-      if (!target) return;
+      const target = e.target.closest(".button, .btn, .fab, .card.clickable");
+      if (!target || target.closest(".sidebar")) return;
 
       const ripple = document.createElement("span");
       ripple.classList.add("ripple");

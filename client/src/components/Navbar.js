@@ -47,9 +47,11 @@ const Navbar = ({ activePage, darkMode, toggleDarkMode }) => {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: '700', minWidth: '140px' }}>{activePage}</h2>
-        <div style={{ marginLeft: '20px', width: '100%', maxWidth: '400px' }}>
-          <GooeyInput placeholder="Search everything..." />
-        </div>
+        {(activePage === 'Inbox' || activePage === 'Tasks') && (
+          <div style={{ marginLeft: '20px', width: '100%', maxWidth: '400px' }}>
+            <GooeyInput placeholder="Search" />
+          </div>
+        )}
       </div>
       
       <div className="navbar-user">
@@ -68,11 +70,9 @@ const Navbar = ({ activePage, darkMode, toggleDarkMode }) => {
           </div>
           
           {showNotifications && (
-            <div style={{
+            <div className="dropdown-menu" style={{
               position: 'absolute', top: '50px', right: '0', width: '320px',
-              backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-hover)', zIndex: 100,
-              padding: '16px 0', overflow: 'hidden'
+              zIndex: 100, padding: '16px 0'
             }}>
               <div style={{ padding: '0 20px 12px', fontWeight: '700', borderBottom: '1px solid var(--border)', fontSize: '0.9rem' }}>Recent Actions Items</div>
               {notifications.length > 0 ? notifications.map((n, i) => (

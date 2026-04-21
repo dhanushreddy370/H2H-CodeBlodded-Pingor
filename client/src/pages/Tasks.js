@@ -11,10 +11,8 @@ const Tasks = ({ setActivePage }) => {
   const [customFilters, setCustomFilters] = useState([]);
   const [customPrompt, setCustomPrompt] = useState('');
   useEffect(() => {
-    if (user?.sub) {
-      fetchTasks();
-      fetchFilters();
-    }
+    fetchTasks();
+    fetchFilters();
   }, [user, statusFilter, prioritySort]);
 
   const fetchFilters = async () => {
@@ -29,7 +27,8 @@ const Tasks = ({ setActivePage }) => {
 
   const fetchTasks = async () => {
     setLoading(true);
-    let url = `http://localhost:5000/api/tasks?userId=${user.sub}&`;
+    const userId = user?.sub || 'test-user-id';
+    let url = `http://localhost:5000/api/tasks?userId=${userId}&`;
     if (statusFilter) url += `status=${statusFilter}&`;
     if (prioritySort) url += `priority=${prioritySort}&`;
     

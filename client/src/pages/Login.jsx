@@ -12,6 +12,8 @@ const Login = () => {
   const [jobRole, setJobRole] = useState('');
   const [company, setCompany] = useState('');
   const [isDevMode, setIsDevMode] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
+  const [customClientId, setCustomClientId] = useState(localStorage.getItem('pingor_client_id') || '');
   const [setupStep, setSetupStep] = useState('auth'); // 'auth' or 'setup'
   const [tempUser, setTempUser] = useState(null);
   const [authMode, setAuthMode] = useState('register'); // 'register' or 'login'
@@ -55,6 +57,13 @@ const Login = () => {
     e.preventDefault();
     if (!jobRole || !company) return;
     login({ ...tempUser, jobRole, company });
+  };
+
+  const saveConfig = (e) => {
+    e.preventDefault();
+    localStorage.setItem('pingor_client_id', customClientId);
+    setShowConfig(false);
+    window.location.reload(); // Reload to apply new client ID to GoogleOAuthProvider
   };
 
   if (setupStep === 'setup') {
@@ -157,8 +166,10 @@ const Login = () => {
                   theme="outline"
                 />
               </div>
-              <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '20px', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setIsDevMode(true)}>
-                Are you a developer? Local test login
+              <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '20px' }}>
+                <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setIsDevMode(true)}>Local test login</span>
+                <span style={{ margin: '0 10px' }}>|</span>
+                <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setShowConfig(true)}>Configure OAuth ID</span>
               </p>
             </div>
           ) : (
@@ -222,6 +233,30 @@ const Login = () => {
             </div>
           )}
 
+          {showConfig && (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
+              <div className="card" style={{ maxWidth: '500px', width: '90%', padding: '32px' }}>
+                <h3 style={{ marginBottom: '16px' }}>Configure Google OAuth</h3>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '24px' }}>
+                  If you are seeing "invalid_client", paste your Google Client ID here. Make sure it has <b>http://localhost:3000</b> in its authorized origins.
+                </p>
+                <form onSubmit={saveConfig}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px' }}>G-Cloud Client ID</label>
+                  <input 
+                    type="text" 
+                    value={customClientId}
+                    onChange={(e) => setCustomClientId(e.target.value)}
+                    placeholder="xxxx-xxxx.apps.googleusercontent.com"
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '24px', background: 'var(--bg-main)', color: 'var(--text-main)' }}
+                  />
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button type="submit" className="button" style={{ flex: 1, justifyContent: 'center' }}>Save & Reload</button>
+                    <button type="button" onClick={() => setShowConfig(false)} className="button" style={{ flex: 1, justifyContent: 'center', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-main)' }}>Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

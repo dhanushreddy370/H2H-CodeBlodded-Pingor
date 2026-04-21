@@ -17,9 +17,59 @@ const syncThreads = async () => {
   try {
     // If there's no auth credential, we skip or error out
     if (!oauth2Client.credentials || Object.keys(oauth2Client.credentials).length === 0) {
-      // NOTE: For a real persistent service, you may want to load tokens from DB or env here.
-      // This assumes oauth2Client has been authenticated somehow in this process.
-      throw new Error('OAuth2 credentials are not set. A user must authenticate first.');
+      console.warn('⚠️ OAuth2 credentials missing. Running in DEV/OFFLINE mode with local database.');
+      // Process existing threads in DB to demonstrate AI agents
+      const db = readDB();
+      const threads = db.threads;
+      let processedCount = 0;
+      
+      for (const t of threads) {
+        if (!t.aiProcessed) {
+          try {
+            console.log(`[DEV MODE] Processing local thread: ${t.subject}`);
+            const categoryTag = await classifyThread(t.subject, t.snippet);
+            const priority = await assignPriority(t.subject, t.snippet);
+            
+            const idx = db.threads.findIndex(th => th._id === t._id);
+            db.threads[idx] = { 
+              ...db.threads[idx], 
+              categoryTag, 
+              priority, 
+              type: categoryTag,
+              aiProcessed: true,
+              lastUpdated: new Date().toISOString() 
+            };
+
+            // Specialized action item extraction
+            if (categoryTag === 'action-required') {
+              const actions = await extractActionItems(t._id, t.subject, t.snippet);
+              for (const a of actions) {
+                const actionData = {
+                  _id: uuidv4(),
+                  action: a.action,
+                  threadId: t._id,
+                  owner: a.owner || 'user',
+                  deadline: a.deadline !== 'none' ? a.deadline : null,
+                  status: 'pending',
+                  priority,
+                  sender: t.sender,
+                  type: categoryTag,
+                  createdAt: new Date().toISOString(),
+                  userId: t.userId || 'test-user-id'
+                };
+                db.actionItems.push(actionData);
+              }
+            }
+            processedCount++;
+          } catch (aiErr) {
+            console.error(`AI failure for local thread ${t._id}:`, aiErr.message);
+          }
+        }
+      }
+      
+      writeDB(db);
+      console.log(`[DEV MODE] Sync finish. Processed ${processedCount} threads with AI.`);
+      return;
     }
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });

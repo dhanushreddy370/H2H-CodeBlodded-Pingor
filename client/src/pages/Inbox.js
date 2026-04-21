@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Bot, CheckSquare, Filter, Archive, Trash2, Reply, Forward, Inbox as InboxIcon } from 'lucide-react';
+import { Bot, CheckSquare, Filter, Archive, Trash2, Reply, Forward, Inbox as InboxIcon, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Inbox = () => {
   const { user } = useAuth();
   const [selectedThreadId, setSelectedThreadId] = useState(null);
   const [threads, setThreads] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
 
   useEffect(() => {
-    if (!user?.sub) return;
-
     const fetchThreads = async () => {
+      setLoading(true);
+      const userId = user?.sub || 'test-user-id';
       try {
-        const res = await fetch(`http://localhost:5000/api/followups?userId=${user.sub}`);
+        const res = await fetch(`http://localhost:5000/api/threads?userId=${userId}`);
         const data = await res.json();
         setThreads(Array.isArray(data) ? data : []);
         if (Array.isArray(data) && data.length > 0) setSelectedThreadId(data[0]._id);
@@ -49,13 +50,37 @@ const Inbox = () => {
 
       <div className="inbox-layout">
         <div className="inbox-sidebar card" style={{ padding: 0 }}>
+          <div style={{ padding: '16px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ position: 'relative' }}>
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input 
+                type="text" 
+                placeholder="Search" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  padding: '10px 12px 10px 36px', 
+                  borderRadius: 'var(--radius-md)', 
+                  border: '1px solid var(--border)', 
+                  background: 'var(--bg-primary)', 
+                  color: 'var(--text-main)', 
+                  fontSize: '0.9rem',
+                  outline: 'none'
+                }}
+              />
+            </div>
+          </div>
           {loading ? (
             <div style={{ padding: '20px' }}>
               {[1,2,3,4,5].map(i => <div key={i} className="skeleton" style={{ height: '80px', marginBottom: '12px', borderRadius: '8px' }}></div>)}
             </div>
           ) : (
             <div className="threads-list">
-              {threads.map(thread => (
+              {threads.filter(t => 
+                t.subject.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                t.sender.toLowerCase().includes(searchTerm.toLowerCase())
+              ).map(thread => (
                 <div 
                   key={thread._id} 
                   className={`email-item ${selectedThreadId === thread._id ? 'selected' : ''}`}

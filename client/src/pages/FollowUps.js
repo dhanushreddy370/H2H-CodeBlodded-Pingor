@@ -11,10 +11,8 @@ const FollowUps = ({ setActivePage }) => {
   const [customFilters, setCustomFilters] = useState([]);
   const [customPrompt, setCustomPrompt] = useState('');
   useEffect(() => {
-    if (user?.sub) {
-      fetchThreads();
-      fetchFilters();
-    }
+    fetchThreads();
+    fetchFilters();
   }, [user, statusFilter, prioritySort]);
 
   const fetchFilters = async () => {
@@ -29,7 +27,8 @@ const FollowUps = ({ setActivePage }) => {
 
   const fetchThreads = async () => {
     setLoading(true);
-    let url = `http://localhost:5000/api/followups?userId=${user.sub}&`;
+    const userId = user?.sub || 'test-user-id';
+    let url = `http://localhost:5000/api/followups?userId=${userId}&`;
     if (statusFilter) url += `status=${statusFilter}&`;
     if (prioritySort) url += `priority=${prioritySort}&`;
     

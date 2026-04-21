@@ -24,12 +24,14 @@ const followupsRoute = require('./routes/followups');
 const filtersRoute = require('./routes/filters');
 const chatRoute = require('./routes/chat');
 const historyRoute = require('./routes/history');
+const threadsRoute = require('./routes/threads');
 
 app.use('/api/tasks', tasksRoute);
 app.use('/api/followups', followupsRoute);
 app.use('/api/filters', filtersRoute);
 app.use('/api/chat', chatRoute);
 app.use('/api/history', historyRoute);
+app.use('/api/threads', threadsRoute);
 
 // API endpoint to fetch sync status and latest threads
 // API endpoint to fetch sync status and latest threads

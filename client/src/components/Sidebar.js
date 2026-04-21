@@ -22,7 +22,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
         {isOpen && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px', whiteSpace: 'nowrap' }}>
             <Bot size={24} color="var(--primary)" />
-            <span>Pingor AI</span>
+            <span>Pingor</span>
           </div>
         )}
       </div>

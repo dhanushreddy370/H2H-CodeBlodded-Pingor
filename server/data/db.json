@@ -1,22 +1,464 @@
 {
-  "actionItems": [],
-  "threads": [],
+  "actionItems": [
+    {
+      "_id": "task-1",
+      "threadId": "thread-1",
+      "action": "Follow up on: Project X Final Approval",
+      "status": "pending",
+      "priority": 5,
+      "deadline": "2026-04-22T10:00:00.000Z",
+      "createdAt": "2026-04-21T08:00:00.000Z",
+      "sender": "alice.smith@example.com",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-2",
+      "threadId": "thread-2",
+      "action": "Complete Weekly Sync Notes",
+      "status": "pending",
+      "priority": 3,
+      "deadline": "2026-04-23T14:00:00.000Z",
+      "createdAt": "2026-04-21T08:05:00.000Z",
+      "sender": "bob.jones@work.com",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-3",
+      "threadId": "thread-3",
+      "action": "Review 2026 Budget Draft",
+      "status": "pending",
+      "priority": 4,
+      "deadline": "2026-04-24T09:30:00.000Z",
+      "createdAt": "2026-04-21T08:10:00.000Z",
+      "sender": "finance@corp.com",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-4",
+      "threadId": "thread-4",
+      "action": "Feedback on new UI designs",
+      "status": "pending",
+      "priority": 2,
+      "deadline": "2026-04-25T17:00:00.000Z",
+      "createdAt": "2026-04-21T08:15:00.000Z",
+      "sender": "design@creative.it",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-5",
+      "threadId": "thread-5",
+      "action": "Investigate Security Alert",
+      "status": "pending",
+      "priority": 5,
+      "deadline": "2026-04-22T08:00:00.000Z",
+      "createdAt": "2026-04-21T08:20:00.000Z",
+      "sender": "security-alert@auth.tech",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-6",
+      "threadId": "thread-6",
+      "action": "Prep for Client Presentation",
+      "status": "pending",
+      "priority": 4,
+      "deadline": "2026-04-26T11:00:00.000Z",
+      "createdAt": "2026-04-21T08:25:00.000Z",
+      "sender": "sales@customer.com",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-7",
+      "threadId": "thread-7",
+      "action": "Check Server Maintenance status",
+      "status": "done",
+      "priority": 1,
+      "deadline": "2026-04-21T10:00:00.000Z",
+      "createdAt": "2026-04-21T08:30:00.000Z",
+      "sender": "it-support@sysadmin.net",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-8",
+      "threadId": "thread-8",
+      "action": "Sign Quarterly Review documents",
+      "status": "pending",
+      "priority": 3,
+      "deadline": "2026-04-28T16:00:00.000Z",
+      "createdAt": "2026-04-21T08:35:00.000Z",
+      "sender": "hr@pingor-inc.com",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-9",
+      "threadId": "thread-9",
+      "action": "Response to Beta Testing feedback",
+      "status": "pending",
+      "priority": 2,
+      "deadline": "2026-04-29T12:00:00.000Z",
+      "createdAt": "2026-04-21T08:40:00.000Z",
+      "sender": "dev-lead@pingor.ai",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-10",
+      "threadId": "thread-10",
+      "action": "Organize Coffee Catchup",
+      "status": "done",
+      "priority": 1,
+      "deadline": "2026-04-21T09:00:00.000Z",
+      "createdAt": "2026-04-21T08:45:00.000Z",
+      "sender": "charlie@friend.org",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-11",
+      "threadId": "thread-11",
+      "action": "Finalize Marketing Strategy",
+      "status": "pending",
+      "priority": 4,
+      "deadline": "2026-04-30T10:00:00.000Z",
+      "createdAt": "2026-04-21T08:50:00.000Z",
+      "sender": "marketing@growth.co",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-12",
+      "threadId": "thread-12",
+      "action": "Renew Domain Subscriptions",
+      "status": "pending",
+      "priority": 5,
+      "deadline": "2026-04-22T23:59:00.000Z",
+      "createdAt": "2026-04-21T08:55:00.000Z",
+      "sender": "admin@registrar.com",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-13",
+      "threadId": "thread-13",
+      "action": "Review API Documentation",
+      "status": "pending",
+      "priority": 3,
+      "deadline": "2026-05-01T15:00:00.000Z",
+      "createdAt": "2026-04-21T09:00:00.000Z",
+      "sender": "api-docs@swagg.io",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-14",
+      "threadId": "thread-14",
+      "action": "Approve Expense Reports",
+      "status": "done",
+      "priority": 2,
+      "deadline": "2026-04-21T18:00:00.000Z",
+      "createdAt": "2026-04-21T09:05:00.000Z",
+      "sender": "billing@office.it",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "task-15",
+      "threadId": "thread-15",
+      "action": "Update Team Roadmap",
+      "status": "pending",
+      "priority": 4,
+      "deadline": "2026-05-05T09:00:00.000Z",
+      "createdAt": "2026-04-21T09:10:00.000Z",
+      "sender": "director@company.com",
+      "userId": "test-user-id"
+    }
+  ],
+  "threads": [
+    {
+      "_id": "thread-1",
+      "subject": "Project X - Final Approval Needed",
+      "sender": "alice.smith@example.com",
+      "snippet": "Hey team, the Project X milestones are complete. Please review for final launch approval.",
+      "lastUpdated": "2026-04-21T11:00:00.000Z",
+      "priority": 5,
+      "status": "pending",
+      "category": "action-required",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-2",
+      "subject": "Weekly Sync Meeting Notes",
+      "sender": "bob.jones@work.com",
+      "snippet": "Notes from today's sync. Action items assigned to everyone for EOW.",
+      "lastUpdated": "2026-04-21T10:30:00.000Z",
+      "priority": 3,
+      "status": "pending",
+      "category": "FYI/informational",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-3",
+      "subject": "Important: Budget Review 2026",
+      "sender": "finance@corp.com",
+      "snippet": "Revised budget for Q1 2026 is attached. We need your feedback by Friday.",
+      "lastUpdated": "2026-04-21T09:45:00.000Z",
+      "priority": 4,
+      "status": "pending",
+      "category": "action-required",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-4",
+      "subject": "Feedback on new UI designs",
+      "sender": "design@creative.it",
+      "snippet": "New Figma mocks are ready. Specifically check the mobile dashboard layout.",
+      "lastUpdated": "2026-04-20T17:00:00.000Z",
+      "priority": 2,
+      "status": "archived",
+      "category": "FYI/informational",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-5",
+      "subject": "Security Alert: Unusual login attempt",
+      "sender": "security-alert@auth.tech",
+      "snippet": "We detected a login from a new device in Tokyo. If this wasn't you, reset your password.",
+      "lastUpdated": "2026-04-20T15:20:00.000Z",
+      "priority": 5,
+      "status": "pending",
+      "category": "urgent",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-6",
+      "subject": "Client Presentation - Slide Deck Draft",
+      "sender": "sales@customer.com",
+      "snippet": "Drafting the deck for Thursday. Can you verify the pricing slide?",
+      "lastUpdated": "2026-04-20T14:15:00.000Z",
+      "priority": 4,
+      "status": "pending",
+      "category": "action-required",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-7",
+      "subject": "Server Maintenance Notification",
+      "sender": "it-support@sysadmin.net",
+      "snippet": "Servers will be down for 2 hours tonight starting at 11 PM UTC.",
+      "lastUpdated": "2026-04-20T08:00:00.000Z",
+      "priority": 1,
+      "status": "archived",
+      "category": "FYI/informational",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-8",
+      "subject": "Quarterly Performance Review",
+      "sender": "hr@pingor-inc.com",
+      "snippet": "Your Q3 review is scheduled for tomorrow at 2 PM. Please prepare your self-assessment.",
+      "lastUpdated": "2026-04-19T16:40:00.000Z",
+      "priority": 3,
+      "status": "pending",
+      "category": "action-required",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-9",
+      "subject": "Pingor - Beta Testing Feedback",
+      "sender": "dev-lead@pingor.ai",
+      "snippet": "Beta users are reporting issues with the chat popup height. Let's discuss fixes.",
+      "lastUpdated": "2026-04-19T13:20:00.000Z",
+      "priority": 2,
+      "status": "archived",
+      "category": "FYI/informational",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-10",
+      "subject": "Coffee catchup next Tuesday?",
+      "sender": "charlie@friend.org",
+      "snippet": "Been a while! Let's grab coffee and talk about the new office.",
+      "lastUpdated": "2026-04-19T10:10:00.000Z",
+      "priority": 1,
+      "status": "archived",
+      "category": "FYI/informational",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-11",
+      "subject": "Marketing Strategy Q4",
+      "sender": "marketing@growth.co",
+      "snippet": "Draft strategy is in the doc. We are pivoting to more video content.",
+      "lastUpdated": "2026-04-18T16:00:00.000Z",
+      "priority": 4,
+      "status": "pending",
+      "category": "action-required",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-12",
+      "subject": "Domain Renewal Notice",
+      "sender": "admin@registrar.com",
+      "snippet": "pingor.app is expiring in 48 hours. Please update your payment method.",
+      "lastUpdated": "2026-04-18T14:00:00.000Z",
+      "priority": 5,
+      "status": "pending",
+      "category": "urgent",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-13",
+      "subject": "API Documentation Update",
+      "sender": "api-docs@swagg.io",
+      "snippet": "The new v2 endpoints are now documented. Check the auth section.",
+      "lastUpdated": "2026-04-18T11:00:00.000Z",
+      "priority": 3,
+      "status": "pending",
+      "category": "FYI/informational",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-14",
+      "subject": "Expense Report Approval",
+      "sender": "billing@office.it",
+      "snippet": "Three expense reports are waiting for your signature. Deadline is EOD.",
+      "lastUpdated": "2026-04-18T09:00:00.000Z",
+      "priority": 2,
+      "status": "pending",
+      "category": "action-required",
+      "userId": "test-user-id"
+    },
+    {
+      "_id": "thread-15",
+      "subject": "Team Roadmap 2026",
+      "sender": "director@company.com",
+      "snippet": "Sharing the proposed roadmap for next year. Let's refine in tomorrow's call.",
+      "lastUpdated": "2026-04-17T18:00:00.000Z",
+      "priority": 4,
+      "status": "pending",
+      "category": "FYI/informational",
+      "userId": "test-user-id"
+    }
+  ],
   "chatSessions": [],
   "syncLogs": [
     {
-      "_id": "be728b11-ec55-420c-a402-027e2270603c",
+      "_id": "a229eee7-7df5-4570-a066-0b6dea30e159",
       "status": "failed",
       "durationMs": 0,
       "error": "OAuth2 credentials are not set. A user must authenticate first.",
-      "executionTime": "2026-04-20T12:30:00.208Z"
-    },
-    {
-      "_id": "629d3e5a-2400-41b4-be30-aca42a8db381",
-      "status": "failed",
-      "durationMs": 1,
-      "error": "OAuth2 credentials are not set. A user must authenticate first.",
-      "executionTime": "2026-04-20T12:34:30.319Z"
+      "executionTime": "2026-04-21T08:37:41.737Z"
     }
   ],
-  "filters": []
+  "filters": [
+    {
+      "_id": "ccd48b53-b12a-4ace-9a88-5b3b22fe28d0",
+      "name": "task 1",
+      "queryPrompt": "task 1",
+      "mongoQuery": {
+        "status": "open",
+        "priority": 1,
+        "type": "thread",
+        "sender": "Alice",
+        "subject": "task 1"
+      },
+      "createdAt": "2026-04-21T09:22:49.004Z"
+    },
+    {
+      "_id": "7a78b0cf-3768-4a4e-adf8-f05b74e378ce",
+      "name": "api",
+      "queryPrompt": "api",
+      "mongoQuery": {
+        "status": {
+          "$eq": "open"
+        },
+        "priority": {
+          "$gte": 4
+        },
+        "sender": {
+          "$regex": "Alice",
+          "$options": "i"
+        },
+        "subject": {
+          "$regex": "Project X audit",
+          "$options": "i"
+        }
+      },
+      "createdAt": "2026-04-21T09:23:28.235Z"
+    },
+    {
+      "_id": "021484d0-9e42-4fb4-ab09-ebd31a847732",
+      "name": "task 1",
+      "queryPrompt": "task 1",
+      "mongoQuery": {
+        "status": "open",
+        "priority": 1,
+        "type": "thread",
+        "sender": "Alice",
+        "subject": "task 1"
+      },
+      "createdAt": "2026-04-21T09:23:49.313Z"
+    },
+    {
+      "_id": "cbf24ca7-aa5c-4948-9bae-01c97bbfeb3e",
+      "name": "api",
+      "queryPrompt": "api",
+      "mongoQuery": {
+        "status": {
+          "$eq": "open"
+        },
+        "priority": {
+          "$gte": 4
+        },
+        "sender": {
+          "$regex": "Alice",
+          "$options": "i"
+        },
+        "subject": {
+          "$regex": "Project X audit",
+          "$options": "i"
+        }
+      },
+      "createdAt": "2026-04-21T09:24:28.050Z"
+    },
+    {
+      "_id": "af5a6ecc-7f20-4dde-8588-8c07c2aa0aff",
+      "name": "task 1",
+      "queryPrompt": "task 1",
+      "mongoQuery": {
+        "status": {
+          "$eq": "open"
+        },
+        "priority": {
+          "$gte": 1
+        },
+        "type": "task",
+        "sender": {
+          "$regex": "task 1",
+          "$options": "i"
+        },
+        "subject": {
+          "$regex": "task 1",
+          "$options": "i"
+        }
+      },
+      "createdAt": "2026-04-21T09:25:11.329Z"
+    },
+    {
+      "_id": "45367cff-dfc1-4b26-9250-0dd791c82c01",
+      "name": "api",
+      "queryPrompt": "api",
+      "mongoQuery": {
+        "status": {
+          "$eq": "open"
+        },
+        "priority": {
+          "$gt": 3
+        },
+        "type": "thread",
+        "sender": {
+          "$regex": "Alice",
+          "$options": "i"
+        },
+        "subject": {
+          "$regex": "Project X audit",
+          "$options": "i"
+        }
+      },
+      "createdAt": "2026-04-21T09:25:47.608Z"
+    }
+  ]
 }
