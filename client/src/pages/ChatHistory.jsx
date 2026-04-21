@@ -35,8 +35,7 @@ const ChatHistory = ({ onOpenChat }) => {
   return (
     <div className="tasks-page" style={{ display: 'flex', gap: '24px', height: '100%' }}>
       <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h1 className="page-title" style={{ margin: 0 }}>Chat History</h1>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
           <button className="button" onClick={onOpenChat}>
             <Plus size={18} /> New Chat
           </button>

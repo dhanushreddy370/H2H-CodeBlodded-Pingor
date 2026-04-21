@@ -10,6 +10,7 @@ import ChatHistory from './pages/ChatHistory';
 import FloatingChat from './components/FloatingChat';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import LoadingScreen from './components/LoadingScreen';
 import { useAuth } from './context/AuthContext';
 import { Bot, MessageSquare } from 'lucide-react';
 import { useRipple } from './utils/useRipple';
@@ -21,6 +22,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeChatId, setActiveChatId] = useState(null);
+  const [initialChatContext, setInitialChatContext] = useState(null);
   
   useRipple();
 
@@ -34,13 +36,17 @@ function App() {
 
   const renderContent = () => {
     switch(activePage) {
-      case 'Dashboard': return <Dashboard setActivePage={setActivePage} />;
+      case 'Dashboard': return <Dashboard setActivePage={setActivePage} onOpenChat={(context) => {
+        setInitialChatContext(context);
+        setIsChatOpen(true);
+      }} />;
       case 'Inbox': return <Inbox />;
       case 'Tasks': return <Tasks />;
       case 'Follow-ups': return (
         <FollowUps 
-          onOpenChat={() => {
+          onOpenChat={(context) => {
             setActiveChatId(null);
+            setInitialChatContext(context);
             setIsChatOpen(true);
           }} 
         />
@@ -59,7 +65,7 @@ function App() {
   };
 
   if (loading) {
-    return <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center' }}>Loading...</div>;
+    return <LoadingScreen />;
   }
 
   if (!user) {
@@ -96,8 +102,12 @@ function App() {
         
         <FloatingChat 
           isOpen={isChatOpen} 
-          onClose={() => setIsChatOpen(false)} 
+          onClose={() => {
+            setIsChatOpen(false);
+            setInitialChatContext(null);
+          }} 
           chatId={activeChatId}
+          initialContext={initialChatContext}
         />
       </div>
     </div>

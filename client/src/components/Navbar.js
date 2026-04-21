@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Sun, Moon, Search, LogOut, User as UserIcon } from 'lucide-react';
-import { GooeyInput } from './ui/GooeyInput';
+import { Bell, Sun, Moon, LogOut, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ProfilePopup from './ProfilePopup';
 
@@ -42,25 +41,16 @@ const Navbar = ({ activePage, darkMode, toggleDarkMode }) => {
   }, []);
 
   return (
-    <div className="navbar">
+    <div className="navbar glass">
       <div className="scroll-progress-container">
         <div className="scroll-progress-bar" style={{ width: `${scrollWidth}%` }}></div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: '700', minWidth: '140px' }}>{activePage}</h2>
-        {(activePage === 'Inbox' || activePage === 'Tasks') && (
-          <div style={{ marginLeft: '20px', width: '100%', maxWidth: '400px' }}>
-            <GooeyInput placeholder="Search" />
-          </div>
-        )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1, paddingLeft: '8px' }}>
+        <h2 style={{ fontSize: '1.6rem', fontWeight: '900', letterSpacing: '-0.02em', minWidth: '200px', transition: 'all 0.3s' }}>{activePage}</h2>
       </div>
       
       <div className="navbar-user">
-        <div className="icon-container" onClick={toggleDarkMode} style={{ cursor: 'pointer', color: 'var(--text-muted)' }}>
-          {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-        </div>
-        
         <div style={{ position: 'relative' }}>
           <div className="icon-container" onClick={() => setShowNotifications(!showNotifications)}>
             <Bell size={20} color="var(--text-muted)" />

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Search } from 'lucide-react';
 
 export const GooeyInput = ({ placeholder, value, onChange, className = "" }) => {
   return (
@@ -19,6 +20,16 @@ export const GooeyInput = ({ placeholder, value, onChange, className = "" }) => 
       </svg>
       <div className="input-blob-wrapper">
         <div className="blob"></div>
+        <Search 
+          size={20} 
+          style={{ 
+            position: 'absolute', 
+            left: '24px', 
+            color: 'var(--text-muted)', 
+            zIndex: 2,
+            transition: 'color 0.3s'
+          }} 
+        />
         <input
           type="text"
           placeholder={placeholder}

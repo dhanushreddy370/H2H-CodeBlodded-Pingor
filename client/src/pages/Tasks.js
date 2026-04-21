@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, Filter, Clock, CheckCircle, ChevronRight, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import DetailModal from '../components/DetailModal';
+import { GooeyInput } from '../components/ui/GooeyInput';
+import CustomSelect from '../components/ui/CustomSelect';
 
 const Tasks = () => {
   const { user } = useAuth();
@@ -11,9 +13,20 @@ const Tasks = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
   const [prioritySort, setPrioritySort] = useState('');
+  const [customFilters, setCustomFilters] = useState([]);
+  const [customPrompt, setCustomPrompt] = useState('');
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('filter') === 'urgent') {
+      setPrioritySort('desc');
+    }
+    fetchTasks();
+  }, [user, statusFilter, prioritySort]);
 
   const fetchTasks = useCallback(async () => {
     setLoading(true);
+    const params = new URLSearchParams(window.location.search);
+    const isUrgentFilter = params.get('filter') === 'urgent';
     try {
       const userId = user?.id || user?.sub;
       if (!userId) {
@@ -25,10 +38,15 @@ const Tasks = () => {
       if (prioritySort) url += `&priority=${prioritySort}`;
       
       const res = await fetch(url);
-      const data = await res.json();
-      setTasks(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Failed to fetch tasks', err);
+      let data = await res.json();
+      if (!Array.isArray(data)) data = [];
+      if (isUrgentFilter) {
+        data = data.filter(t => t.priority >= 4);
+      }
+      setTasks(data);
+    } catch(err) { 
+      console.error(err);
+      setTasks([]);
     } finally {
       setLoading(false);
     }
@@ -63,28 +81,37 @@ const Tasks = () => {
 
   return (
     <div className="tasks-page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-        <h1 className="page-title" style={{ margin: 0 }}>Action Items</h1>
-        <button className="button" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => openTask({})}>
-          <Plus size={20} /> New Task
-        </button>
+      <div style={{ marginBottom: '16px' }}>
+        <GooeyInput placeholder="Search tasks..." className="search-expand-container" />
       </div>
-
-      <div className="card" style={{ padding: '16px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="card" style={{ padding: '16px', marginBottom: '24px', zIndex: 10, overflow: 'visible' }}>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <select onChange={(e) => setStatusFilter(e.target.value)} value={statusFilter} className="gooey-input-field" style={{ width: 'auto', padding: '8px 16px', borderRadius: 'var(--radius-md)' }}>
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="done">Done</option>
-            </select>
+            <CustomSelect 
+              value={statusFilter} 
+              onChange={setStatusFilter} 
+              options={[
+                { value: '', label: 'All Status' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'done', label: 'Done' }
+              ]}
+              placeholder="Status"
+            />
             
-            <select onChange={(e) => setPrioritySort(e.target.value)} value={prioritySort} className="gooey-input-field" style={{ width: 'auto', padding: '8px 16px', borderRadius: 'var(--radius-md)' }}>
-              <option value="">Sort Priority</option>
-              <option value="desc">High to Low</option>
-              <option value="asc">Low to High</option>
-            </select>
+            <CustomSelect 
+              value={prioritySort} 
+              onChange={setPrioritySort} 
+              options={[
+                { value: '', label: 'Sort Priority' },
+                { value: 'desc', label: 'High to Low' },
+                { value: 'asc', label: 'Low to High' }
+              ]}
+              placeholder="Priority"
+            />
           </div>
+          <button className="button" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => openTask({})}>
+            <Plus size={20} /> New Task
+          </button>
         </div>
       </div>
 
