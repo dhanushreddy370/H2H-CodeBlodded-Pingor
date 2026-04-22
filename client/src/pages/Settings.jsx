@@ -71,6 +71,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
     </div>
   );
 
+
   const SettingRow = ({ label, description, children }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--border)', marginBottom: '12px' }}>
       <div style={{ flex: 1, paddingRight: '16px' }}>
@@ -216,7 +217,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
           </SettingRow>
         </div>
 
-        {/* 4. Account & Session (MOVING TO BOTTOM) */}
+        {/* 4. Account & Session */}
         <div className="card" style={{ padding: '32px', marginBottom: '40px' }}>
           <SectionHeader 
             icon={User} 
@@ -226,17 +227,25 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
           
           <SettingRow label="Connected Gmail" description={user?.email || 'No email attached'}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontWeight: '700', fontSize: '0.85rem' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16a34a' }}></div>
-                Connected
-              </div>
-              <button 
-                onClick={() => alert('Gmail disconnection will disable Pingor Intelligence. Proceed via Google Account settings.')} 
-                className="hover-text-primary" 
-                style={{ background: 'none', border: 'none', fontSize: '0.75rem', color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}
-              >
-                Disconnect Account
-              </button>
+              {user?.gmailConnected ? (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontWeight: '700', fontSize: '0.85rem' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16a34a' }}></div>
+                    Connected
+                  </div>
+                  <button 
+                    onClick={() => alert('Gmail disconnection will disable Pingor Intelligence. Proceed via Google Account settings.')} 
+                    className="hover-text-primary" 
+                    style={{ background: 'none', border: 'none', fontSize: '0.75rem', color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    Disconnect Account
+                  </button>
+                </>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444', fontWeight: '700', fontSize: '0.85rem' }}>
+                  <AlertCircle size={14} /> Not Linked
+                </div>
+              )}
             </div>
           </SettingRow>
 

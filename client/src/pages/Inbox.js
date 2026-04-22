@@ -33,6 +33,21 @@ const Inbox = () => {
     fetchThreads();
   }, [fetchThreads]);
 
+  useEffect(() => {
+    const contentArea = document.querySelector('.content-area');
+    if (isComposeOpen) {
+      document.body.classList.add('modal-open');
+      if (contentArea) contentArea.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('modal-open');
+      if (contentArea) contentArea.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      if (contentArea) contentArea.style.overflow = 'auto';
+    };
+  }, [isComposeOpen]);
+
   const showToast = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 4000);
@@ -92,27 +107,29 @@ const Inbox = () => {
 
       {/* Quick Compose Overlay */}
       {isComposeOpen && (
-        <div className="modal-overlay" onClick={() => setIsComposeOpen(false)} style={{ zIndex: 4000 }}>
-          <div className="card" onClick={e => e.stopPropagation()} style={{ width: '500px', padding: '32px', borderRadius: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div className="modal-overlay" onClick={() => setIsComposeOpen(false)}>
+          <div className="modal-container" onClick={e => e.stopPropagation()} style={{ width: 'min(500px, 90%)', height: 'auto', maxHeight: 'min(600px, 90%)', borderRadius: '24px' }}>
+            <div className="modal-header">
               <h3 style={{ margin: 0, fontWeight: 800 }}>New Message</h3>
               <XCircle size={20} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setIsComposeOpen(false)} />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <input 
-                type="text" placeholder="Recipients" className="chat-input" 
-                value={composeData.to} onChange={e => setComposeData({...composeData, to: e.target.value})}
-              />
-              <input 
-                type="text" placeholder="Subject" className="chat-input" 
-                value={composeData.subject} onChange={e => setComposeData({...composeData, subject: e.target.value})}
-              />
-              <textarea 
-                placeholder="Write your message..." className="chat-input" 
-                style={{ minHeight: '200px', borderRadius: '16px', resize: 'none' }}
-                value={composeData.body} onChange={e => setComposeData({...composeData, body: e.target.value})}
-              ></textarea>
-              <button className="button" onClick={handleSendCompose}>Send as Draft</button>
+            <div className="modal-body" style={{ gridTemplateColumns: '1fr', padding: '32px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <input 
+                  type="text" placeholder="Recipients" className="chat-input" 
+                  value={composeData.to} onChange={e => setComposeData({...composeData, to: e.target.value})}
+                />
+                <input 
+                  type="text" placeholder="Subject" className="chat-input" 
+                  value={composeData.subject} onChange={e => setComposeData({...composeData, subject: e.target.value})}
+                />
+                <textarea 
+                  placeholder="Write your message..." className="chat-input" 
+                  style={{ minHeight: '200px', borderRadius: '16px', resize: 'none' }}
+                  value={composeData.body} onChange={e => setComposeData({...composeData, body: e.target.value})}
+                ></textarea>
+                <button className="button" onClick={handleSendCompose}>Send as Draft</button>
+              </div>
             </div>
           </div>
         </div>

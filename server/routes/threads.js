@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { readDB, writeDB } = require('../services/dbService');
 const { google } = require('googleapis');
-const { oauth2Client } = require('../config/gmail');
+const { getClientForUser } = require('../config/gmail');
 
 router.get('/', (req, res) => {
   try {
@@ -32,7 +32,8 @@ router.post('/:id/sync-gmail', async (req, res) => {
     if (index === -1) return res.status(404).json({ error: 'Thread not found' });
     const thread = db.threads[index];
 
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    const client = getClientForUser(thread.userId);
+    const gmail = google.gmail({ version: 'v1', auth: client });
 
     if (action === 'archive') {
       await gmail.users.threads.modify({

@@ -216,6 +216,10 @@ h1, h2, h3, h4, h5, h6 { color: var(--text-main); }
   position: relative;
 }
 
+body.modal-open .main-content {
+  z-index: 10001; /* Elevate above sidebar */
+}
+
 .navbar {
   height: 70px;
   background-color: var(--bg-card);
@@ -271,6 +275,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--text-main); }
   flex: 1;
   padding: 10px 32px 32px 32px;
   overflow-y: auto;
+  position: relative;
 }
 
 /* Components */

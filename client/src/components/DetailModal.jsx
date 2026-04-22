@@ -17,18 +17,24 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
   useEffect(() => {
     setActiveData(data || {});
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
+      const contentArea = document.querySelector('.content-area');
+      if (contentArea) contentArea.style.overflow = 'hidden';
       const userId = user?.userId || user?.id || user?.sub || 'test-user-id';
       fetch(`http://localhost:5000/api/contacts?userId=${userId}`)
         .then(r => r.json())
         .then(setContacts)
         .catch(console.error);
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.classList.remove('modal-open');
+      const contentArea = document.querySelector('.content-area');
+      if (contentArea) contentArea.style.overflow = 'auto';
     }
     
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.classList.remove('modal-open');
+      const contentArea = document.querySelector('.content-area');
+      if (contentArea) contentArea.style.overflow = 'auto';
     };
   }, [data, isOpen]);
 

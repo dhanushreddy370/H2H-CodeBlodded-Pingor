@@ -1,4 +1,5 @@
-const { getGmailClient } = require('../config/gmail');
+const { getClientForUser } = require('../config/gmail');
+const { google } = require('googleapis');
 
 /**
  * Creates an email draft as an auto-reply within a specific thread.
@@ -7,9 +8,10 @@ const { getGmailClient } = require('../config/gmail');
  * @param {string} subject 
  * @param {string} body 
  */
-async function createAutoReplyDraft(threadId, to, subject, body) {
+async function createAutoReplyDraft(userId, threadId, to, subject, body) {
   try {
-    const gmail = getGmailClient();
+    const client = getClientForUser(userId);
+    const gmail = google.gmail({ version: 'v1', auth: client });
     
     // Ensure subject has Re: if not already
     const finalSubject = subject.toLowerCase().startsWith('re:') ? subject : `Re: ${subject}`;

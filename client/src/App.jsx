@@ -56,7 +56,7 @@ function App() {
     }
 
     return (
-      <div className="app-container">
+      <div className="app-container" style={{ '--sidebar-width': isSidebarOpen ? '260px' : '80px' }}>
         <Sidebar 
           activePage={activePage} 
           setActivePage={setActivePage} 

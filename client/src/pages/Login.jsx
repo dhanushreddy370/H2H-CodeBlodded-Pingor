@@ -27,55 +27,45 @@ const Login = () => {
   const [localName, setLocalName] = useState('');
   const [localEmail, setLocalEmail] = useState('');
 
-  const handleSuccess = async (credentialResponse) => {
+  useEffect(() => {
+    const handleAuthMessage = (event) => {
+      // Security: Validate origin
+      const isLocal = event.origin.includes('localhost') || event.origin.includes('127.0.0.1');
+      if (event.origin !== window.location.origin && !isLocal) return;
+
+      if (event.data.type === 'AUTH_SUCCESS') {
+        console.log('Authentication received from popup:', event.data.user);
+        const userData = event.data.user;
+        if (userData.jobRole && userData.company) {
+          login(userData);
+        } else {
+          setTempUser(userData);
+          setSetupStep('setup');
+        }
+      }
+    };
+    window.addEventListener('message', handleAuthMessage);
+    return () => window.removeEventListener('message', handleAuthMessage);
+  }, [login]);
+
+  const handleGoogleLogin = async () => {
     setLoadingCheck(true);
     try {
-      const decoded = jwtDecode(credentialResponse.credential);
-      const email = decoded.email;
-      
-      // Check if user exists in backend
-      const response = await axios.get(`${API_BASE}/auth/check-user?email=${email}`);
-      const userData = {
-        name: decoded.name,
-        email: decoded.email,
-        picture: decoded.picture,
-        sub: decoded.sub,
-        ...(response.data.exists ? response.data.user : {})
-      };
-
-      if (response.data.exists || authMode === 'login') {
-        // User already exists or is explicitly trying to log in
-        // (If they don't exist but chose 'login', we go in with defaults to satisfy USER_REQUEST)
-        login(userData);
-      } else {
-        // New user on Sign Up mode, show onboarding
-        setTempUser(userData);
-        setSetupStep('setup');
-      }
+      const res = await fetch(`${API_BASE}/auth/url`);
+      const { url } = await res.json();
+      const width = 600;
+      const height = 700;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
+      window.open(url, 'Pingor Auth', `width=${width},height=${height},left=${left},top=${top}`);
     } catch (error) {
-      console.error('Error during auth check:', error);
-      const decoded = jwtDecode(credentialResponse.credential);
-      const userData = {
-        name: decoded.name,
-        email: decoded.email,
-        picture: decoded.picture,
-        sub: decoded.sub
-      };
-      
-      if (authMode === 'login') {
-        login(userData);
-      } else {
-        setTempUser(userData);
-        setSetupStep('setup');
-      }
+      console.error('Login Error:', error);
+      alert('Authentication error. Please try again.');
     } finally {
-      setLoadingCheck(false);
+      setTimeout(() => setLoadingCheck(false), 2000);
     }
   };
 
-  const handleError = () => {
-    alert('Google Authentication Failed. Please try again.');
-  };
 
   const handleFinalSetup = async (e) => {
     e.preventDefault();
@@ -320,14 +310,31 @@ const Login = () => {
                             Checking account...
                           </div>
                         ) : (
-                          <GoogleLogin
-                            onSuccess={handleSuccess}
-                            onError={handleError}
-                            text={authMode === 'register' ? "signup_with" : "signin_with"}
-                            shape="pill"
-                            size="large"
-                            theme="outline"
-                          />
+                          <button 
+                            className="button" 
+                            onClick={handleGoogleLogin}
+                            style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '12px', 
+                              padding: '14px 40px', 
+                              borderRadius: '40px', 
+                              backgroundColor: 'white', 
+                              color: 'var(--text-main)',
+                              border: '1px solid #e1e4e8',
+                              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                              fontSize: '1rem',
+                              fontWeight: '600'
+                            }}
+                          >
+                            <svg viewBox="0 0 24 24" width="20" height="20">
+                              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-1 .67-2.27 1.07-3.71 1.07-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                              <path fill="#FBBC05" d="M5.84 14.11c-.22-.67-.35-1.39-.35-2.11s.13-1.44.35-2.11V7.05H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.95l3.66-2.84z"/>
+                              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            {authMode === 'register' ? 'Sign up with Google' : 'Sign in with Google'}
+                          </button>
                         )}
                       </div>
                       <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '24px' }}>

@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const { google } = require('googleapis');
-const { oauth2Client } = require('../config/gmail');
+const { getClientForUser } = require('../config/gmail');
 const { readDB, writeDB } = require('./dbService');
 const aiService = require('./aiService');
 
@@ -41,12 +41,13 @@ const syncThreads = async (userId = 'system-sync') => {
   };
   
   try {
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    const client = getClientForUser(userId);
+    const gmail = google.gmail({ version: 'v1', auth: client });
     
-    // Fetch latest 25 threads
+    // Fetch latest 75 threads
     const response = await gmail.users.threads.list({
       userId: 'me',
-      maxResults: 25,
+      maxResults: 75,
     });
 
     const threads = response.data.threads || [];
@@ -182,10 +183,20 @@ const syncThreads = async (userId = 'system-sync') => {
  */
 const initHeartbeat = () => {
   // Triggers every hour at minute 0
-  cron.schedule('0 * * * *', () => {
-    syncThreads();
+  cron.schedule('0 * * * *', async () => {
+    console.log('Heartbeat: Checking all users for sync tasks...');
+    const db = readDB();
+    const usersWithGmail = (db.users || []).filter(u => u.gmailConnected && u.tokens);
+    
+    for (const user of usersWithGmail) {
+      try {
+        await syncThreads(user.id || user.sub || user.email);
+      } catch (err) {
+        console.error(`Heartbeat sync failed for user ${user.email}:`, err.message);
+      }
+    }
   });
-  console.log('Heartbeat cron job initialized.');
+  console.log('Heartbeat cron job initialized for multi-user sync.');
 };
 
 module.exports = {

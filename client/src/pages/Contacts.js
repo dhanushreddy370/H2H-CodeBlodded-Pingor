@@ -34,6 +34,21 @@ const Contacts = () => {
     fetchContacts();
   }, [fetchContacts]);
 
+  useEffect(() => {
+    const contentArea = document.querySelector('.content-area');
+    if (isModalOpen) {
+      document.body.classList.add('modal-open');
+      if (contentArea) contentArea.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('modal-open');
+      if (contentArea) contentArea.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      if (contentArea) contentArea.style.overflow = 'auto';
+    };
+  }, [isModalOpen]);
+
   const handleOpenModal = (contact = null) => {
     setSelectedContact(contact);
     setFormData(contact ? { name: contact.name, email: contact.email, phone: contact.phone || '' } : { name: '', email: '', phone: '' });
@@ -166,7 +181,7 @@ const Contacts = () => {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-container" style={{ maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+          <div className="modal-container" style={{ maxWidth: 'min(500px, 90%)', maxHeight: 'min(800px, 90%)' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
                 {selectedContact ? 'Edit Contact' : 'New Contact'}
@@ -175,47 +190,49 @@ const Contacts = () => {
                 <X size={20} />
               </div>
             </div>
-            <form onSubmit={handleSubmit} style={{ padding: '32px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-muted)' }}>NAME *</label>
-                  <input 
-                    required
-                    className="chat-input"
-                    style={{ width: '100%' }}
-                    value={formData.name}
-                    onChange={e => setFormData({...formData, name: e.target.value})}
-                  />
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body" style={{ gridTemplateColumns: '1fr', padding: '32px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-muted)' }}>NAME *</label>
+                    <input 
+                      required
+                      className="chat-input"
+                      style={{ width: '100%' }}
+                      value={formData.name}
+                      onChange={e => setFormData({...formData, name: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-muted)' }}>EMAIL *</label>
+                    <input 
+                      required
+                      type="email"
+                      className="chat-input"
+                      style={{ width: '100%' }}
+                      value={formData.email}
+                      onChange={e => setFormData({...formData, email: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-muted)' }}>MOBILE NUMBER</label>
+                    <input 
+                      className="chat-input"
+                      style={{ width: '100%' }}
+                      value={formData.phone}
+                      onChange={e => setFormData({...formData, phone: e.target.value})}
+                    />
+                  </div>
+                  <button type="submit" disabled={isSaving} className="button" style={{ marginTop: '12px', width: '100%', padding: '12px', opacity: isSaving ? 0.7 : 1, cursor: isSaving ? 'wait' : 'pointer' }}>
+                    {isSaving ? (
+                      <div className="animate-spin" style={{ width: '20px', height: '20px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto' }} />
+                    ) : (
+                      <>
+                        <Save size={18} style={{ marginRight: '8px' }} /> {selectedContact ? 'Update Contact' : 'Create Contact'}
+                      </>
+                    )}
+                  </button>
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-muted)' }}>EMAIL *</label>
-                  <input 
-                    required
-                    type="email"
-                    className="chat-input"
-                    style={{ width: '100%' }}
-                    value={formData.email}
-                    onChange={e => setFormData({...formData, email: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-muted)' }}>MOBILE NUMBER</label>
-                  <input 
-                    className="chat-input"
-                    style={{ width: '100%' }}
-                    value={formData.phone}
-                    onChange={e => setFormData({...formData, phone: e.target.value})}
-                  />
-                </div>
-                <button type="submit" disabled={isSaving} className="button" style={{ marginTop: '12px', width: '100%', padding: '12px', opacity: isSaving ? 0.7 : 1, cursor: isSaving ? 'wait' : 'pointer' }}>
-                  {isSaving ? (
-                    <div className="animate-spin" style={{ width: '20px', height: '20px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto' }} />
-                  ) : (
-                    <>
-                      <Save size={18} style={{ marginRight: '8px' }} /> {selectedContact ? 'Update Contact' : 'Create Contact'}
-                    </>
-                  )}
-                </button>
               </div>
             </form>
           </div>

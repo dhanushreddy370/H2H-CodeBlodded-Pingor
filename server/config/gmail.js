@@ -1,15 +1,12 @@
 const { google } = require('googleapis');
 const dotenv = require('dotenv');
-const fs = require('fs');
 const path = require('path');
+const { readDB, writeDB } = require('../services/dbService');
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-const TOKEN_PATH = path.join(__dirname, 'tokens.json');
-
 /**
  * Configure OAuth2 client for Gmail API access.
- * Note: You need to set client_id, client_secret, and redirect_uri in your .env file.
  */
 const oauth2Client = new google.auth.OAuth2(
   process.env.GMAIL_CLIENT_ID,
@@ -17,8 +14,11 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.GMAIL_REDIRECT_URI
 );
 
-// Scopes for Gmail API
+// Unified Scopes: Identity + Gmail
 const SCOPES = [
+  'openid',
+  'email',
+  'profile',
   'https://www.googleapis.com/auth/gmail.readonly',
   'https://www.googleapis.com/auth/gmail.modify',
   'https://www.googleapis.com/auth/gmail.send'
@@ -27,53 +27,53 @@ const SCOPES = [
 /**
  * Generates an authentication URL to redirect users to.
  */
-const getAuthUrl = () => {
+const getAuthUrl = (state = '') => {
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
-    prompt: 'consent'
+    prompt: 'consent',
+    include_granted_scopes: true,
+    state: state
   });
 };
 
 /**
- * Loads saved tokens if they exist.
- * @returns {boolean} True if tokens exist and were loaded.
+ * Gets a configured OAuth client for a specific user.
  */
-const loadSavedTokens = () => {
-  try {
-    if (fs.existsSync(TOKEN_PATH)) {
-      const tokens = JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf8'));
-      oauth2Client.setCredentials(tokens);
-      return true;
-    }
-  } catch (err) {
-    console.error('Error reading tokens.json', err.message);
+const getClientForUser = (userId) => {
+  if (!userId) throw new Error('User ID is required.');
+
+  const db = readDB();
+  const user = db.users.find(u => 
+    u.id === userId || u.sub === userId || u.email === userId
+  );
+  
+  if (!user || !user.tokens) {
+    throw new Error('Gmail account not connected or user not found.');
   }
-  return false;
+
+  const client = new google.auth.OAuth2(
+    process.env.GMAIL_CLIENT_ID,
+    process.env.GMAIL_CLIENT_SECRET,
+    process.env.GMAIL_REDIRECT_URI
+  );
+  
+  client.setCredentials(user.tokens);
+  return client;
 };
 
 /**
- * Sets credentials from the authorized code and saves them.
- * @param {string} code - The authorization code from the redirect URI.
+ * Direct token exchange from code
  */
-const setCredentials = async (code) => {
+const getTokensFromCode = async (code) => {
   const { tokens } = await oauth2Client.getToken(code);
-  oauth2Client.setCredentials(tokens);
-  fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens));
   return tokens;
-};
-
-/**
- * Returns an instance of the Gmail API client.
- */
-const getGmailClient = (auth = oauth2Client) => {
-  return google.gmail({ version: 'v1', auth });
 };
 
 module.exports = {
   oauth2Client,
   getAuthUrl,
-  loadSavedTokens,
-  setCredentials,
-  getGmailClient
+  getClientForUser,
+  getTokensFromCode,
+  getGmailClient: (auth) => google.gmail({ version: 'v1', auth })
 };

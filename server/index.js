@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { initHeartbeat, syncThreads, getSyncProgress } = require('./services/syncService');
-const { loadSavedTokens } = require('./config/gmail');
 
 // Load environment variables
 dotenv.config();
@@ -37,6 +36,7 @@ app.use('/api/chat', chatRoute);
 app.use('/api/history', historyRoute);
 app.use('/api/threads', threadsRoute);
 app.use('/api/auth', authRoute);
+app.use('/auth', authRoute); // Handle direct redirects like /auth/callback
 app.use('/api/users', usersRoute);
 app.use('/api/contacts', contactsRoute);
 
@@ -67,19 +67,25 @@ app.get('/api/sync/status', (req, res) => {
 app.post('/api/sync/manual', async (req, res) => {
   try {
     const userId = req.query.userId || req.body.userId;
+    if (!userId || userId === 'undefined') {
+      return res.status(400).json({ error: 'Valid User ID is required for synchronization.' });
+    }
+    
     await syncThreads(userId);
     res.json({ success: true, message: 'Sync triggered successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Manual Sync Error:', error.message);
+    res.status(500).json({ 
+      error: error.message.includes('not connected') 
+        ? 'Gmail account not connected. Please go to Settings to link your account.' 
+        : error.message 
+    });
   }
 });
 
 app.get('/api/sync/progress', (req, res) => {
   res.json(getSyncProgress());
 });
-
-// Load saved tokens if any
-loadSavedTokens();
 
 // Initialize heartbeat
 initHeartbeat();

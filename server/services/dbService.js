@@ -26,19 +26,23 @@ const initDB = () => {
 const readDB = () => {
   initDB();
   const rawData = fs.readFileSync(DB_PATH, 'utf8');
+  const emptySchema = {
+    users: [],
+    actionItems: [],
+    threads: [],
+    chatSessions: [],
+    syncLogs: [],
+    filters: [],
+    contacts: []
+  };
+
   try {
     const data = JSON.parse(rawData);
-    if (!data.contacts) data.contacts = [];
-    return data;
+    // Ensure all keys exist
+    return { ...emptySchema, ...data };
   } catch (err) {
     console.error("DB file corrupted, returning empty schema:", err);
-    return {
-      actionItems: [],
-      threads: [],
-      chatSessions: [],
-      syncLogs: [],
-      filters: []
-    };
+    return emptySchema;
   }
 };
 
