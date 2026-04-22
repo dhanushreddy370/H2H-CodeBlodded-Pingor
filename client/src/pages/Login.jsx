@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import '../App.css';
 
-const API_BASE = 'http://localhost:5000/api';
+import { API_BASE } from '../config';
 
 const Login = () => {
   const { login } = useAuth();
@@ -51,7 +51,7 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setLoadingCheck(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/url`);
+      const res = await fetch(`${API_BASE}/api/auth/url`);
       const { url } = await res.json();
       const width = 600;
       const height = 700;
@@ -75,7 +75,7 @@ const Login = () => {
     
     try {
       // Register in backend
-      await axios.post(`${API_BASE}/auth/register`, { userData: finalUser });
+      await axios.post(`${API_BASE}/api/auth/register`, { userData: finalUser });
       login(finalUser);
     } catch (error) {
       console.error('Error saving user:', error);
@@ -100,7 +100,7 @@ const Login = () => {
 
     try {
       if (authMode === 'register') {
-        await axios.post(`${API_BASE}/auth/register`, { userData: devUser });
+        await axios.post(`${API_BASE}/api/auth/register`, { userData: devUser });
       }
       login(devUser);
     } catch (error) {

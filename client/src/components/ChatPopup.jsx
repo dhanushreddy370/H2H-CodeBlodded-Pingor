@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, X, Minus, Paperclip, Bot, User, Maximize2 } from 'lucide-react';
+import { API_BASE } from '../config';
 
 const ChatPopup = ({ isOpen, onClose, user }) => {
   const [messages, setMessages] = useState([
@@ -29,7 +30,7 @@ const ChatPopup = ({ isOpen, onClose, user }) => {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/chat/message', {
+      const res = await fetch(`${API_BASE}/api/chat/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMsg })

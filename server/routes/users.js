@@ -55,14 +55,28 @@ router.post('/profile', (req, res) => {
 
 // Update settings
 router.patch('/settings', (req, res) => {
+  handleSettingsUpdate(req, res);
+});
+
+// Alias for settings per UI overhaul requirements
+router.patch('/preferences', (req, res) => {
+  handleSettingsUpdate(req, res);
+});
+
+async function handleSettingsUpdate(req, res) {
   try {
     const { userId, settings } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+    
     const db = readDB();
     const index = (db.users || []).findIndex(u => u.userId === userId);
     
     if (index === -1) return res.status(404).json({ error: 'User not found' });
     
-    db.users[index].settings = settings;
+    db.users[index].settings = {
+      ...(db.users[index].settings || {}),
+      ...settings
+    };
     db.users[index].updatedAt = new Date().toISOString();
     
     await writeDB(db);
@@ -70,8 +84,9 @@ router.patch('/settings', (req, res) => {
     initHeartbeat();
     res.json(db.users[index]);
   } catch (err) {
+    console.error('Settings update error:', err);
     res.status(500).json({ error: err.message });
   }
-});
+}
 
 module.exports = router;

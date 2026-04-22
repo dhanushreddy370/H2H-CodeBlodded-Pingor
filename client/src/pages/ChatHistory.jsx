@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Clock, Plus, Bot } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../config';
 
 const ChatHistory = ({ onOpenChat }) => {
   const { user } = useAuth();
@@ -17,7 +18,7 @@ const ChatHistory = ({ onOpenChat }) => {
   const fetchSessions = async (userId) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/history?userId=${userId}`);
+      const res = await fetch(`${API_BASE}/api/history?userId=${userId}`);
       const data = await res.json();
       setSessions(data);
     } catch(err) {

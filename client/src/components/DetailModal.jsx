@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Calendar, User, MessageCircle, Paperclip, CheckCircle, Clock, Trash2, Send, Plus, Archive, ChevronDown, AtSign } from 'lucide-react';
 import '../styles/UniversalModal.css';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../config';
 
 const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
   const { user } = useAuth();
@@ -21,7 +22,7 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
       const contentArea = document.querySelector('.content-area');
       if (contentArea) contentArea.style.overflow = 'hidden';
       const userId = user?.userId || user?.id || user?.sub || 'test-user-id';
-      fetch(`http://localhost:5000/api/contacts?userId=${userId}`)
+      fetch(`${API_BASE}/api/contacts?userId=${userId}`)
         .then(r => r.json())
         .then(setContacts)
         .catch(console.error);
@@ -50,13 +51,13 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
     try {
       let res;
       if (isNew) {
-        res = await fetch(`http://localhost:5000/api/${getApiPath()}`, {
+        res = await fetch(`${API_BASE}/api/${getApiPath()}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...currentData, userId })
         });
       } else {
-        res = await fetch(`http://localhost:5000/api/${getApiPath()}/${activeData._id}`, {
+        res = await fetch(`${API_BASE}/api/${getApiPath()}/${activeData._id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedFields)
@@ -111,7 +112,7 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
     // Create a new contact automatically if email is not found
     const userId = user?.userId || user?.id || user?.sub || 'test-user-id';
     try {
-        const res = await fetch('http://localhost:5000/api/contacts', {
+        const res = await fetch(`${API_BASE}/api/contacts`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: email.split('@')[0], email, userId })
@@ -137,7 +138,7 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
     if (!activeData.threadId) return;
     setIsSyncing(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/threads/${activeData.threadId}/sync-gmail`, {
+      const res = await fetch(`${API_BASE}/api/threads/${activeData.threadId}/sync-gmail`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action })

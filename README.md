@@ -1,11 +1,12 @@
+<p align="center">
+  <img src="assets/pingor_banner.png" width="600" alt="Pingor AI Logo" />
+</p>
+
+<h2 align="center">Agentic Communication Assistant</h2>
+
 <div align="center">
 
-<img src="banner.jpeg" alt="CodeBlooded Banner" width="100%" style="display:block;"/>
-
 <br/>
-
-# ⚡ Pingor
-### Your Production-Grade Intelligent Communication Sidekick
 
 *Built for the modern professional. Powered by local AI.*
 
@@ -216,6 +217,10 @@ H2H-CodeBlodded-Pingor/
 
 **CodeBlooded** — built for the H2H Hackathon
 
+<p align="center">
+  <img src="assets/codeblooded_banner.jpg" width="100%" alt="CodeBlooded Banner" />
+</p>
+
 | Name | Role |
 |------|------|
 | Dhanush Reddy S | Team Lead · Backend Architecture · AI Pipeline |
@@ -224,5 +229,5 @@ H2H-CodeBlodded-Pingor/
 ---
 
 <div align="center">
-<sub>Built with ☕ and zero sleep · <strong>Dhanush Reddy S & M Rithika</strong> · CodeBlooded Team · 2026</sub>
+<sub>Built with ☕ and zero sleep · CodeBlooded Team · 2026</sub>
 </div>

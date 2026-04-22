@@ -31,6 +31,8 @@ const threadsRoute = require('./routes/threads');
 const authRoute = require('./routes/auth');
 const usersRoute = require('./routes/users');
 const contactsRoute = require('./routes/contacts');
+const inboxRoute = require('./routes/inbox');
+const statusRoute = require('./routes/status');
 
 app.use('/api/tasks', tasksRoute);
 app.use('/api/followups', followupsRoute);
@@ -42,6 +44,8 @@ app.use('/api/auth', authRoute);
 app.use('/auth', authRoute); // Handle direct redirects like /auth/callback
 app.use('/api/users', usersRoute);
 app.use('/api/contacts', contactsRoute);
+app.use('/api/inbox', inboxRoute);
+app.use('/api/status', statusRoute);
 
 // API endpoint to fetch sync status and latest threads
 app.get('/api/sync/status', (req, res) => {
