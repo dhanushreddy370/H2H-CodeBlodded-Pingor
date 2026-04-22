@@ -52,7 +52,7 @@ router.post('/:id/sync-gmail', async (req, res) => {
     }
 
     db.threads[index].updatedAt = new Date().toISOString();
-    writeDB(db);
+    await writeDB(db);
     
     res.json({ success: true, message: `Email ${action}d in Gmail account.` });
   } catch (err) {

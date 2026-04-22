@@ -66,7 +66,7 @@ router.patch('/:id/status', (req, res) => {
     db.threads[index].status = status;
     db.threads[index].updatedAt = new Date().toISOString();
     
-    writeDB(db);
+    await writeDB(db);
     res.json(db.threads[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -85,7 +85,7 @@ router.patch('/edit/:id', (req, res) => {
     db.threads[index].aiResponse = aiResponse;
     db.threads[index].updatedAt = new Date().toISOString();
     
-    writeDB(db);
+    await writeDB(db);
     res.json(db.threads[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -105,6 +105,7 @@ router.post('/approve/:id', async (req, res) => {
 
     // Push to Gmail API
     const draftCreated = await createAutoReplyDraft(
+      thread.userId,
       thread.threadId, 
       thread.sender, 
       thread.subject, 
@@ -115,7 +116,7 @@ router.post('/approve/:id', async (req, res) => {
       db.threads[index].draftStatus = 'approved';
       db.threads[index].status = 'done';
       db.threads[index].updatedAt = new Date().toISOString();
-      writeDB(db);
+      await writeDB(db);
       res.json({ success: true, thread: db.threads[index] });
     } else {
       res.status(500).json({ error: 'Failed to create draft in Gmail' });
@@ -137,7 +138,7 @@ router.post('/reject/:id', (req, res) => {
     db.threads[index].handledByAI = false;
     db.threads[index].updatedAt = new Date().toISOString();
     
-    writeDB(db);
+    await writeDB(db);
     res.json({ success: true, thread: db.threads[index] });
   } catch (err) {
     res.status(500).json({ error: err.message });

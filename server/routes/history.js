@@ -50,7 +50,7 @@ router.post('/', (req, res) => {
     };
     
     db.chatSessions.push(newSession);
-    writeDB(db);
+    await writeDB(db);
     res.status(201).json(newSession);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -72,7 +72,7 @@ router.post('/:id/messages', (req, res) => {
         db.chatSessions[index].title = content.substring(0, 30) + (content.length > 30 ? '...' : '');
     }
 
-    writeDB(db);
+    await writeDB(db);
     res.json(db.chatSessions[index]);
   } catch (error) {
     res.status(500).json({ error: error.message });

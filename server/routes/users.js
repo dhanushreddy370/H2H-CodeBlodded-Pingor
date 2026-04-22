@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { readDB, writeDB } = require('../services/dbService');
+const { initHeartbeat } = require('../services/syncService');
 
 // Get all users (for assignment dropdowns)
 router.get('/', (req, res) => {
@@ -45,7 +46,7 @@ router.post('/profile', (req, res) => {
       };
     }
     
-    writeDB(db);
+    await writeDB(db);
     res.json(db.users[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -64,7 +65,9 @@ router.patch('/settings', (req, res) => {
     db.users[index].settings = settings;
     db.users[index].updatedAt = new Date().toISOString();
     
-    writeDB(db);
+    await writeDB(db);
+    // Refresh heartbeat with new settings
+    initHeartbeat();
     res.json(db.users[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });

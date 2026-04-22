@@ -1,16 +1,18 @@
 const { ChatOllama } = require("@langchain/ollama");
-const { SearchEmailsTool, ReadThreadTool, DraftEmailTool, SendEmailTool } = require("./gmailTools");
+const { getTools } = require("./gmailTools");
 const { createToolCallingAgent, AgentExecutor } = require("langchain/agents");
 const { ChatPromptTemplate, MessagesPlaceholder } = require("@langchain/core/prompts");
-const { getGmailClient } = require("../config/gmail");
+const { getGmailClient, getClientForUser } = require("../utils/googleClient");
 
 const OLLAMA_URL = process.env.OLLAMA_BASE_URL || process.env.OLLAMA_URL || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2';
 
-const initAgent = async () => {
+const initAgent = async (userId) => {
   let senderEmail = "unknown@gmail.com";
+  let client;
   try {
-    const gmail = getGmailClient();
+    client = getClientForUser(userId);
+    const gmail = getGmailClient(client);
     const profile = await gmail.users.getProfile({ userId: 'me' });
     senderEmail = profile.data.emailAddress;
   } catch (e) {
@@ -23,7 +25,7 @@ const initAgent = async () => {
     temperature: 0.1,
   });
 
-  const tools = [SearchEmailsTool, ReadThreadTool, DraftEmailTool, SendEmailTool];
+  const tools = getTools(client);
 
   // Tool calling agent requires binding tools
   const prompt = ChatPromptTemplate.fromMessages([

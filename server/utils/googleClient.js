@@ -39,6 +39,7 @@ const getAuthUrl = (state = '') => {
 
 /**
  * Gets a configured OAuth client for a specific user.
+ * Includes token refresh logic.
  */
 const getClientForUser = (userId) => {
   if (!userId) throw new Error('User ID is required.');
@@ -59,6 +60,26 @@ const getClientForUser = (userId) => {
   );
   
   client.setCredentials(user.tokens);
+
+  // Set up token refresh listener
+  client.on('tokens', async (tokens) => {
+    console.log(`Refreshing tokens for user: ${userId}`);
+    const currentDB = readDB();
+    const userIndex = currentDB.users.findIndex(u => u.id === user.id);
+    
+    if (userIndex !== -1) {
+      if (tokens.refresh_token) {
+        currentDB.users[userIndex].tokens.refresh_token = tokens.refresh_token;
+      }
+      currentDB.users[userIndex].tokens.access_token = tokens.access_token;
+      currentDB.users[userIndex].tokens.expiry_date = tokens.expiry_date;
+      currentDB.users[userIndex].updatedAt = new Date().toISOString();
+      
+      await writeDB(currentDB);
+      console.log('Tokens updated in database.');
+    }
+  });
+
   return client;
 };
 

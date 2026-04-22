@@ -50,7 +50,7 @@ router.post('/', (req, res) => {
     };
     
     db.actionItems.push(newTask);
-    writeDB(db);
+    await writeDB(db);
     res.status(201).json(newTask);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -71,7 +71,7 @@ router.patch('/:id', (req, res) => {
       updatedAt: new Date().toISOString()
     };
     
-    writeDB(db);
+    await writeDB(db);
     res.json(db.actionItems[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -90,7 +90,7 @@ router.patch('/:id/status', (req, res) => {
     db.actionItems[index].status = status;
     db.actionItems[index].updatedAt = new Date().toISOString();
     
-    writeDB(db);
+    await writeDB(db);
     res.json(db.actionItems[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });

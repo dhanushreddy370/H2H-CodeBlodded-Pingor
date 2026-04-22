@@ -1,4 +1,4 @@
-const { getClientForUser } = require('../config/gmail');
+const { getClientForUser } = require('../utils/googleClient');
 const { google } = require('googleapis');
 
 /**

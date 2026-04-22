@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const { google } = require('googleapis');
-const { getClientForUser } = require('../config/gmail');
+const { getClientForUser } = require('../utils/googleClient');
 const { readDB, writeDB } = require('./dbService');
 const aiService = require('./aiService');
 
@@ -197,7 +197,7 @@ const syncThreads = async (userId = 'system-sync') => {
 
         // Periodic Save (Every 5 processed items)
         if (processedCount % 5 === 0) {
-          writeDB(db);
+          await writeDB(db);
           console.log(`[PIPELINE] Checkpoint: ${processedCount}/${rawDataQueue.length} processed.`);
         }
 
@@ -213,7 +213,7 @@ const syncThreads = async (userId = 'system-sync') => {
     }
 
     // Final Save
-    writeDB(db);
+    await writeDB(db);
     console.log(`[SYNC] Pipeline finished. ${processedCount} threads finalized.`);
     currentSyncStatus.inProgress = false;
     isSyncing = false;
@@ -225,21 +225,33 @@ const syncThreads = async (userId = 'system-sync') => {
   }
 };
 
+let syncJob;
+
 /**
- * Initializes the Node-Cron heartbeat job
+ * Initializes the Node-Cron heartbeat job with dynamic frequency.
  */
 const initHeartbeat = () => {
-  // Triggers every 10 minutes
-  cron.schedule('*/10 * * * *', async () => {
-    console.log('Heartbeat: Checking all users for sync tasks...');
+  const db = readDB();
+  // Check for global or user-specific sync frequency (default to 10 mins)
+  // We'll use the setting from the first user for simplicity in this version
+  const firstUser = db.users?.find(u => u.settings?.syncFrequency);
+  const frequency = firstUser?.settings?.syncFrequency || 10;
+  
+  if (syncJob) {
+    syncJob.stop();
+    console.log('Stopping existing sync job...');
+  }
+
+  // Triggers every X minutes
+  syncJob = cron.schedule(`*/${frequency} * * * *`, async () => {
+    console.log(`Heartbeat: Triggering sync for all connected users (every ${frequency}m)...`);
     await triggerAllSyncs();
   });
 
   // Run immediately on server start to ensure fresh data
-  console.log('Heartbeat: Triggering initial sync for all connected users...');
-  triggerAllSyncs();
+  triggerAllSyncs().catch(err => console.error('Initial sync failed:', err.message));
   
-  console.log('Heartbeat cron job initialized (10min interval).');
+  console.log(`Heartbeat cron job initialized (${frequency}min interval).`);
 };
 
 const triggerAllSyncs = async () => {

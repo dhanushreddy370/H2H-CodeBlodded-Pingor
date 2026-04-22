@@ -20,7 +20,7 @@ router.post('/generate', async (req, res) => {
       createdAt: new Date().toISOString()
     };
     db.filters.push(filter);
-    writeDB(db);
+    await writeDB(db);
     
     res.json(filter);
   } catch (err) {

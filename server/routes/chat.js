@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { generateChatResponse } = require('../services/aiService');
+const { initAgent } = require('../agents/agentService');
 const { readDB, writeDB } = require('../services/dbService');
 
 // Context Injection Endpoint
@@ -36,7 +36,7 @@ router.post('/context', (req, res) => {
   }
 });
 
-// Real Chat Endpoint
+// Real Agentic Chat Endpoint
 router.post('/ask', async (req, res) => {
   try {
     const { messages, userId } = req.body;
@@ -44,17 +44,67 @@ router.post('/ask', async (req, res) => {
       return res.status(400).json({ error: 'Messages array is required' });
     }
 
-    const aiText = await generateChatResponse(messages);
-    
-    // Optional: Save to chatSessions in JSON DB if userId is provided
-    if (userId) {
-       const db = readDB();
-       if (!db.chatSessions) db.chatSessions = [];
-       // Add logic to save conversation if needed
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required for agentic chat.' });
     }
+
+    // 1. Initialize the LangChain agent for this specific user
+    const agent = await initAgent(userId);
+    
+    // 2. Prepare history and last message
+    const lastMessage = messages[messages.length - 1].content;
+    const history = messages.slice(0, -1).map(m => ({
+      role: m.role === 'user' ? 'human' : 'ai',
+      content: m.content
+    }));
+
+    // 3. Invoke the agent
+    console.log(`[CHAT] Invoking agent for user ${userId}...`);
+    const result = await agent.invoke({
+      input: lastMessage,
+      chat_history: history
+    });
+
+    const aiText = result.output;
+    
+    // 4. Persistence: Save to chatSessions in JSON DB
+    const db = readDB();
+    if (!db.chatSessions) db.chatSessions = [];
+    
+    let sessionIndex = db.chatSessions.findIndex(s => s.userId === userId && s.status === 'active');
+    
+    if (sessionIndex === -1) {
+      const newSession = {
+        _id: `chat-${Date.now()}`,
+        userId,
+        title: lastMessage.substring(0, 40) + (lastMessage.length > 40 ? '...' : ''),
+        messages: [],
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      db.chatSessions.push(newSession);
+      sessionIndex = db.chatSessions.length - 1;
+    }
+
+    // Append messages to history
+    db.chatSessions[sessionIndex].messages.push({
+      role: 'user',
+      content: lastMessage,
+      timestamp: new Date().toISOString()
+    });
+    db.chatSessions[sessionIndex].messages.push({
+      role: 'assistant',
+      content: aiText,
+      timestamp: new Date().toISOString()
+    });
+    db.chatSessions[sessionIndex].updatedAt = new Date().toISOString();
+
+    await writeDB(db);
 
     res.json({ text: aiText });
   } catch (err) {
+    console.error('Agentic Chat Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

@@ -46,8 +46,8 @@ const readDB = () => {
   }
 };
 
-const writeDB = (data) => {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+const writeDB = async (data) => {
+  await fs.promises.writeFile(DB_PATH, JSON.stringify(data, null, 2));
 };
 
 module.exports = {

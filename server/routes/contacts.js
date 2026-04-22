@@ -42,7 +42,7 @@ router.post('/', (req, res) => {
     };
     
     db.contacts.push(newContact);
-    writeDB(db);
+    await writeDB(db);
     
     res.status(201).json(newContact);
   } catch (err) {
@@ -65,7 +65,7 @@ router.patch('/:id', (req, res) => {
       updatedAt: new Date().toISOString()
     };
     
-    writeDB(db);
+    await writeDB(db);
     res.json(db.contacts[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -85,7 +85,7 @@ router.delete('/:id', (req, res) => {
       return res.status(404).json({ error: 'Contact not found' });
     }
     
-    writeDB(db);
+    await writeDB(db);
     res.json({ message: 'Contact deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { oauth2Client, getAuthUrl, getTokensFromCode, getClientForUser } = require('../config/gmail');
+const { oauth2Client, getAuthUrl, getTokensFromCode, getClientForUser } = require('../utils/googleClient');
 const { google } = require('googleapis');
 const { readDB, writeDB } = require('../services/dbService');
 
@@ -65,7 +65,7 @@ router.get('/callback', async (req, res) => {
       userIndex = db.users.length - 1;
     }
     
-    writeDB(db);
+    await writeDB(db);
 
     // Filter out sensitive tokens before sending back to frontend
     const safeUser = { ...db.users[userIndex] };
@@ -152,7 +152,7 @@ router.post('/callback', async (req, res) => {
       userIndex = db.users.length - 1;
     }
     
-    writeDB(db);
+    await writeDB(db);
 
     const safeUser = { ...db.users[userIndex] };
     delete safeUser.tokens;
@@ -210,7 +210,7 @@ router.post('/register', (req, res) => {
     db.users.push(finalUser);
   }
 
-  writeDB(db);
+  await writeDB(db);
   const { tokens, ...safeUser } = finalUser;
   res.json({ success: true, user: safeUser });
 });
