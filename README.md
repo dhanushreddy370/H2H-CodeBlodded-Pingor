@@ -1,104 +1,228 @@
-# Pingor: Agentic Email & Communication Tracker
+<div align="center">
 
-## 🏆 Hackathon Progress Log
+<img src="banner.jpeg" alt="CodeBlooded Banner" width="100%" style="display:block;"/>
 
-- **Day 1:** Set up the basic structural foundations. Created the React frontend and Node/Express backend. Configured Google OAuth2 for Gmail API access.
-- **Day 2:** Created MongoDB data models (Thread, SyncLog, ActionItem). Implemented `node-cron` for an automated hourly heartbeat sync that fetches the latest threads and upserts them into the database.
-- **Day 3:** Integrated the local LLM (Ollama) into the sync pipeline. Created `aiService.js` to categorize threads automatically. Built an interactive CLI app (`terminalChat.js`) that handles OAuth authentication and fetches live emails. Transformed this basic LLM chat into an autonomous LangChain Agent using `createToolCallingAgent`. Built dynamic tools (`gmailTools.js`) giving Pingor the ability to autonomously search emails, read specific threads, and create email draft suggestions directly in the user's Gmail. Additionally, implemented persistent OAuth token caching to streamline development!
-- **Day 4:** Accelerated frontend development. Built the central Dashboard, Tasks, and Follow-up pages with advanced filtering/sorting. Implemented a "Context Injection" system using `/` and `@` triggers in the chat window. Developed the "Draft Approval" logic where the AI proposes a complex email body based on user prompts, which the user reviews and edits before sending.
-- **Day 5:** Achieved production-grade scalability by migrating the entire persistence layer to **MongoDB Atlas**, enabling persistent user profiles, global settings, and multi-user association. Refactored the core synchronization engine for cloud-backed reliability and implemented the initial framework for premium Detail Modals and real-time Gmail sync actions (Archive/Trash).
-- **Day 6:** Finalized the UI/UX overhaul and stabilized the platform. Resolved critical runtime performance bottlenecks and hook violations in the floating chat. Refined the **Detail Modal** with perfect centering and responsive layouts. Completed the **Inbox** feature set with a functional **Quick Compose** system and advanced thread filtering.
-- **Day 7:** Optimized platform autonomy and communication efficiency. Implemented full email body extraction and rich-text rendering in the Inbox. Added 'Reply' and 'AI Generate Reply' actions, enabling one-click professional drafts using local AI. Refined the global UI with perfect modal centering (compensating for sidebar offsets) and a compact, scroll-free workspace layout. Stabilized the authentication flow and background sync heartbeat to ensure 100% data freshness without manual intervention.
+<br/>
+
+# ⚡ Pingor
+### Your Production-Grade Intelligent Communication Sidekick
+
+*Built for the modern professional. Powered by local AI.*
+
+<br/>
+
+[![React](https://img.shields.io/badge/React-18.2-61DAFB?style=flat-square&logo=react)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=node.js)](https://nodejs.org/)
+[![Ollama](https://img.shields.io/badge/AI-Ollama%20%7C%20Llama%203.2-black?style=flat-square)](https://ollama.ai/)
+[![LangChain](https://img.shields.io/badge/Agent-LangChain-1C3C3C?style=flat-square)](https://langchain.com/)
+[![Gmail API](https://img.shields.io/badge/Gmail-OAuth2-EA4335?style=flat-square&logo=gmail)](https://developers.google.com/gmail)
+
+</div>
 
 ---
 
-## 1. Project Title & Tagline
+## What is Pingor?
 
-**Pingor** - Your Production-Grade Intelligent Communication Sidekick.
+Email overload is a productivity killer. Pingor fixes that.
 
-## 2. Problem Statement
+It's an agentic communication assistant that connects to your Gmail, uses a locally-hosted LLM to classify and prioritize every thread, extracts actionable tasks automatically, and puts everything into a clean, intelligent dashboard — so you can focus on deep work while Pingor handles the logistics.
 
-In the modern workplace, email overload is a productivity killer. Users spend hours sorting through low-priority messages and identifying critical action items. Scalable, persistent tracking and collaborative task management are essential for modern teams.
+No cloud AI subscriptions. No data sent to third parties. Everything runs locally.
 
-## 3. Proposed Solution
+---
 
-Pingor is a production-ready Agentic Assistant that automates email management and task tracking. By integrating a high-performance **Local JSON DB** for offline-capable persistence and **Ollama (Llama 3.2)** locally, Pingor categorizes threads, extracts action items, and handles communication entirely with a high-fidelity user experience.
+## The Build — Day by Day
 
-## 4. Tech Stack
+| Day | What We Shipped |
+|-----|----------------|
+| **01** | 🏗️ React frontend + Node/Express backend scaffolded · Google OAuth2 configured for Gmail API access |
+| **02** | 🗃️ JSON data models defined (Threads, ActionItems, ChatSessions) · Node-Cron heartbeat sync implemented |
+| **03** | 🤖 Ollama (Llama 3.2) integrated into sync pipeline · LangChain ReAct agent built with live Gmail tools (search, read, draft) · OAuth token caching added |
+| **04** | 🖥️ Dashboard, Tasks, and Follow-ups pages built · Context Injection system (`/` and `@` triggers) added to chat · Draft Approval flow implemented |
+| **05** | ☁️ Migrated to MongoDB Atlas for multi-user persistence · Detail Modals scaffolded · Real-time Gmail Archive/Trash actions wired |
+| **06** | 🎨 UI/UX overhaul · FloatingChat hook violations resolved · Quick Compose system completed · Advanced inbox filtering shipped |
+| **07** | 📬 Full email body extraction with HTML rendering · One-click AI Reply generation · Auth flow stabilized · 10-minute heartbeat sync finalized |
 
-- **Frontend:** React.js, Lucide Icons, Vanilla CSS
-- **Backend:** Node.js, Express.js
-- **Database:** Local JSON Persistence (High-performance, offline-capable, privacy-focused)
-- **AI Engine:** Ollama (Local LLM - Llama 3.2)
-- **Agent Framework:** LangChain (ReAct Tool Calling Architecture)
-- **APIs:** Gmail API (OAuth2)
-- **Scheduling:** Node-Cron for synchronized 10-minute heartbeat tracking
+---
 
-## 5. Features
+## Features
 
-- **Local Persistence:** Full CRUD operations for tasks, threads, and chat history with zero external database dependencies.
-- **AI-Powered Communication:** One-click 'AI Generate Reply' that drafts professional responses based on thread context.
-- **Full Email Sync:** Real-time extraction of full email bodies with HTML rendering for a complete inbox experience.
-- **Gmail Synchronization:** Native Archive and Trash actions from the Pingor UI that reflect instantly in your Gmail inbox.
-- **Premium Detail Modal:** A centered, scroll-free interface for deep-task editing, including multi-user assignment and comment threads.
-- **Intelligent Chat:** Resizable AI chat window with "Context Injection" and functional file attachments.
+**Intelligent Sync Engine**
+Pingor polls Gmail every 10 minutes using a Node-Cron heartbeat. Threads are fetched in parallel batches, analyzed by the local LLM, and upserted into the database — all without touching external AI services.
 
-## 6. Architecture & Flow
+**AI-Powered Classification**
+Every email thread is automatically tagged (action-required, FYI, meeting-related, approval-pending, vendor/external, personal) and assigned a priority score from 1–5 using Ollama running locally.
 
-`Gmail API` -> `Node-Cron (Heartbeat)` -> `Local AI (Ollama)` -> `MongoDB Atlas` -> `React Frontend`
+**Agentic Chat with Context Injection**
+The floating AI assistant supports `@sender` and `/task` or `/followup` triggers to inject live context from your inbox directly into the chat conversation. Ask it anything about your threads.
 
-1. **Poll:** Node server triggers a Gmail API fetch.
-2. **Analyze:** Content is sent to the local Ollama instance for tagging and extraction.
-3. **Store:** Metadata and extracted action items are saved to MongoDB.
-4. **Display:** React UI provides a dashboard for tracking and an AI chat for querying.
+**Human-in-the-Loop Draft Approval**
+When Pingor generates a reply, it doesn't send it. It puts it in a review queue where you can edit, approve, or reject — giving you final control before anything hits Gmail.
 
-## 7. Setup Instructions
+**Gmail-Native Actions**
+Archive and trash emails directly from the Pingor UI. Changes reflect instantly in your actual Gmail inbox via the Gmail API.
+
+**Full Email Rendering**
+Read complete HTML email bodies — not just snippets — inside the Pingor inbox with full formatting preserved.
+
+**One-Click AI Reply**
+Select any thread and generate a professional draft reply in one click. The AI uses the thread's subject and content as context.
+
+**Task & Follow-up Tracking**
+Extracted action items are surfaced in a dedicated Tasks view with priority sorting, deadline tracking, status management, and multi-user assignment.
+
+**Chat History**
+Every AI conversation is persisted and accessible from the Chat History page. Resume any session exactly where you left off.
+
+**Local-First Privacy**
+The AI engine (Ollama) runs entirely on your machine. Your emails never leave your environment.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | React 18, Lucide Icons, Framer Motion, Vanilla CSS |
+| **Backend** | Node.js, Express.js |
+| **Database** | Local JSON (offline-capable, zero external dependencies) |
+| **AI Engine** | Ollama — Llama 3.2 (local) |
+| **Agent Framework** | LangChain — ReAct Tool Calling Architecture |
+| **Email API** | Gmail API via Google OAuth2 |
+| **Scheduling** | Node-Cron — 10-minute heartbeat sync |
+
+---
+
+## Architecture
+
+```
+Gmail API
+    │
+    ▼
+Node-Cron Heartbeat (every 10 min)
+    │
+    ▼
+Batch Retrieval (parallel, 10 threads/batch)
+    │
+    ▼
+Ollama AI Pipeline (classify → prioritize → summarize → extract tasks)
+    │
+    ▼
+Local JSON Database (db.json)
+    │
+    ▼
+React Frontend (Dashboard · Inbox · Tasks · Follow-ups · Chat)
+```
+
+---
+
+## Setup
 
 ### Prerequisites
 
-- Install [Ollama](https://ollama.ai/)
-- Install Node.js & MongoDB
+- [Node.js](https://nodejs.org/) v18+
+- [Ollama](https://ollama.ai/) installed and running
+- A Google Cloud project with Gmail API enabled and OAuth2 credentials
 
-### Ollama Setup
+### 1. Pull the AI Model
 
 ```bash
 ollama run llama3.2
 ```
 
-### Application Setup
+### 2. Clone the Repository
 
-1. **Clone the Repo:**
+```bash
+git clone https://github.com/dhanushreddy370/H2H-CodeBlodded-Pingor.git
+cd H2H-CodeBlodded-Pingor
+```
 
-   ```bash
-   git clone <repo-url>
-   cd H2H-CodeBlodded-Pingor
-   ```
+### 3. Configure the Server
 
-2. **Server Setup:**
+```bash
+cd server
+npm install
+cp .env.example .env
+```
 
-   ```bash
-   cd server
-   npm install
-   cp .env.example .env
-   # Fill in your Gmail OAuth2 Credentials
-   npm run dev
-   ```
+Open `.env` and fill in your credentials:
 
-3. **Client Setup:**
+```env
+GMAIL_CLIENT_ID=your_google_client_id
+GMAIL_CLIENT_SECRET=your_google_client_secret
+GMAIL_REDIRECT_URI=http://localhost:5000/auth/callback
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2:latest
+PORT=5000
+```
 
-   ```bash
-   cd ../client
-   npm install
-   npm start
-   ```
+```bash
+npm run dev
+```
 
-## 8. Demo / Screenshots
+### 4. Start the Client
 
-*(Placeholders for screenshots)*
-Coming soon
+```bash
+cd ../client
+npm install
+npm start
+```
 
-## 9. Team Members
+The app will open at `http://localhost:3000`.
 
-- **CodeBlooded Team**
-- Dhanush Reddy S [Team Lead]
-- M Rithika
+> **First Login:** Use "Sign in with Google" to connect your Gmail account. Pingor will trigger an initial sync automatically after authentication.
+
+---
+
+## Project Structure
+
+```
+H2H-CodeBlodded-Pingor/
+├── client/
+│   └── src/
+│       ├── components/        # FloatingChat, DetailModal, Navbar, Sidebar
+│       ├── context/           # AuthContext (session management)
+│       ├── pages/             # Dashboard, Inbox, Tasks, FollowUps, Settings
+│       └── App.js             # Root app with routing and layout
+└── server/
+    ├── agents/                # LangChain agent + Gmail tools
+    ├── config/                # Gmail OAuth2 client configuration
+    ├── routes/                # REST API (tasks, followups, threads, chat, auth...)
+    ├── services/              # aiService, syncService, gmailService, dbService
+    └── index.js               # Express server entry point
+```
+
+---
+
+## API Reference
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/url` | GET | Get Google OAuth2 login URL |
+| `/api/auth/callback` | GET | Handle OAuth callback, store tokens |
+| `/api/sync/manual` | POST | Trigger an immediate Gmail sync |
+| `/api/sync/status` | GET | Get current sync state and latest threads |
+| `/api/threads` | GET | List all synced email threads |
+| `/api/tasks` | GET/POST/PATCH | Manage action items |
+| `/api/followups` | GET | List FYI threads and pending drafts |
+| `/api/followups/approve/:id` | POST | Push approved draft to Gmail |
+| `/api/chat/ask` | POST | Send a message to the AI assistant |
+| `/api/contacts` | GET/POST/PATCH/DELETE | Manage contacts |
+| `/api/history` | GET/POST | List and create chat sessions |
+
+---
+
+## Team
+
+**CodeBlooded** — built for the H2H Hackathon
+
+| Name | Role |
+|------|------|
+| Dhanush Reddy S | Team Lead · Backend Architecture · AI Pipeline |
+| M Rithika | Frontend Development · UI/UX · Integration |
+
+---
+
+<div align="center">
+<sub>Built with ☕ and zero sleep · <strong>Dhanush Reddy S & M Rithika</strong> · CodeBlooded Team · 2026</sub>
+</div>
