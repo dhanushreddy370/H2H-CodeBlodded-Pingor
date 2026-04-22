@@ -202,7 +202,7 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
                 style={{ 
                     padding: '20px', background: 'var(--bg-primary)', borderRadius: '16px', 
                     lineHeight: '1.6', color: 'var(--text-main)', width: '100%', border: '1px solid var(--border)',
-                    minHeight: '120px', resize: 'vertical', outline: 'none'
+                    minHeight: '80px', resize: 'vertical', outline: 'none'
                 }}
               />
             </div>
@@ -223,7 +223,7 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
                   placeholder="Ask a question or post an update..."
                   value={commentText}
                   onChange={e => setCommentText(e.target.value)}
-                  style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', resize: 'none', minHeight: '80px', color: 'var(--text-main)' }}
+                  style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', resize: 'none', minHeight: '60px', color: 'var(--text-main)' }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
                   <button className="button" onClick={handleAddComment} style={{ padding: '8px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -235,9 +235,9 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
           </div>
 
           <div className="modal-right">
-            <div className="card" style={{ padding: '24px', position: 'sticky', top: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
               <div className="modal-section">
-                <div className="modal-section-title"><Calendar size={20} /> Deadline</div>
+                <div className="modal-section-title" style={{ fontSize: '1rem' }}><Calendar size={18} /> Deadline</div>
                 <input 
                   type="date" 
                   value={activeData.deadline ? new Date(activeData.deadline).toISOString().split('T')[0] : ''}
@@ -248,7 +248,7 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
               </div>
 
               <div className="modal-section" style={{ marginTop: '24px' }}>
-                <div className="modal-section-title"><User size={20} /> Assignees</div>
+                <div className="modal-section-title" style={{ fontSize: '1rem' }}><User size={18} /> Assignees</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
                   {(activeData.assignees || []).map(u => (
                     <div key={u.id || u.email} className="user-tag">{u.name}</div>
@@ -290,7 +290,7 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
               </div>
 
               <div className="modal-section" style={{ marginTop: '24px' }}>
-                <div className="modal-section-title"><Paperclip size={20} /> Attachments</div>
+                <div className="modal-section-title" style={{ fontSize: '1rem' }}><Paperclip size={18} /> Attachments</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {(activeData.attachments || []).map((a, i) => (
                     <div key={i} className="nav-item" style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '12px', justifyContent: 'space-between' }}>

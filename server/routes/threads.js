@@ -61,4 +61,21 @@ router.post('/:id/sync-gmail', async (req, res) => {
   }
 });
 
+// AI Generate Reply endpoint
+router.post('/:id/generate-reply', async (req, res) => {
+  try {
+    const { generateReply } = require('../services/aiService');
+    const db = readDB();
+    const thread = (db.threads || []).find(t => t._id === req.params.id);
+    
+    if (!thread) return res.status(404).json({ error: 'Thread not found' });
+
+    const reply = await generateReply(thread.subject, thread.snippet);
+    res.json({ reply });
+  } catch (err) {
+    console.error('AI Reply Error:', err);
+    res.status(500).json({ error: 'Failed to generate AI reply: ' + err.message });
+  }
+});
+
 module.exports = router;

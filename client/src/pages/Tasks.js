@@ -54,6 +54,8 @@ const Tasks = () => {
 
   useEffect(() => {
     fetchTasks();
+    const interval = setInterval(fetchTasks, 10000);
+    return () => clearInterval(interval);
   }, [fetchTasks]);
 
   const openTask = (task) => {

@@ -113,7 +113,7 @@ const Login = () => {
     animate: (custom) => ({
       y: [0, custom ? -20 : 20, 0],
       transition: {
-        duration: custom ? 4 : 5,
+        duration: custom ? 2 : 2.5,
         repeat: Infinity,
         ease: "easeInOut"
       }
@@ -123,8 +123,8 @@ const Login = () => {
   const containerVariants = {
     exit: {
       opacity: 0,
-      y: -100,
-      transition: { duration: 0.8, ease: "easeInOut" }
+      y: -50,
+      transition: { duration: 0.4, ease: "easeInOut" }
     }
   };
 
@@ -185,6 +185,7 @@ const Login = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit="exit"
+            transition={{ duration: 0.5 }}
             style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '20px', zIndex: 10, position: 'relative' }}
           >
             {/* Parallax Background Elements */}
@@ -206,9 +207,9 @@ const Login = () => {
             </div>
 
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
+              initial={{ y: 15, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
               style={{ zIndex: 2 }}
             >
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', padding: '8px 16px', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '20px', marginBottom: '32px', fontWeight: '600', fontSize: '0.9rem' }}>
@@ -241,9 +242,9 @@ const Login = () => {
         ) : (
           <motion.div
             key="auth"
-            initial={{ opacity: 0, scale: 1.1 }}
+            initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             style={{ height: '100vh', width: '100vw', display: 'flex' }}
           >
             {/* Left Branding Panel */}

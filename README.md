@@ -28,7 +28,7 @@ Pingor is a production-ready Agentic Assistant that automates email management a
 - **Frontend:** React.js, Lucide Icons, Vanilla CSS
 - **Backend:** Node.js, Express.js, Mongoose
 - **Database:** MongoDB Atlas (Cloud-based, persistent, scalable)
-- **AI Engine:** Ollama (Local LLM - Llama 3.2 / Gemma)
+- **AI Engine:** Ollama (Local LLM - Llama 3.2)
 - **Agent Framework:** LangChain (ReAct Tool Calling Architecture)
 - **APIs:** Gmail API (OAuth2)
 - **Scheduling:** Node-Cron for synchronized heartbeat tracking

@@ -168,14 +168,54 @@ JSON: { "isInformational": true, "draftReply": "..." }
   }
 }
 
-module.exports = {
-  classifyThread,
-  assignPriority,
-  generateFilterQuery,
-  generateChatResponse,
-  extractActionItems,
-  evaluateAcknowledgement
-};
+/**
+ * Generate a professional reply to an email thread
+ */
+async function generateReply(subject, snippet) {
+  const prompt = `
+Generate a professional, concise reply to this email.
+Subject: ${subject}
+Content: ${snippet}
+
+Respond ONLY with the text of the reply. Keep it under 100 words.
+`;
+
+  try {
+    const response = await axios.post(OLLAMA_GENERATE_URL, {
+      model: OLLAMA_MODEL,
+      prompt: prompt,
+      stream: false
+    });
+
+    return response.data.response;
+  } catch (error) {
+    console.error('Ollama reply generation failed:', error.message);
+    return "Thank you for your email. I will look into this and get back to you shortly.";
+  }
+}
+
+/**
+ * Generate a quick one-sentence insight for an email
+ */
+async function generateInsight(subject, snippet) {
+  const prompt = `
+Summarize the main intent of this email in EXACTLY one short sentence.
+Subject: ${subject}
+Content: ${snippet}
+`;
+
+  try {
+    const response = await axios.post(OLLAMA_GENERATE_URL, {
+      model: OLLAMA_MODEL,
+      prompt: prompt,
+      stream: false
+    });
+
+    return response.data.response.trim();
+  } catch (error) {
+    return "No urgent insight required for this thread.";
+  }
+}
 
 module.exports = {
   classifyThread,
@@ -183,5 +223,7 @@ module.exports = {
   generateFilterQuery,
   generateChatResponse,
   extractActionItems,
-  evaluateAcknowledgement
+  evaluateAcknowledgement,
+  generateReply,
+  generateInsight
 };

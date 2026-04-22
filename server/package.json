@@ -24,5 +24,11 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "data/*"
+    ],
+    "delay": "1000"
   }
 }

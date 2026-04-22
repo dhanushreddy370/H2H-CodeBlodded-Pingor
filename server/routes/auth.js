@@ -108,6 +108,62 @@ router.get('/callback', async (req, res) => {
   }
 });
 
+// Route to handle the callback from Google (POST version for frontend components)
+router.post('/callback', async (req, res) => {
+  const { code } = req.body;
+  if (!code) {
+    return res.status(400).json({ success: false, error: 'Authorization code is required' });
+  }
+
+  try {
+    const tokens = await getTokensFromCode(code);
+    const tempClient = new google.auth.OAuth2(
+      process.env.GMAIL_CLIENT_ID,
+      process.env.GMAIL_CLIENT_SECRET,
+      process.env.GMAIL_REDIRECT_URI
+    );
+    tempClient.setCredentials(tokens);
+    
+    const oauth2 = google.oauth2({ version: 'v2', auth: tempClient });
+    const { data: userInfo } = await oauth2.userinfo.get();
+
+    if (!userInfo.email) {
+      throw new Error('Email not provided by Google');
+    }
+
+    const db = readDB();
+    let userIndex = db.users.findIndex(u => u.email.toLowerCase() === userInfo.email.toLowerCase());
+    
+    const userUpdate = {
+      id: userInfo.id,
+      sub: userInfo.id,
+      email: userInfo.email,
+      name: userInfo.name,
+      picture: userInfo.picture,
+      tokens: tokens,
+      gmailConnected: true,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (userIndex !== -1) {
+      db.users[userIndex] = { ...db.users[userIndex], ...userUpdate };
+    } else {
+      db.users.push({ ...userUpdate, createdAt: new Date().toISOString() });
+      userIndex = db.users.length - 1;
+    }
+    
+    writeDB(db);
+
+    const safeUser = { ...db.users[userIndex] };
+    delete safeUser.tokens;
+
+    res.json({ success: true, user: safeUser });
+  } catch (error) {
+    console.error('OAuth POST Callback Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // --- Local Refinement Routes (User Management) ---
 
 // Check if user exists

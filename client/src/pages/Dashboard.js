@@ -73,11 +73,14 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
       } catch (err) {
         console.error('Failed to align with backend:', err);
       } finally {
-        setTimeout(() => setLoading(false), 800);
+        setLoading(false);
       }
     };
 
     fetchData();
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
   }, [user]);
 
   const handleManualSync = async () => {

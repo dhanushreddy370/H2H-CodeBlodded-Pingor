@@ -39,6 +39,8 @@ const FollowUps = ({ onOpenChat }) => {
 
   useEffect(() => {
     fetchFollowUps();
+    const interval = setInterval(fetchFollowUps, 10000);
+    return () => clearInterval(interval);
   }, [fetchFollowUps]);
 
   const handleUpdate = (updated) => {

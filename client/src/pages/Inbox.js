@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bot, CheckSquare, Filter, Archive, Trash2, Reply, Inbox as InboxIcon, Search, CheckCircle, XCircle, Loader2, Plus } from 'lucide-react';
+import { Bot, CheckSquare, Filter, Archive, Trash2, Reply, Inbox as InboxIcon, Search, CheckCircle, XCircle, Loader2, Plus, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { GooeyInput } from '../components/ui/GooeyInput';
 
@@ -31,6 +31,8 @@ const Inbox = () => {
 
   useEffect(() => {
     fetchThreads();
+    const interval = setInterval(fetchThreads, 10000);
+    return () => clearInterval(interval);
   }, [fetchThreads]);
 
   useEffect(() => {
@@ -81,6 +83,39 @@ const Inbox = () => {
       setComposeData({ to: '', subject: '', body: '' });
       showToast('Draft created successfully!');
     }, 1500);
+  };
+
+  const handleManualReply = () => {
+    if (!selectedThread) return;
+    setComposeData({
+      to: selectedThread.sender,
+      subject: selectedThread.subject.startsWith('Re:') ? selectedThread.subject : `Re: ${selectedThread.subject}`,
+      body: `\n\n--- On ${new Date(selectedThread.lastUpdated).toLocaleString()}, ${selectedThread.sender} wrote:\n> ${selectedThread.snippet}`
+    });
+    setIsComposeOpen(true);
+  };
+
+  const handleAIReply = async () => {
+    if (!selectedThread) return;
+    try {
+      showToast('Pingor AI is crafting a reply...', 'loading');
+      const res = await fetch(`http://localhost:5000/api/threads/${selectedThreadId}/generate-reply`, { method: 'POST' });
+      const data = await res.json();
+      
+      if (data.reply) {
+        setComposeData({
+          to: selectedThread.sender,
+          subject: selectedThread.subject.startsWith('Re:') ? selectedThread.subject : `Re: ${selectedThread.subject}`,
+          body: data.reply
+        });
+        setIsComposeOpen(true);
+        showToast('AI reply generated!');
+      } else {
+        showToast('Failed to generate AI reply', 'error');
+      }
+    } catch (err) {
+      showToast('AI connection error', 'error');
+    }
   };
 
   const selectedThread = threads.find(t => t._id === selectedThreadId);
@@ -172,6 +207,8 @@ const Inbox = () => {
               <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>{selectedThread.subject}</h2>
                 <div style={{ display: 'flex', gap: '8px' }}>
+                  <div className="icon-container" onClick={handleManualReply} style={{ border: '1px solid var(--border)', cursor: 'pointer' }} title="Manual Reply"><Reply size={18} /></div>
+                  <div className="icon-container" onClick={handleAIReply} style={{ border: '1px solid var(--border)', color: 'var(--primary)', cursor: 'pointer' }} title="AI Generate Reply"><Sparkles size={18} /></div>
                   <div className="icon-container" onClick={() => handleGmailAction('archive')} style={{ border: '1px solid var(--border)', cursor: 'pointer' }} title="Archive in Gmail"><Archive size={18} /></div>
                   <div className="icon-container" onClick={() => handleGmailAction('trash')} style={{ border: '1px solid var(--border)', color: '#ef4444', cursor: 'pointer' }} title="Trash in Gmail"><Trash2 size={18} /></div>
                 </div>
@@ -193,7 +230,16 @@ const Inbox = () => {
                   <p style={{ margin: 0, lineHeight: 1.6 }}>{selectedThread.aiSummary || "Analysis in progress by Pingor Intelligence..."}</p>
                 </div>
 
-                <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>{selectedThread.snippet}</div>
+                {selectedThread.content && selectedThread.content.includes('<') ? (
+                  <div 
+                    style={{ lineHeight: 1.6 }}
+                    dangerouslySetInnerHTML={{ __html: selectedThread.content }} 
+                  />
+                ) : (
+                  <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
+                    {selectedThread.content || selectedThread.snippet}
+                  </div>
+                )}
               </div>
             </div>
           ) : (

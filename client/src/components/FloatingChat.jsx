@@ -282,7 +282,7 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
           </div>
           <div>
             <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>Pingor Intelligence</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{isMinimized ? 'Minimized' : 'Local AI Model • Ollama'}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{isMinimized ? 'Minimized' : 'Local AI Model • Llama 3.2'}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
