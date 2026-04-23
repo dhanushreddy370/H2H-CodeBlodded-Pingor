@@ -12,6 +12,8 @@ import FloatingChat from './components/FloatingChat';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import LoadingScreen from './components/LoadingScreen';
+import DailyDigest from './pages/DailyDigest';
+import SmartSearch from './pages/SmartSearch';
 import { useAuth } from './context/AuthContext';
 import { useRipple } from './utils/useRipple';
 
@@ -48,6 +50,10 @@ function App() {
         );
       case 'Inbox':
         return <Inbox />;
+      case 'Daily Digest':
+        return <DailyDigest onBack={() => setActivePage('Dashboard')} />;
+      case 'Smart Search':
+        return <SmartSearch onBack={() => setActivePage('Dashboard')} />;
       case 'Tasks':
         return <Tasks />;
       case 'Follow-ups':

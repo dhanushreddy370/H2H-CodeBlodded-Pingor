@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Inbox, CheckSquare, Clock, Bot, Menu, User, Settings as SettingsIcon, Cpu, ShieldCheck, AlertTriangle, Users, History } from 'lucide-react';
+import { LayoutDashboard, Inbox, CheckSquare, Clock, Menu, Settings as SettingsIcon, Cpu, ShieldCheck, AlertTriangle, Users, History, FileText, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 
@@ -49,6 +49,8 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
 
   const navItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+    { name: 'Daily Digest', icon: <FileText size={20} /> },
+    { name: 'Smart Search', icon: <Search size={20} /> },
     { name: 'Inbox', icon: <Inbox size={20} /> },
     { name: 'Tasks', icon: <CheckSquare size={20} /> },
     { name: 'Follow-ups', icon: <Clock size={20} />, badge: draftCount > 0 ? draftCount : null },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Mail, CheckCircle, CheckSquare, Clock, AlertTriangle, TrendingUp, ArrowRight, RefreshCw, MessageSquare } from 'lucide-react';
+import { Mail, CheckCircle, CheckSquare, Clock, AlertTriangle, TrendingUp, ArrowRight, RefreshCw, MessageSquare, FileText, Search, Database } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 
@@ -18,10 +18,11 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState({ processedThreads: 0, totalThreads: 0 });
+  const [seedingDemo, setSeedingDemo] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const userId = user?.id || user?.sub;
+      const userId = user?.userId || user?.id || user?.sub;
       if (!userId) return;
       
       const [tasksRes, followupsRes, threadsRes] = await Promise.all([
@@ -88,7 +89,7 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
     setSyncProgress({ processedThreads: 0, totalThreads: 0 });
     
     try {
-      const userId = user?.id || user?.sub;
+      const userId = user?.userId || user?.id || user?.sub;
       const res = await fetch(`${API_BASE}/api/sync/manual?userId=${userId}`, { method: 'POST' });
       if (res.ok) {
         await fetchData();
@@ -97,6 +98,26 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
       console.error('Manual sync failed:', err);
     } finally {
       setTimeout(() => setIsSyncing(false), 2000);
+    }
+  };
+
+  const handleSeedDemo = async () => {
+    const userId = user?.userId || user?.id || user?.sub;
+    if (!userId) return;
+    setSeedingDemo(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/demo/seed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, count: 120 })
+      });
+      if (res.ok) {
+        await fetchData();
+      }
+    } catch (err) {
+      console.error('Synthetic seed failed', err);
+    } finally {
+      setSeedingDemo(false);
     }
   };
 
@@ -206,25 +227,49 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
           <h1 className="page-title" style={{ marginBottom: '4px' }}>Welcome back, {user?.name || 'User'}</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Efficiency score is high today. Here's your status.</p>
         </div>
-        <button 
-          className="button" 
-          onClick={handleManualSync}
-          disabled={isSyncing}
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '10px', 
-            padding: '14px 28px', 
-            borderRadius: '16px',
-            boxShadow: 'var(--shadow-hover)' 
-          }}
-        >
-          <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
-          {isSyncing ? 'Synchronizing...' : 'Sync Now'}
-        </button>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button 
+            className="button-secondary" 
+            onClick={() => setActivePage('Daily Digest')}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 22px', borderRadius: '16px' }}
+          >
+            <FileText size={18} /> View Digest
+          </button>
+          <button 
+            className="button-secondary" 
+            onClick={() => setActivePage('Smart Search')}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 22px', borderRadius: '16px' }}
+          >
+            <Search size={18} /> Smart Search
+          </button>
+          <button
+            className="button-secondary"
+            onClick={handleSeedDemo}
+            disabled={seedingDemo}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 22px', borderRadius: '16px' }}
+          >
+            <Database size={18} /> {seedingDemo ? 'Generating demo...' : 'Generate 100+ Demo Threads'}
+          </button>
+          <button 
+            className="button" 
+            onClick={handleManualSync}
+            disabled={isSyncing}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '10px', 
+              padding: '14px 28px', 
+              borderRadius: '16px',
+              boxShadow: 'var(--shadow-hover)' 
+            }}
+          >
+            <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
+            {isSyncing ? 'Synchronizing...' : 'Sync Now'}
+          </button>
+        </div>
       </div>
       
-      <div className="ai-summary-block">
+      <div className="ai-summary-block clickable" onClick={() => setActivePage('Daily Digest')} style={{ cursor: 'pointer' }}>
         <h3 className="ai-summary-title">
           <TrendingUp size={20} /> Today's Focus
         </h3>
@@ -232,6 +277,9 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
           Backend sync complete. You have <strong>{data.stats[3].value} urgent items</strong> needing attention. 
           Your AI Assistant has analyzed <strong>{data.threads.length}</strong> follow-up threads for today.
         </p>
+        <div style={{ marginTop: '14px', color: 'var(--primary)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          Open daily digest <ArrowRight size={16} />
+        </div>
       </div>
 
       <div className="grid grid-cols-4" style={{ marginBottom: '40px' }}>

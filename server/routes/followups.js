@@ -37,8 +37,9 @@ router.get('/', (req, res) => {
     const db = readDB();
     const threads = db.threads || [];
     
-    // Core filter: All informational emails OR emails that have a generated draft
+    // Core filter: overdue follow-ups, pending drafts, manual follow-ups, and informational threads
     let filtered = threads.filter(t => 
+      t.needsFollowUp ||
       t.categoryTag === 'FYI/informational' ||
       t.categoryTag === MANUAL_FOLLOWUP_TAG ||
       (t.draftStatus && t.draftStatus !== 'none')
@@ -58,6 +59,8 @@ router.get('/', (req, res) => {
       
       if (priority === 'asc') return (a.priority || 3) - (b.priority || 3);
       if (priority === 'desc') return (b.priority || 3) - (a.priority || 3);
+      if (a.needsFollowUp && !b.needsFollowUp) return -1;
+      if (!a.needsFollowUp && b.needsFollowUp) return 1;
       
       return dateB - dateA;
     });

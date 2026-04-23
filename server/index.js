@@ -33,6 +33,9 @@ const usersRoute = require('./routes/users');
 const contactsRoute = require('./routes/contacts');
 const inboxRoute = require('./routes/inbox');
 const statusRoute = require('./routes/status');
+const digestRoute = require('./routes/digest');
+const searchRoute = require('./routes/search');
+const demoRoute = require('./routes/demo');
 
 app.use('/api/tasks', tasksRoute);
 app.use('/api/followups', followupsRoute);
@@ -46,6 +49,9 @@ app.use('/api/users', usersRoute);
 app.use('/api/contacts', contactsRoute);
 app.use('/api/inbox', inboxRoute);
 app.use('/api/status', statusRoute);
+app.use('/api/digest', digestRoute);
+app.use('/api/search', searchRoute);
+app.use('/api/demo', demoRoute);
 
 // API endpoint to fetch sync status and latest threads
 app.get('/api/sync/status', (req, res) => {

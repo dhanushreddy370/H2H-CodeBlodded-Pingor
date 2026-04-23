@@ -3,6 +3,7 @@ const { google } = require('googleapis');
 const { getClientForUser } = require('../utils/googleClient');
 const { readDB, writeDB } = require('./dbService');
 const aiService = require('./aiService');
+const { buildThreadState, parseEmailAddress, stripDisplayName } = require('./threadUtils');
 
 let isSyncing = false;
 
@@ -75,17 +76,21 @@ const syncThreads = async (userId = 'system-sync') => {
     const client = getClientForUser(userId);
     const gmail = google.gmail({ version: 'v1', auth: client });
     
-    // Fetch latest 75 thread IDs
+    const db = readDB();
+    const userRecord = (db.users || []).find((entry) =>
+      entry.userId === userId || entry.id === userId || entry.sub === userId || entry.email === userId
+    );
+    const userEmail = userRecord?.email || '';
+
+    // Fetch latest 120 thread IDs
     const listResponse = await gmail.users.threads.list({
       userId: 'me',
-      maxResults: 75,
+      maxResults: 120,
     });
 
     const threadList = listResponse.data.threads || [];
     currentSyncStatus.totalThreads = threadList.length;
     currentSyncStatus.processedThreads = 0;
-
-    const db = readDB();
     if (!db.threads) db.threads = [];
     if (!db.actionItems) db.actionItems = [];
 
@@ -148,6 +153,12 @@ const syncThreads = async (userId = 'system-sync') => {
           aiSummary = existingThread.aiSummary;
         }
 
+        const threadState = buildThreadState({
+          messages,
+          existingThread,
+          userEmail
+        });
+
         const threadData = {
           _id: existingThread?._id || `thread-${id}`,
           threadId: id,
@@ -158,9 +169,11 @@ const syncThreads = async (userId = 'system-sync') => {
           categoryTag,
           lastUpdated: new Date().toISOString(),
           priority,
-          sender: fromAddress,
+          sender: stripDisplayName(fromAddress),
+          sourceEmail: threadState.sourceEmail || parseEmailAddress(fromAddress),
           userId,
-          status: existingThread?.status || 'open'
+          status: existingThread?.status || 'open',
+          ...threadState
         };
 
         if (threadIndex !== -1) {
@@ -179,10 +192,12 @@ const syncThreads = async (userId = 'system-sync') => {
                 _id: taskIndex !== -1 ? db.actionItems[taskIndex]._id : `task-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
                 userId,
                 action: a.action,
+                owner: a.owner || 'user',
                 threadId: id,
                 deadline: a.deadline && a.deadline !== 'none' ? a.deadline : null,
                 priority,
                 sender: fromAddress,
+                sourceEmail: threadData.sourceEmail,
                 status: taskIndex !== -1 ? db.actionItems[taskIndex].status : 'pending',
                 updatedAt: new Date().toISOString()
               };
