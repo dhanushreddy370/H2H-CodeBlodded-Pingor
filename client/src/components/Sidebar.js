@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Inbox, CheckSquare, Clock, Bot, Menu, User, Settings as SettingsIcon, Cpu, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, Inbox, CheckSquare, Clock, Bot, Menu, User, Settings as SettingsIcon, Cpu, ShieldCheck, AlertTriangle, Users, History } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 
@@ -52,6 +52,8 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
     { name: 'Inbox', icon: <Inbox size={20} /> },
     { name: 'Tasks', icon: <CheckSquare size={20} /> },
     { name: 'Follow-ups', icon: <Clock size={20} />, badge: draftCount > 0 ? draftCount : null },
+    { name: 'Contacts', icon: <Users size={20} /> },
+    { name: 'Chat History', icon: <History size={20} /> },
     { name: 'Settings', icon: <SettingsIcon size={20} /> }
   ];
 
@@ -74,15 +76,21 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
           style={{ cursor: 'pointer', flexShrink: 0, color: 'var(--primary)' }} 
           onClick={() => setIsOpen(!isOpen)} 
         />
+        <img 
+          src="/assets/pingor_logo.jpg" 
+          alt="Pingor" 
+          style={{ 
+            width: '32px', 
+            height: '32px', 
+            borderRadius: '10px', 
+            objectFit: 'cover',
+            mixBlendMode: 'multiply',
+            marginLeft: isOpen ? '12px' : '8px',
+            flexShrink: 0
+          }} 
+        />
         {isOpen && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '12px', whiteSpace: 'nowrap' }}>
-            <img 
-              src="/assets/pingor_logo.jpg" 
-              alt="Pingor" 
-              style={{ width: '32px', height: '32px', borderRadius: '10px', objectFit: 'cover' }} 
-            />
-            <span style={{ fontWeight: 900, fontSize: '1.3rem', letterSpacing: '-0.03em', color: 'var(--text-main)' }}>Pingor</span>
-          </div>
+           <span style={{ fontWeight: 900, fontSize: '1.3rem', letterSpacing: '-0.03em', color: 'var(--text-main)', marginLeft: '8px' }}>Pingor</span>
         )}
       </div>
 

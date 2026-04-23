@@ -69,28 +69,61 @@ const Inbox = () => {
   const handleSendCompose = async () => {
     const userId = user?.id || user?.sub;
     if (!userId) return;
-
     setIsSendingDraft(true);
     showToast('Creating draft in Gmail...', 'loading');
-    
+    const replyThreadId = composeData._isReply ? selectedThread?.threadId : null;
     try {
       const res = await fetch(`${API_BASE}/api/inbox/send-draft`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
-          threadId: selectedThread?.threadId,
-          ...composeData
+          threadId: replyThreadId,
+          to: composeData.to,
+          subject: composeData.subject,
+          body: composeData.body
         })
       });
-      
       const data = await res.json();
       if (data.success) {
         showToast('Draft created successfully!');
         setIsComposeOpen(false);
-        setComposeData({ to: '', subject: '', body: '' });
+        setComposeData({ to: '', subject: '', body: '', _isReply: false });
       } else {
         showToast(data.error || 'Failed to create draft', 'error');
+      }
+    } catch (err) {
+      showToast('API connection error', 'error');
+    } finally {
+      setIsSendingDraft(false);
+    }
+  };
+
+  const handleSendNow = async () => {
+    const userId = user?.id || user?.sub;
+    if (!userId) return;
+    setIsSendingDraft(true);
+    showToast('Sending email via Gmail...', 'loading');
+    const replyThreadId = composeData._isReply ? selectedThread?.threadId : null;
+    try {
+      const res = await fetch(`${API_BASE}/api/inbox/send-now`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          threadId: replyThreadId,
+          to: composeData.to,
+          subject: composeData.subject,
+          body: composeData.body
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Email sent successfully!');
+        setIsComposeOpen(false);
+        setComposeData({ to: '', subject: '', body: '', _isReply: false });
+      } else {
+        showToast(data.error || 'Failed to send email', 'error');
       }
     } catch (err) {
       showToast('API connection error', 'error');
@@ -104,7 +137,8 @@ const Inbox = () => {
     setComposeData({
       to: selectedThread.sender,
       subject: selectedThread.subject.startsWith('Re:') ? selectedThread.subject : `Re: ${selectedThread.subject}`,
-      body: `\n\n--- On ${new Date(selectedThread.lastUpdated).toLocaleString()}, ${selectedThread.sender} wrote:\n> ${selectedThread.snippet}`
+      body: `\n\n--- On ${new Date(selectedThread.lastUpdated).toLocaleString()}, ${selectedThread.sender} wrote:\n> ${selectedThread.snippet}`,
+      _isReply: true
     });
     setIsComposeOpen(true);
   };
@@ -122,7 +156,8 @@ const Inbox = () => {
         setComposeData({
           to: selectedThread.sender,
           subject: selectedThread.subject.startsWith('Re:') ? selectedThread.subject : `Re: ${selectedThread.subject}`,
-          body: data.reply
+          body: data.reply,
+          _isReply: true
         });
         setIsComposeOpen(true);
         showToast('AI reply generated!');
@@ -204,15 +239,16 @@ const Inbox = () => {
                     value={composeData.body} onChange={e => setComposeData({...composeData, body: e.target.value})}
                   ></textarea>
                 </div>
-                <button 
-                  className="button" 
-                  onClick={handleSendCompose}
-                  disabled={isSendingDraft}
-                  style={{ padding: '16px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
-                >
-                  {isSendingDraft ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                  {isSendingDraft ? 'Creating Draft...' : 'Send as Draft'}
-                </button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button className="button" onClick={handleSendCompose} disabled={isSendingDraft} style={{ flex: 1, padding: '16px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary)' }}>
+                    {isSendingDraft ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                    {isSendingDraft ? 'Saving...' : 'Save as Draft'}
+                  </button>
+                  <button className="button" onClick={handleSendNow} disabled={isSendingDraft} style={{ flex: 1, padding: '16px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                    {isSendingDraft ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                    {isSendingDraft ? 'Sending...' : 'Send Now'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -232,7 +268,7 @@ const Inbox = () => {
         <div className="inbox-sidebar card" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
             <div style={{ fontWeight: '900', fontSize: '0.75rem', color: 'var(--text-muted)', letterSpacing: '0.1em' }}>INBOX</div>
-            <button onClick={() => setIsComposeOpen(true)} className="icon-container" style={{ color: 'var(--primary)', cursor: 'pointer', border: 'none', background: 'white' }}>
+            <button onClick={() => { setComposeData({ to: '', subject: '', body: '', _isReply: false }); setIsComposeOpen(true); }} className="icon-container" style={{ color: 'var(--primary)', cursor: 'pointer', border: 'none', background: 'white' }}>
                <Plus size={18} />
             </button>
           </div>

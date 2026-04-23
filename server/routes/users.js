@@ -15,7 +15,7 @@ router.get('/', (req, res) => {
 });
 
 // Get/Create current user profile
-router.post('/profile', (req, res) => {
+router.post('/profile', async (req, res) => {
   try {
     const { userId, email, name, picture } = req.body;
     if (!userId) return res.status(400).json({ error: 'userId is required' });
@@ -54,13 +54,13 @@ router.post('/profile', (req, res) => {
 });
 
 // Update settings
-router.patch('/settings', (req, res) => {
-  handleSettingsUpdate(req, res);
+router.patch('/settings', async (req, res) => {
+  await handleSettingsUpdate(req, res);
 });
 
 // Alias for settings per UI overhaul requirements
-router.patch('/preferences', (req, res) => {
-  handleSettingsUpdate(req, res);
+router.patch('/preferences', async (req, res) => {
+  await handleSettingsUpdate(req, res);
 });
 
 async function handleSettingsUpdate(req, res) {

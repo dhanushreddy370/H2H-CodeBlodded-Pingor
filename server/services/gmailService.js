@@ -2,19 +2,17 @@ const { getClientForUser } = require('../utils/googleClient');
 const { google } = require('googleapis');
 
 /**
- * Creates an email draft as an auto-reply within a specific thread.
- * @param {string} threadId 
- * @param {string} to 
- * @param {string} subject 
- * @param {string} body 
+ * Creates an email draft. If threadId is provided, treated as a reply (Re: prefix added).
+ * If no threadId, treated as a new compose — subject used as-is.
  */
 async function createAutoReplyDraft(userId, threadId, to, subject, body) {
   try {
     const client = getClientForUser(userId);
     const gmail = google.gmail({ version: 'v1', auth: client });
-    
-    // Ensure subject has Re: if not already
-    const finalSubject = subject.toLowerCase().startsWith('re:') ? subject : `Re: ${subject}`;
+
+    const finalSubject = threadId
+      ? (subject.toLowerCase().startsWith('re:') ? subject : `Re: ${subject}`)
+      : subject;
 
     const messageLines = [
       `To: ${to}`,
@@ -23,7 +21,6 @@ async function createAutoReplyDraft(userId, threadId, to, subject, body) {
       body
     ];
 
-    // RFC 2822 formatting requires base64url encoding
     const emailRaw = Buffer.from(messageLines.join('\n')).toString('base64')
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
@@ -44,6 +41,45 @@ async function createAutoReplyDraft(userId, threadId, to, subject, body) {
   }
 }
 
+/**
+ * Sends an email immediately via Gmail API.
+ * If threadId provided, sends as a reply in that thread.
+ */
+async function sendEmail(userId, threadId, to, subject, body) {
+  try {
+    const client = getClientForUser(userId);
+    const gmail = google.gmail({ version: 'v1', auth: client });
+
+    const finalSubject = threadId
+      ? (subject.toLowerCase().startsWith('re:') ? subject : `Re: ${subject}`)
+      : subject;
+
+    const messageLines = [
+      `To: ${to}`,
+      `Subject: ${finalSubject}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: text/plain; charset="UTF-8"`,
+      '',
+      body
+    ];
+
+    const emailRaw = Buffer.from(messageLines.join('\n')).toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    const requestBody = { raw: emailRaw };
+    if (threadId) requestBody.threadId = threadId;
+
+    await gmail.users.messages.send({ userId: 'me', requestBody });
+    return true;
+  } catch (error) {
+    console.error(`Failed to send email:`, error.message);
+    return false;
+  }
+}
+
 module.exports = {
-  createAutoReplyDraft
+  createAutoReplyDraft,
+  sendEmail
 };

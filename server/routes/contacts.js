@@ -21,7 +21,7 @@ router.get('/', (req, res) => {
 });
 
 // Create a new contact
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { name, email, phone, userId } = req.body;
     if (!name || !email || !userId) {
@@ -51,7 +51,7 @@ router.post('/', (req, res) => {
 });
 
 // Update a contact
-router.patch('/:id', (req, res) => {
+router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const db = readDB();
@@ -73,7 +73,7 @@ router.patch('/:id', (req, res) => {
 });
 
 // Delete a contact
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const db = readDB();

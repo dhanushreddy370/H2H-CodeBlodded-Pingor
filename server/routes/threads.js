@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { readDB, writeDB } = require('../services/dbService');
 const { google } = require('googleapis');
-const { getClientForUser } = require('../config/gmail');
+const { getClientForUser } = require('../utils/googleClient');
 
 router.get('/', (req, res) => {
   try {

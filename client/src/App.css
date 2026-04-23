@@ -609,11 +609,13 @@ th {
   position: relative;
   width: 100%;
   max-width: 300px;
+  min-width: 0;
+  overflow: visible;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .gooey-input-container:focus-within {
-  max-width: 700px;
+  max-width: min(700px, 100%);
 }
 
 .input-blob-wrapper {

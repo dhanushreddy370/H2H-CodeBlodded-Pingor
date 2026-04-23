@@ -1,4 +1,6 @@
 const { google } = require('googleapis');
+const { DynamicStructuredTool } = require("@langchain/core/tools");
+const { z } = require("zod");
 
 /**
  * Returns a set of tools configured with a specific user's Gmail client.
