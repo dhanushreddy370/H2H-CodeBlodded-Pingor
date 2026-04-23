@@ -17,7 +17,7 @@ const Tasks = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const fetchTasks = useCallback(async () => {
-    const userId = user?.id || user?.sub;
+    const userId = user?.userId || user?.id || user?.sub;
     if (!userId) {
       setLoading(false);
       return;
@@ -145,8 +145,8 @@ const Tasks = () => {
               {searchTerm ? "No tasks match your search criteria. Try a different term or clear filters." : "No pending tasks found. Pingor will automatically extract tasks from your emails as they arrive."}
             </p>
             {!searchTerm && (
-              <button className="button" onClick={() => openTask({})} style={{ background: 'var(--primary-light)', color: 'var(--primary)', border: 'none' }}>
-                Add manual task
+              <button className="button-secondary" onClick={() => openTask({})}>
+                <Plus size={18} /> Add Manual Task
               </button>
             )}
           </div>
@@ -243,4 +243,3 @@ const Tasks = () => {
 };
 
 export default Tasks;
-

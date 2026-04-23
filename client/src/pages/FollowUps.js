@@ -130,8 +130,8 @@ const FollowUps = ({ onOpenChat }) => {
             <p style={{ color: 'var(--text-muted)', marginBottom: '32px', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
               You’re all caught up. Pingor will alert you when a new follow-up requires your attention based on your email interactions.
             </p>
-            <button className="button" onClick={() => { setSelectedThread({}); setIsModalOpen(true); }} style={{ background: 'var(--primary-light)', color: 'var(--primary)', border: 'none' }}>
-              Create manual follow-up
+            <button className="button-secondary" onClick={() => { setSelectedThread({}); setIsModalOpen(true); }}>
+              <Plus size={18} /> Create Manual Follow-up
             </button>
           </div>
         ) : (
@@ -185,18 +185,18 @@ const FollowUps = ({ onOpenChat }) => {
 
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                             {editingDraftId === thread._id ? (
-                              <button className="button" onClick={() => saveEdit(thread._id)} style={{ padding: '10px 20px', fontSize: '0.85rem', borderRadius: '10px' }}>
-                                <Save size={16} style={{ marginRight: '6px' }} /> Save Edits
+                              <button className="button" onClick={() => saveEdit(thread._id)}>
+                                <Save size={16} /> Save
                               </button>
                             ) : (
-                              <button className="button-secondary" onClick={() => { setEditingDraftId(thread._id); setDraftContent(thread.aiResponse); }} style={{ padding: '10px', borderRadius: '10px' }}>
+                              <button className="button-secondary" onClick={() => { setEditingDraftId(thread._id); setDraftContent(thread.aiResponse); }} title="Edit Draft">
                                 <Edit2 size={16} />
                               </button>
                             )}
-                            <button className="button" onClick={() => approveDraft(thread._id)} style={{ background: '#10b981', border: 'none', padding: '10px 20px', fontSize: '0.85rem', borderRadius: '10px', color: 'white', fontWeight: 700 }}>
-                              <Send size={16} style={{ marginRight: '6px' }} /> Send Draft
+                            <button className="button" onClick={() => approveDraft(thread._id)} style={{ background: '#10b981' }}>
+                              <Send size={16} /> Send
                             </button>
-                            <button className="button-secondary" onClick={() => rejectDraft(thread._id)} style={{ color: '#ef4444', padding: '10px', borderRadius: '10px' }}>
+                            <button className="button-danger" onClick={() => rejectDraft(thread._id)} title="Reject Draft">
                               <X size={16} />
                             </button>
                           </div>

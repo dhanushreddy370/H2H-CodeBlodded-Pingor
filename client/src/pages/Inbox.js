@@ -17,7 +17,7 @@ const Inbox = () => {
   const [composeData, setComposeData] = useState({ to: '', subject: '', body: '' });
 
   const fetchThreads = useCallback(async () => {
-    const userId = user?.id || user?.sub;
+    const userId = user?.userId || user?.id || user?.sub;
     if (!userId) return;
     try {
       const res = await fetch(`${API_BASE}/api/threads?userId=${userId}`);
@@ -67,7 +67,7 @@ const Inbox = () => {
   };
 
   const handleSendCompose = async () => {
-    const userId = user?.id || user?.sub;
+    const userId = user?.userId || user?.id || user?.sub;
     if (!userId) return;
     setIsSendingDraft(true);
     showToast('Creating draft in Gmail...', 'loading');
@@ -100,7 +100,7 @@ const Inbox = () => {
   };
 
   const handleSendNow = async () => {
-    const userId = user?.id || user?.sub;
+    const userId = user?.userId || user?.id || user?.sub;
     if (!userId) return;
     setIsSendingDraft(true);
     showToast('Sending email via Gmail...', 'loading');
@@ -208,34 +208,34 @@ const Inbox = () => {
       {isComposeOpen && (
         <div className="modal-overlay" onClick={() => !isSendingDraft && setIsComposeOpen(false)}>
           <div className="modal-container" onClick={e => e.stopPropagation()} style={{ width: 'min(600px, 90%)', height: 'auto', maxHeight: 'min(700px, 90%)', borderRadius: '24px' }}>
-            <div className="modal-header">
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(59, 130, 246, 0.05))', borderBottom: '1px solid rgba(37, 99, 235, 0.18)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div className="icon-container" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}><Send size={18} /></div>
-                <h3 style={{ margin: 0, fontWeight: 800 }}>New Message</h3>
+                <div className="icon-container" style={{ background: 'rgba(37, 99, 235, 0.14)', color: 'var(--primary)', border: '1px solid rgba(37, 99, 235, 0.22)' }}><Send size={18} /></div>
+                <h3 style={{ margin: 0, fontWeight: 800, color: 'var(--primary)' }}>New Message</h3>
               </div>
-              <XCircle size={20} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => !isSendingDraft && setIsComposeOpen(false)} />
+              <XCircle size={20} style={{ cursor: 'pointer', color: 'var(--primary)' }} onClick={() => !isSendingDraft && setIsComposeOpen(false)} />
             </div>
             <div className="modal-body" style={{ gridTemplateColumns: '1fr', padding: '32px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>RECIPIENT</label>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '8px', display: 'block', letterSpacing: '0.08em' }}>RECIPIENT</label>
                   <input 
                     type="text" placeholder="Email address" className="chat-input" 
                     value={composeData.to} onChange={e => setComposeData({...composeData, to: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>SUBJECT</label>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '8px', display: 'block', letterSpacing: '0.08em' }}>SUBJECT</label>
                   <input 
                     type="text" placeholder="What is this about?" className="chat-input" 
                     value={composeData.subject} onChange={e => setComposeData({...composeData, subject: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>MESSAGE BODY</label>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '8px', display: 'block', letterSpacing: '0.08em' }}>MESSAGE BODY</label>
                   <textarea 
                     placeholder="Write your message..." className="chat-input" 
-                    style={{ minHeight: '200px', borderRadius: '16px', resize: 'none', padding: '16px' }}
+                    style={{ minHeight: '200px', borderRadius: '16px', resize: 'none', padding: '16px', boxShadow: 'inset 0 1px 0 rgba(37, 99, 235, 0.04)' }}
                     value={composeData.body} onChange={e => setComposeData({...composeData, body: e.target.value})}
                   ></textarea>
                 </div>

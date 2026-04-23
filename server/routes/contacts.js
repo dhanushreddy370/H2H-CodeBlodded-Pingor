@@ -1,6 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const { readDB, writeDB } = require('../services/dbService');
+const { parseEmailAddress, stripDisplayName } = require('../services/threadUtils');
+
+const dedupeSuggestions = (entries = []) => {
+  const seen = new Map();
+  entries.forEach((entry) => {
+    if (!entry.email) return;
+    const key = entry.email.toLowerCase();
+    if (!seen.has(key)) {
+      seen.set(key, {
+        _id: entry._id || entry.id || key,
+        name: entry.name || entry.email,
+        email: entry.email,
+        source: entry.source || 'contact'
+      });
+    }
+  });
+  return [...seen.values()];
+};
 
 // Get all contacts for a user
 router.get('/', (req, res) => {
@@ -15,6 +33,56 @@ router.get('/', (req, res) => {
     contacts.sort((a, b) => a.name.localeCompare(b.name));
     
     res.json(contacts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/suggestions', (req, res) => {
+  try {
+    const { userId, q = '' } = req.query;
+    if (!userId) return res.status(400).json({ error: 'UserId is required' });
+
+    const db = readDB();
+    const normalizedQuery = String(q).trim().toLowerCase();
+
+    const contacts = (db.contacts || [])
+      .filter((contact) => contact.userId === userId)
+      .map((contact) => ({ ...contact, source: 'contact' }));
+
+    const users = (db.users || [])
+      .filter((entry) => (entry.userId || entry.id || entry.sub || entry.email) !== userId)
+      .map((entry) => ({
+        _id: entry._id || entry.id || entry.userId || entry.email,
+        name: entry.name || entry.email,
+        email: entry.email,
+        source: 'user'
+      }));
+
+    const senders = (db.threads || [])
+      .filter((thread) => thread.userId === userId)
+      .map((thread) => ({
+        _id: thread._id || thread.threadId || parseEmailAddress(thread.sender || ''),
+        name: stripDisplayName(thread.sender || ''),
+        email: parseEmailAddress(thread.sender || '') || thread.sourceEmail || '',
+        source: 'mail'
+      }));
+
+    const ranked = dedupeSuggestions([...contacts, ...users, ...senders])
+      .filter((entry) => {
+        if (!normalizedQuery) return true;
+        const haystack = `${entry.name} ${entry.email} ${entry.source}`.toLowerCase();
+        return haystack.includes(normalizedQuery);
+      })
+      .sort((a, b) => {
+        const aExact = normalizedQuery && (`${a.name} ${a.email}`.toLowerCase().startsWith(normalizedQuery) ? 1 : 0);
+        const bExact = normalizedQuery && (`${b.name} ${b.email}`.toLowerCase().startsWith(normalizedQuery) ? 1 : 0);
+        if (bExact !== aExact) return bExact - aExact;
+        return a.name.localeCompare(b.name);
+      })
+      .slice(0, 8);
+
+    res.json(ranked);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

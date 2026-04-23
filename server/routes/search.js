@@ -6,12 +6,13 @@ router.get('/demo-queries', (req, res) => {
   res.json({ queries: DEMO_QUERIES });
 });
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { userId, prompt } = req.body;
     if (!userId) return res.status(400).json({ error: 'userId is required' });
     if (!prompt) return res.status(400).json({ error: 'prompt is required' });
-    res.json(executeSearch({ userId, prompt }));
+    const results = await executeSearch({ userId, prompt });
+    res.json(results);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

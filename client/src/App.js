@@ -29,6 +29,20 @@ function App() {
   useRipple();
 
   useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    
+    handleResize(); // Initial check
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
     if (darkMode) {
       document.body.setAttribute('data-theme', 'dark');
     } else {
@@ -94,6 +108,22 @@ function App() {
 
   return (
     <div className="app-container">
+      {isSidebarOpen && window.innerWidth <= 768 && (
+        <div 
+          className="sidebar-backdrop" 
+          onClick={() => setIsSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'rgba(0,0,0,0.2)',
+            backdropFilter: 'blur(2px)',
+            zIndex: 9
+          }}
+        />
+      )}
       <Sidebar
         activePage={activePage}
         setActivePage={setActivePage}
@@ -107,6 +137,7 @@ function App() {
           setActivePage={setActivePage}
           darkMode={darkMode}
           toggleDarkMode={() => setDarkMode(!darkMode)}
+          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
         <div className="content-area" style={{ flex: 1 }}>

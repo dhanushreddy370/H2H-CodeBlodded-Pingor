@@ -44,20 +44,22 @@ const buildDigest = (userId) => {
     '',
     '## Critical Actions',
     ...(urgentTasks.length > 0
-      ? urgentTasks.slice(0, 8).map((task) => `- [P${task.priority || 3}] ${task.action || task.subject || 'Untitled task'}${task.deadline ? ` — due ${formatDate(task.deadline)}` : ''}`)
+      ? urgentTasks
+          .slice(0, 8)
+          .map((task) => `- [P${task.priority || 3}] ${task.action || task.subject || 'Untitled task'}${task.deadline ? ` - due ${formatDate(task.deadline)}` : ''}`)
       : ['- No urgent tasks right now.']),
     '',
     '## Follow-ups Waiting On You',
     ...(followUps.length > 0
       ? followUps.map((thread) => {
           const age = differenceInDays(thread.lastInboundAt || thread.lastUpdated);
-          return `- [P${thread.priority || 3}] ${thread.subject || 'Untitled thread'} — ${thread.sender || 'Unknown sender'}${age !== null ? ` — waiting ${age} day${age === 1 ? '' : 's'}` : ''}`;
+          return `- [P${thread.priority || 3}] ${thread.subject || 'Untitled thread'} - ${thread.sender || 'Unknown sender'}${age !== null ? ` - waiting ${age} day${age === 1 ? '' : 's'}` : ''}`;
         })
       : ['- No follow-ups currently overdue.']),
     '',
     '## Recent Highlights',
     ...(todaysHighlights.length > 0
-      ? todaysHighlights.map((thread) => `- ${thread.subject || 'Untitled thread'} — ${thread.aiSummary || thread.snippet || 'No summary available.'}`)
+      ? todaysHighlights.map((thread) => `- ${thread.subject || 'Untitled thread'} - ${thread.aiSummary || thread.snippet || 'No summary available.'}`)
       : ['- No recent threads available.'])
   ].join('\n');
 

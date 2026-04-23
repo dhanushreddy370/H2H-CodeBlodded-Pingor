@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Sun, Moon, LogOut, User as UserIcon } from 'lucide-react';
+import { Bell, Sun, Moon, LogOut, User as UserIcon, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ProfilePopup from './ProfilePopup';
 import { API_BASE } from '../config';
 
-const Navbar = ({ activePage, setActivePage, darkMode, toggleDarkMode }) => {
+const Navbar = ({ activePage, setActivePage, darkMode, toggleDarkMode, toggleSidebar }) => {
   const { user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -48,11 +48,37 @@ const Navbar = ({ activePage, setActivePage, darkMode, toggleDarkMode }) => {
         <div className="scroll-progress-bar" style={{ width: `${scrollWidth}%` }}></div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1, paddingLeft: '8px' }}>
-        <h2 style={{ fontSize: '1.6rem', fontWeight: '900', letterSpacing: '-0.02em', minWidth: '200px', transition: 'all 0.3s' }}>{activePage}</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, overflow: 'hidden' }}>
+        <div 
+          className="mobile-menu-toggle" 
+          onClick={toggleSidebar}
+          style={{ 
+            cursor: 'pointer', 
+            color: 'var(--primary)',
+            display: 'none',
+            padding: '8px',
+            borderRadius: '8px',
+            background: 'var(--primary-light)'
+          }}
+        >
+          <Menu size={20} />
+        </div>
+        <h2 style={{ 
+          fontSize: '1.25rem', 
+          fontWeight: '900', 
+          letterSpacing: '-0.02em', 
+          transition: 'all 0.3s',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          margin: 0
+        }}>{activePage}</h2>
       </div>
       
       <div className="navbar-user">
+        <div className="icon-container" onClick={toggleDarkMode} title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+          {darkMode ? <Sun size={20} color="var(--text-muted)" /> : <Moon size={20} color="var(--text-muted)" />}
+        </div>
         <div style={{ position: 'relative' }}>
           <div className="icon-container" onClick={() => setShowNotifications(!showNotifications)}>
             <Bell size={20} color="var(--text-muted)" />
@@ -80,7 +106,7 @@ const Navbar = ({ activePage, setActivePage, darkMode, toggleDarkMode }) => {
           )}
         </div>
 
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '10px' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div 
             onClick={() => setShowProfile(!showProfile)} 
             style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}

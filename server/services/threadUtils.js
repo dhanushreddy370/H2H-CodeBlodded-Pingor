@@ -28,11 +28,15 @@ const buildThreadState = ({
   followUpWindowDays = FOLLOW_UP_WINDOW_DAYS
 }) => {
   const normalizedUserEmail = String(userEmail || '').toLowerCase();
-  let lastInboundAt = existingThread.lastInboundAt || null;
-  let lastOutboundAt = existingThread.lastOutboundAt || null;
-  let lastMessageAt = existingThread.lastMessageAt || existingThread.lastUpdated || existingThread.createdAt || null;
-  let lastDirection = existingThread.lastDirection || 'unknown';
-  let sourceEmail = existingThread.sourceEmail || parseEmailAddress(existingThread.sender);
+  
+  // Safety: If null is passed explicitly, default parameters are ignored
+  const thread = existingThread || {};
+  
+  let lastInboundAt = thread.lastInboundAt || null;
+  let lastOutboundAt = thread.lastOutboundAt || null;
+  let lastMessageAt = thread.lastMessageAt || thread.lastUpdated || thread.createdAt || null;
+  let lastDirection = thread.lastDirection || 'unknown';
+  let sourceEmail = thread.sourceEmail || parseEmailAddress(thread.sender);
 
   if (messages.length > 0) {
     let latestTimestamp = 0;

@@ -79,7 +79,42 @@ async function sendEmail(userId, threadId, to, subject, body) {
   }
 }
 
+async function sendTaskAssignmentEmail({ assignerUserId, recipientEmail, recipientName, task }) {
+  const assigneeName = recipientName || recipientEmail;
+  const taskTitle = task.action || task.subject || task.title || 'Untitled task';
+  const dueDate = task.deadline ? new Date(task.deadline).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  }) : 'No deadline set';
+
+  const lines = [
+    `Hi ${assigneeName},`,
+    '',
+    'You have been assigned a task in Pingor.',
+    '',
+    `Task: ${taskTitle}`,
+    `Description: ${task.description || task.snippet || 'No description provided.'}`,
+    `Deadline: ${dueDate}`,
+    `Priority: P${task.priority || 3}`,
+    '',
+    'Please review it and follow up in Gmail if needed.',
+    '',
+    'Regards,',
+    'Pingor'
+  ];
+
+  return sendEmail(
+    assignerUserId,
+    null,
+    recipientEmail,
+    `Task assigned: ${taskTitle}`,
+    lines.join('\n')
+  );
+}
+
 module.exports = {
   createAutoReplyDraft,
-  sendEmail
+  sendEmail,
+  sendTaskAssignmentEmail
 };

@@ -27,6 +27,8 @@ Respond ONLY with valid JSON: { "tag": "tag-name" }
       prompt: prompt,
       stream: false,
       format: 'json'
+    }, {
+      timeout: 4000
     });
 
     const responseText = response.data.response;
@@ -58,6 +60,8 @@ Respond ONLY with JSON: { "priority": 3 }
       prompt: prompt,
       stream: false,
       format: 'json'
+    }, {
+      timeout: 4000
     });
 
     const responseText = response.data.response;
@@ -120,9 +124,21 @@ Return a JSON array of objects: [{ "action": "...", "owner": "...", "deadline": 
  */
 async function generateFilterQuery(userPrompt) {
   const prompt = `
-Generate a MongoDB query for these fields: status, priority, type, sender, subject, snippet.
+You are a search assistant. Convert this natural language user prompt into a structured JSON filter for a local email thread database.
 Prompt: "${userPrompt}"
-Respond ONLY with JSON query.
+
+Fields available:
+- categoryTag (action-required, FYI/informational, meeting-related, approval-pending, vendor/external, personal)
+- priority (integer 1-5, where 5 is highest)
+- sender (name or email)
+- subject (text search)
+- snippet (text search)
+- needsFollowUp (boolean)
+- direction ("inbound" for received/inbox mail, "outbound" for sent mail)
+- datePreset ("today" or "yesterday" when explicitly asked)
+- dateWindowDays (integer, e.g., 7 for last week, 1 for today)
+
+Respond ONLY with valid JSON. Example: { "categoryTag": "action-required", "minPriority": 4, "sender": "Ravi", "direction": "inbound", "dateWindowDays": 7 }
 `;
 
   try {

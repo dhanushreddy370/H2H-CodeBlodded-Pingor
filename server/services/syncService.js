@@ -155,7 +155,7 @@ const syncThreads = async (userId = 'system-sync') => {
 
         const threadState = buildThreadState({
           messages,
-          existingThread,
+          existingThread: existingThread || {},
           userEmail
         });
 
@@ -181,6 +181,32 @@ const syncThreads = async (userId = 'system-sync') => {
         } else {
           db.threads.push(threadData);
         }
+
+        // --- CONTACT EXTRACTION ---
+        const extractContacts = (headerName) => {
+            const val = headers.find(h => h.name.toLowerCase() === headerName.toLowerCase())?.value;
+            if (!val) return;
+            const parts = val.split(',').map(p => p.trim());
+            parts.forEach(p => {
+                const email = parseEmailAddress(p);
+                const name = stripDisplayName(p);
+                if (email && email !== userEmail) {
+                    if (!db.contacts) db.contacts = [];
+                    const exists = db.contacts.find(c => c.email === email && c.userId === userId);
+                    if (!exists) {
+                        db.contacts.push({
+                            _id: `contact-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                            name, email, userId,
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        });
+                    }
+                }
+            });
+        };
+        extractContacts('from');
+        extractContacts('to');
+        extractContacts('cc');
 
         // Action Item Extraction
         if (categoryTag === 'action-required') {

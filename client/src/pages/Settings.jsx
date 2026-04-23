@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Shield, Bell, Save, CheckCircle, Moon, Sun, 
-  User, RefreshCw, LogOut, Mail, Clock, Layout, 
+  Shield, Bell, Save,
+  User, RefreshCw, LogOut, Clock, Layout, 
   Check, AlertCircle, Loader2
 } from 'lucide-react';
 import { API_BASE } from '../config';
@@ -78,9 +78,85 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
     </div>
   );
 
+  const sectionCardStyle = {
+    padding: '32px',
+    marginBottom: '32px',
+    borderRadius: '24px',
+    background: 'var(--glass-bg)',
+    border: '1px solid var(--glass-border)'
+  };
+
+  const settingRowBaseStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '20px',
+    background: 'var(--bg-elevated)',
+    borderRadius: '20px',
+    border: '1px solid var(--surface-outline)',
+    marginBottom: '16px',
+    transition: 'all 0.2s',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)'
+  };
+
+  const segmentedGroupStyle = {
+    display: 'flex',
+    background: 'var(--bg-secondary)',
+    padding: '6px',
+    borderRadius: '14px',
+    border: '1px solid var(--surface-outline)'
+  };
+
+  const getSegmentButtonStyle = (isActive) => ({
+    padding: '10px 20px',
+    borderRadius: '10px',
+    border: 'none',
+    background: isActive ? 'var(--bg-card)' : 'transparent',
+    color: isActive ? 'var(--primary)' : 'var(--text-muted)',
+    boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.18)' : 'none',
+    fontSize: '0.85rem',
+    fontWeight: 800,
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  });
+
+  const getChoiceCardStyle = (isActive) => ({
+    padding: '20px',
+    borderRadius: '16px',
+    border: '1px solid',
+    borderColor: isActive ? 'rgba(var(--primary-rgb), 0.32)' : 'var(--surface-outline)',
+    background: isActive ? 'var(--primary-light)' : 'var(--bg-elevated)',
+    color: isActive ? 'var(--primary)' : 'var(--text-main)',
+    fontWeight: 800,
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '8px',
+    boxShadow: isActive ? '0 10px 24px rgba(var(--primary-rgb), 0.14)' : 'none'
+  });
+
+  const saveBarStyle = {
+    position: 'fixed',
+    bottom: '32px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 'min(700px, 90%)',
+    padding: '16px 24px',
+    borderRadius: '24px',
+    zIndex: 100,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    boxShadow: '0 20px 50px rgba(0,0,0,0.22)',
+    border: '1px solid var(--glass-border)',
+    backdropFilter: 'blur(20px)',
+    background: 'var(--floating-bar-bg)'
+  };
 
   const SettingRow = ({ label, description, children }) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', background: 'white', borderRadius: '20px', border: '1px solid var(--border)', marginBottom: '16px', transition: 'all 0.2s' }}>
+    <div style={settingRowBaseStyle}>
       <div style={{ flex: 1, paddingRight: '16px' }}>
         <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>{label}</div>
         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', fontWeight: 500, lineHeight: 1.4 }}>{description}</div>
@@ -99,7 +175,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
         </div>
 
         {/* 1. Notifications */}
-        <div className="card" style={{ padding: '32px', marginBottom: '32px', borderRadius: '24px' }}>
+        <div className="card" style={sectionCardStyle}>
           <SectionHeader 
             icon={Bell} 
             title="Notifications" 
@@ -126,7 +202,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
         </div>
 
         {/* 2. Sync Settings */}
-        <div className="card" style={{ padding: '32px', marginBottom: '32px', borderRadius: '24px' }}>
+        <div className="card" style={sectionCardStyle}>
           <SectionHeader 
             icon={RefreshCw} 
             title="Sync Settings" 
@@ -138,42 +214,14 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
               <button
                 onClick={() => setSettings({ ...settings, syncFrequency: '60' })}
-                style={{
-                  padding: '20px',
-                  borderRadius: '16px',
-                  border: '2px solid',
-                  borderColor: settings.syncFrequency === '60' ? 'var(--primary)' : 'var(--border)',
-                  background: settings.syncFrequency === '60' ? 'var(--primary-light)' : 'white',
-                  color: settings.syncFrequency === '60' ? 'var(--primary)' : 'var(--text-main)',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
+                style={getChoiceCardStyle(settings.syncFrequency === '60')}
               >
                 <Clock size={20} />
                 <span>Hourly (Automated)</span>
               </button>
               <button
                 onClick={() => setSettings({ ...settings, syncFrequency: 'manual' })}
-                style={{
-                  padding: '20px',
-                  borderRadius: '16px',
-                  border: '2px solid',
-                  borderColor: settings.syncFrequency === 'manual' ? 'var(--primary)' : 'var(--border)',
-                  background: settings.syncFrequency === 'manual' ? 'var(--primary-light)' : 'white',
-                  color: settings.syncFrequency === 'manual' ? 'var(--primary)' : 'var(--text-main)',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
+                style={getChoiceCardStyle(settings.syncFrequency === 'manual')}
               >
                 <Shield size={20} />
                 <span>Manual Trigger</span>
@@ -193,7 +241,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
         </div>
 
         {/* 3. UI Preferences */}
-        <div className="card" style={{ padding: '32px', marginBottom: '32px', borderRadius: '24px' }}>
+        <div className="card" style={sectionCardStyle}>
           <SectionHeader 
             icon={Layout} 
             title="Interface Preferences" 
@@ -210,33 +258,21 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
           </SettingRow>
 
           <SettingRow label="View Density" description="Choose between a compact or more spacious layout.">
-            <div style={{ display: 'flex', background: '#f1f5f9', padding: '6px', borderRadius: '14px' }}>
+            <div style={segmentedGroupStyle}>
               <button 
                 onClick={() => setSettings({...settings, viewMode: 'compact'})}
-                style={{ 
-                  padding: '10px 20px', borderRadius: '10px', border: 'none', 
-                  background: settings.viewMode === 'compact' ? 'white' : 'transparent',
-                  color: settings.viewMode === 'compact' ? 'var(--primary)' : 'var(--text-muted)',
-                  boxShadow: settings.viewMode === 'compact' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
-                  fontSize: '0.85rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s'
-                }}
+                style={getSegmentButtonStyle(settings.viewMode === 'compact')}
               >Compact</button>
               <button 
                 onClick={() => setSettings({...settings, viewMode: 'comfortable'})}
-                style={{ 
-                  padding: '10px 20px', borderRadius: '10px', border: 'none', 
-                  background: settings.viewMode === 'comfortable' ? 'white' : 'transparent',
-                  color: settings.viewMode === 'comfortable' ? 'var(--primary)' : 'var(--text-muted)',
-                  boxShadow: settings.viewMode === 'comfortable' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
-                  fontSize: '0.85rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s'
-                }}
+                style={getSegmentButtonStyle(settings.viewMode === 'comfortable')}
               >Comfortable</button>
             </div>
           </SettingRow>
         </div>
 
         {/* 4. Account & Session */}
-        <div className="card" style={{ padding: '32px', marginBottom: '40px', borderRadius: '24px' }}>
+        <div className="card" style={{ ...sectionCardStyle, marginBottom: '40px' }}>
           <SectionHeader 
             icon={User} 
             title="Account & Connectivity" 
@@ -246,12 +282,12 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
           <SettingRow label="Connected Google Account" description={user?.email || 'No email attached'}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
               {user?.gmailConnected ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#10b981', fontWeight: '800', fontSize: '0.9rem', background: '#ecfdf5', padding: '8px 16px', borderRadius: '12px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--success-text)', fontWeight: '800', fontSize: '0.9rem', background: 'var(--success-surface)', border: '1px solid var(--success-border)', padding: '8px 16px', borderRadius: '12px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success-text)' }}></div>
                   Securely Linked
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444', fontWeight: '800', fontSize: '0.9rem', background: '#fef2f2', padding: '8px 16px', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--danger-text)', fontWeight: '800', fontSize: '0.9rem', background: 'var(--danger-surface)', border: '1px solid var(--danger-border)', padding: '8px 16px', borderRadius: '12px' }}>
                   <AlertCircle size={16} /> Not Connected
                 </div>
               )}
@@ -262,7 +298,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
             <button 
               onClick={logout} 
               className="button-secondary" 
-              style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fef2f2', display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 24px', borderRadius: '16px', fontWeight: 800 }}
+              style={{ color: 'var(--danger-text)', borderColor: 'var(--danger-border)', background: 'var(--danger-surface)', display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 24px', borderRadius: '16px', fontWeight: 800 }}
             >
               <LogOut size={18} /> Sign Out of Pingor
             </button>
@@ -270,18 +306,11 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
         </div>
 
         {/* Floating Save Bar */}
-        <div className="glass" style={{ 
-          position: 'fixed', bottom: '32px', left: '50%', transform: 'translateX(-50%)',
-          width: 'min(700px, 90%)',
-          padding: '16px 24px', borderRadius: '24px', zIndex: 100,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.15)', border: '1px solid var(--glass-border)',
-          backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.8)'
-        }}>
+        <div className="glass" style={saveBarStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {saved ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#10b981', fontWeight: '800' }}>
-                <div style={{ background: '#ecfdf5', padding: '8px', borderRadius: '50%' }}><Check size={18} /></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--success-text)', fontWeight: '800' }}>
+                <div style={{ background: 'var(--success-surface)', border: '1px solid var(--success-border)', padding: '8px', borderRadius: '50%' }}><Check size={18} /></div>
                 Settings synchronized
               </div>
             ) : (

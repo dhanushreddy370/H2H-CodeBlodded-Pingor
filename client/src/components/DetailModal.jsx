@@ -12,6 +12,7 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [showAssigneePicker, setShowAssigneePicker] = useState(false);
   const [assigneeSearch, setAssigneeSearch] = useState('');
+  const [contactSuggestions, setContactSuggestions] = useState([]);
   
   const fileInputRef = useRef(null);
 
@@ -22,9 +23,13 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
       const contentArea = document.querySelector('.content-area');
       if (contentArea) contentArea.style.overflow = 'hidden';
       const userId = user?.userId || user?.id || user?.sub || 'test-user-id';
-      fetch(`${API_BASE}/api/contacts?userId=${userId}`)
+      fetch(`${API_BASE}/api/contacts/suggestions?userId=${userId}`)
         .then(r => r.json())
-        .then(setContacts)
+        .then((data) => {
+          const list = Array.isArray(data) ? data : [];
+          setContacts(list);
+          setContactSuggestions(list);
+        })
         .catch(console.error);
     } else {
       document.body.classList.remove('modal-open');
@@ -38,6 +43,27 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
       if (contentArea) contentArea.style.overflow = 'auto';
     };
   }, [data, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const userId = user?.userId || user?.id || user?.sub || 'test-user-id';
+    const controller = new AbortController();
+    const query = assigneeSearch.trim();
+
+    fetch(`${API_BASE}/api/contacts/suggestions?userId=${userId}&q=${encodeURIComponent(query)}`, {
+      signal: controller.signal
+    })
+      .then((response) => response.json())
+      .then((data) => setContactSuggestions(Array.isArray(data) ? data : []))
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          console.error('Failed to load assignee suggestions:', error);
+        }
+      });
+
+    return () => controller.abort();
+  }, [assigneeSearch, isOpen, user]);
 
   if (!isOpen || !activeData) return null;
 
@@ -157,6 +183,8 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
     c.email.toLowerCase().includes(assigneeSearch.toLowerCase())
   ).slice(0, 5);
 
+  const liveSuggestions = assigneeSearch ? contactSuggestions : filteredContacts;
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={e => e.stopPropagation()}>
@@ -273,10 +301,17 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
 
                     {showAssigneePicker && assigneeSearch && (
                         <div className="card" style={{ position: 'absolute', top: '100%', left: 0, width: '100%', zIndex: 100, padding: '8px', marginTop: '4px' }}>
-                            {filteredContacts.length > 0 ? (
-                                filteredContacts.map(c => (
-                                    <div key={c.id} className="nav-item" onClick={() => handleAssignContact(c)} style={{ padding: '8px', borderRadius: '8px' }}>
-                                        <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>{c.name}</div>
+                            {liveSuggestions.length > 0 ? (
+                                liveSuggestions.map(c => (
+                                    <div key={c._id || c.id || c.email} className="nav-item" onClick={() => handleAssignContact(c)} style={{ padding: '8px', borderRadius: '8px' }}>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                                          <span>{c.name}</span>
+                                          {c.source && (
+                                            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--primary)' }}>
+                                              {c.source}
+                                            </span>
+                                          )}
+                                        </div>
                                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{c.email}</div>
                                     </div>
                                 ))

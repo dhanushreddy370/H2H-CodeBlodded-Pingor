@@ -17,7 +17,7 @@ const ProfilePopup = ({ isOpen, onClose, setActivePage }) => {
         position: 'absolute',
         top: '60px',
         right: '0',
-        width: '320px',
+        width: 'min(320px, 90vw)',
         background: 'var(--bg-card)',
         borderRadius: '24px',
         boxShadow: '0 20px 60px rgba(0,0,0,0.5)',

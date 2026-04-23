@@ -3,6 +3,64 @@ import { ArrowLeft, CalendarDays, Sparkles, ClipboardList, Clock, Copy } from 'l
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 
+const normalizeMarkdownText = (markdown = '') =>
+  String(markdown)
+    .replace(/â€”/g, ' - ')
+    .replace(/â€¢/g, ' • ');
+
+const renderDigestMarkdown = (markdown = '') => {
+  const normalized = normalizeMarkdownText(markdown);
+  const lines = normalized.split('\n');
+  const blocks = [];
+  let listItems = [];
+  let listKey = 0;
+
+  const flushList = () => {
+    if (listItems.length === 0) return;
+    const nextKey = listKey++;
+    blocks.push(
+      <ul key={`list-${nextKey}`} className="digest-markdown-list">
+        {listItems.map((item, index) => (
+          <li key={`item-${nextKey}-${index}`}>{item}</li>
+        ))}
+      </ul>
+    );
+    listItems = [];
+  };
+
+  lines.forEach((rawLine, index) => {
+    const line = rawLine.trim();
+
+    if (!line) {
+      flushList();
+      return;
+    }
+
+    if (line.startsWith('# ')) {
+      flushList();
+      blocks.push(<h1 key={`h1-${index}`}>{line.slice(2)}</h1>);
+      return;
+    }
+
+    if (line.startsWith('## ')) {
+      flushList();
+      blocks.push(<h2 key={`h2-${index}`}>{line.slice(3)}</h2>);
+      return;
+    }
+
+    if (line.startsWith('- ')) {
+      listItems.push(line.slice(2));
+      return;
+    }
+
+    flushList();
+    blocks.push(<p key={`p-${index}`}>{line}</p>);
+  });
+
+  flushList();
+  return blocks;
+};
+
 const DailyDigest = ({ onBack = () => {} }) => {
   const { user } = useAuth();
   const [digest, setDigest] = useState(null);
@@ -42,10 +100,10 @@ const DailyDigest = ({ onBack = () => {} }) => {
   return (
     <div className="tasks-page" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button className="button-secondary" onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ArrowLeft size={18} /> Back to Dashboard
+        <button className="button-secondary" onClick={onBack}>
+          <ArrowLeft size={18} /> Back
         </button>
-        <button className="button" onClick={copyDigest} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button className="button" onClick={copyDigest}>
           <Copy size={16} /> {copied ? 'Copied' : 'Copy Markdown'}
         </button>
       </div>
@@ -115,11 +173,11 @@ const DailyDigest = ({ onBack = () => {} }) => {
       <div className="card" style={{ padding: '28px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
           <CalendarDays size={20} color="var(--primary)" />
-          <h3 className="section-title" style={{ margin: 0 }}>Digest Markdown</h3>
+          <h3 className="section-title" style={{ margin: 0 }}>Digest Preview</h3>
         </div>
-        <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '0.92rem', color: 'var(--text-main)', background: '#f8fafc', borderRadius: '18px', padding: '20px', border: '1px solid var(--border)' }}>
-          {digest?.markdown}
-        </pre>
+        <div className="digest-markdown-preview">
+          {renderDigestMarkdown(digest?.markdown)}
+        </div>
       </div>
     </div>
   );
