@@ -80,7 +80,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
 
 
   const SettingRow = ({ label, description, children }) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', background: 'white', borderRadius: '20px', border: '1px solid var(--border)', marginBottom: '16px', transition: 'all 0.2s' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', background: 'var(--bg-card)', borderRadius: '20px', border: '1px solid var(--border)', marginBottom: '16px', transition: 'all 0.2s' }}>
       <div style={{ flex: 1, paddingRight: '16px' }}>
         <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>{label}</div>
         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', fontWeight: 500, lineHeight: 1.4 }}>{description}</div>
@@ -143,7 +143,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
                   borderRadius: '16px',
                   border: '2px solid',
                   borderColor: settings.syncFrequency === '60' ? 'var(--primary)' : 'var(--border)',
-                  background: settings.syncFrequency === '60' ? 'var(--primary-light)' : 'white',
+                  background: settings.syncFrequency === '60' ? 'var(--primary-light)' : 'var(--bg-card)',
                   color: settings.syncFrequency === '60' ? 'var(--primary)' : 'var(--text-main)',
                   fontWeight: 800,
                   cursor: 'pointer',
@@ -164,7 +164,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
                   borderRadius: '16px',
                   border: '2px solid',
                   borderColor: settings.syncFrequency === 'manual' ? 'var(--primary)' : 'var(--border)',
-                  background: settings.syncFrequency === 'manual' ? 'var(--primary-light)' : 'white',
+                  background: settings.syncFrequency === 'manual' ? 'var(--primary-light)' : 'var(--bg-card)',
                   color: settings.syncFrequency === 'manual' ? 'var(--primary)' : 'var(--text-main)',
                   fontWeight: 800,
                   cursor: 'pointer',
@@ -210,12 +210,12 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
           </SettingRow>
 
           <SettingRow label="View Density" description="Choose between a compact or more spacious layout.">
-            <div style={{ display: 'flex', background: '#f1f5f9', padding: '6px', borderRadius: '14px' }}>
+            <div style={{ display: 'flex', background: 'var(--sidebar-hover)', padding: '6px', borderRadius: '14px' }}>
               <button 
                 onClick={() => setSettings({...settings, viewMode: 'compact'})}
                 style={{ 
                   padding: '10px 20px', borderRadius: '10px', border: 'none', 
-                  background: settings.viewMode === 'compact' ? 'white' : 'transparent',
+                  background: settings.viewMode === 'compact' ? 'var(--bg-card)' : 'transparent',
                   color: settings.viewMode === 'compact' ? 'var(--primary)' : 'var(--text-muted)',
                   boxShadow: settings.viewMode === 'compact' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
                   fontSize: '0.85rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s'
@@ -225,7 +225,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
                 onClick={() => setSettings({...settings, viewMode: 'comfortable'})}
                 style={{ 
                   padding: '10px 20px', borderRadius: '10px', border: 'none', 
-                  background: settings.viewMode === 'comfortable' ? 'white' : 'transparent',
+                  background: settings.viewMode === 'comfortable' ? 'var(--bg-card)' : 'transparent',
                   color: settings.viewMode === 'comfortable' ? 'var(--primary)' : 'var(--text-muted)',
                   boxShadow: settings.viewMode === 'comfortable' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
                   fontSize: '0.85rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s'
@@ -246,12 +246,11 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
           <SettingRow label="Connected Google Account" description={user?.email || 'No email attached'}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
               {user?.gmailConnected ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#10b981', fontWeight: '800', fontSize: '0.9rem', background: '#ecfdf5', padding: '8px 16px', borderRadius: '12px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
-                  Securely Linked
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#10b981', fontWeight: '800', fontSize: '0.9rem', background: 'var(--success-bg)', padding: '8px 16px', borderRadius: '12px' }}>
+                  <CheckCircle size={16} /> Connected
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444', fontWeight: '800', fontSize: '0.9rem', background: '#fef2f2', padding: '8px 16px', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444', fontWeight: '800', fontSize: '0.9rem', background: 'var(--danger-bg)', padding: '8px 16px', borderRadius: '12px' }}>
                   <AlertCircle size={16} /> Not Connected
                 </div>
               )}
@@ -262,7 +261,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
             <button 
               onClick={logout} 
               className="button-secondary" 
-              style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fef2f2', display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 24px', borderRadius: '16px', fontWeight: 800 }}
+              style={{ color: 'var(--danger-text)', borderColor: 'var(--border)', background: 'var(--danger-bg)', display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 24px', borderRadius: '16px', fontWeight: 800 }}
             >
               <LogOut size={18} /> Sign Out of Pingor
             </button>
@@ -276,17 +275,17 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
           padding: '16px 24px', borderRadius: '24px', zIndex: 100,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           boxShadow: '0 20px 50px rgba(0,0,0,0.15)', border: '1px solid var(--glass-border)',
-          backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.8)'
+          backdropFilter: 'blur(20px)', background: 'var(--glass-bg)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {saved ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#10b981', fontWeight: '800' }}>
-                <div style={{ background: '#ecfdf5', padding: '8px', borderRadius: '50%' }}><Check size={18} /></div>
+                <div style={{ background: 'var(--success-bg)', padding: '8px', borderRadius: '50%' }}><Check size={18} /></div>
                 Settings synchronized
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: 600 }}>
-                <Shield size={20} style={{ color: 'var(--primary)' }} /> 
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444', fontWeight: '800', fontSize: '0.95rem' }}>
+                <div style={{ background: 'var(--danger-bg)', padding: '8px', borderRadius: '50%' }}><Shield size={18} /></div>
                 <span>You have unsaved changes</span>
               </div>
             )}

@@ -31,15 +31,20 @@ if (-not $npmCheck) {
 }
 Write-Host "✅ [DETECTED] Local Engine Ready.`n" -ForegroundColor Green
 
-# 2.5 Port Stabilizer (Clear 3000 & 5000)
-Write-Host "[SYSTEM] Clearing legacy port bindings (3000, 5000)..." -ForegroundColor White
+# 2.5 Port Stabilizer (Clear 3000 & 5000) - OPTIMIZED
+Write-Host "[SYSTEM] Clearing legacy port bindings (3000, 5000) - FAST SCAN..." -ForegroundColor White
 $ports = @(3000, 5000)
 foreach ($port in $ports) {
     try {
-        $conns = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
-        if ($conns) {
-            foreach ($c in $conns) {
-                Stop-Process -Id $c.OwningProcess -Force -ErrorAction SilentlyContinue
+        # Using netstat which is significantly faster than Get-NetTCPConnection on Windows
+        $portSearch = ":$port "
+        $processes = netstat -ano | findstr $portSearch
+        if ($processes) {
+            foreach ($proc in $processes) {
+                $pid = $proc.Trim().Split(' ', [System.StringSplitOptions]::RemoveEmptyEntries)[-1]
+                if ($pid -gt 0) {
+                    Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+                }
             }
             Write-Host "✅ Released Port $port" -ForegroundColor Green
         }
@@ -72,8 +77,8 @@ if (-not (Test-Path (Join-Path $WEB_DIR "node_modules"))) {
 
 # 6. Launch Visual Dashboard
 Write-Host "[FRONTEND] Spawning Visual Dashboard..." -ForegroundColor Yellow
-Start-Process powershell.exe -ArgumentList "-NoExit", "-Command", "cd '$WEB_DIR'; `$host.UI.RawUI.WindowTitle = 'Pingor Frontend'; npm start"
-Write-Host "✅ [UI ENGINE BOOTED] http://localhost:3000" -ForegroundColor Green
+Start-Process powershell.exe -ArgumentList "-NoExit", "-Command", "cd '$WEB_DIR'; `$env:HOST='127.0.0.1'; `$host.UI.RawUI.WindowTitle = 'Pingor Frontend'; npm start"
+Write-Host "✅ [UI ENGINE BOOTED] http://127.0.0.1:3000" -ForegroundColor Green
 
 # 7. Success Report
 Write-Host "`n============================================================" -ForegroundColor Cyan

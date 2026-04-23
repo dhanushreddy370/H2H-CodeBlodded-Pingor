@@ -17,6 +17,12 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
   const [contextChips, setContextChips] = useState([]); 
   const [filteredOptions, setFilteredOptions] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [chatToast, setChatToast] = useState(null);
+
+  const showChatToast = (message, type = 'success') => {
+    setChatToast({ message, type });
+    if (type !== 'loading') setTimeout(() => setChatToast(null), 4000);
+  };
   
   const [tasks, setTasks] = useState([]);
   const [followUps, setFollowUps] = useState([]);
@@ -194,6 +200,10 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
         })
       });
       
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
       const data = await response.json();
       const aiText = data.text;
       
@@ -213,10 +223,11 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
 
     } catch(err) {
       console.error('Chat error:', err);
+      showChatToast('AI engine unreachable. Check that Ollama is running.', 'error');
       setMessages(prev => [...prev, { 
         id: Date.now() + 1, 
         role: 'assistant', 
-        text: "I'm having trouble reaching my local intelligence engine. Please ensure Ollama is running on your machine." 
+        text: "I'm having trouble reaching the AI engine. Please ensure Ollama is running on your machine." 
       }]);
     } finally {
       setIsTyping(false);
@@ -240,16 +251,29 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
       width: '420px', 
       height: isMinimized ? '70px' : '650px', 
       maxHeight: 'calc(100vh - 48px)',
-      background: 'white', 
+      background: 'var(--bg-card)', 
       borderRadius: '28px', 
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', 
       display: 'flex', 
       flexDirection: 'column', 
       zIndex: 1000, 
-      border: '1px solid rgba(0,0,0,0.08)',
+      border: '1px solid var(--border)',
       overflow: 'hidden',
       transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
     }}>
+      {chatToast && (
+        <div style={{
+          position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)',
+          background: chatToast.type === 'error' ? '#ef4444' : '#16a34a',
+          color: 'white', padding: '8px 18px', borderRadius: '12px',
+          fontSize: '0.8rem', fontWeight: 600, zIndex: 10,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)', whiteSpace: 'nowrap',
+          animation: 'slideUp 0.3s ease'
+        }}>
+          {chatToast.message}
+        </div>
+      )}
+
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -264,9 +288,9 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
       
       {/* Header */}
       <div style={{ 
-        background: 'white', 
+        background: 'var(--bg-card)', 
         padding: '16px 24px', 
-        borderBottom: isMinimized ? 'none' : '1px solid rgba(0,0,0,0.05)',
+        borderBottom: isMinimized ? 'none' : '1px solid var(--border)',
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
@@ -277,12 +301,12 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
           <div
             className="icon-container"
             style={{
-              background: 'linear-gradient(180deg, #ffffff 0%, #eef4ff 100%)',
+              background: 'var(--primary-light)',
               width: '42px',
               height: '42px',
               borderRadius: '14px',
-              boxShadow: '0 8px 18px rgba(37,99,235,0.16)',
-              border: '1px solid rgba(37,99,235,0.08)'
+              boxShadow: '0 8px 18px rgba(var(--primary-rgb), 0.12)',
+              border: '1px solid var(--border)'
             }}
           >
             <img
@@ -318,12 +342,12 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
       {!isMinimized && (
         <>
           {/* Messages Area */}
-          <div className="chat-history" style={{ flex: 1, padding: '24px', overflowY: 'auto', background: '#fcfdfe', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="chat-history" style={{ flex: 1, padding: '24px', overflowY: 'auto', background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {messages.map(msg => (
               <div key={msg.id} style={{ display: 'flex', gap: '12px', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row', alignItems: 'flex-end' }}>
                 <div style={{ 
                   width: '32px', height: '32px', borderRadius: '10px', 
-                  background: msg.role === 'user' ? 'var(--primary)' : 'white', 
+                  background: msg.role === 'user' ? 'var(--primary)' : 'var(--bg-card)', 
                   color: msg.role === 'user' ? 'white' : 'var(--primary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
@@ -336,12 +360,13 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
                       src="/assets/pingor_mark.svg"
                       alt="Pingor"
                       style={{ width: '18px', height: '18px', objectFit: 'contain' }}
+                      className="pingor-mark-logo"
                     />
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
                   <div style={{ 
-                    background: msg.role === 'user' ? 'var(--primary)' : 'white',
+                    background: msg.role === 'user' ? 'var(--primary)' : 'var(--bg-card)',
                     color: msg.role === 'user' ? 'white' : 'var(--text-main)',
                     boxShadow: msg.role === 'user' ? '0 4px 12px rgba(37,99,235,0.2)' : '0 2px 10px rgba(0,0,0,0.03)',
                     border: msg.role === 'user' ? 'none' : '1px solid rgba(0,0,0,0.05)',
@@ -367,14 +392,15 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
             ))}
             {isTyping && (
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'white', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                   <img
                     src="/assets/pingor_mark.svg"
                     alt="Pingor"
                     style={{ width: '18px', height: '18px', objectFit: 'contain' }}
+                    className="pingor-mark-logo"
                   />
                 </div>
-                <div style={{ background: 'white', padding: '12px 18px', borderRadius: '20px 20px 20px 4px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', display: 'flex', gap: '4px' }}>
+                <div style={{ background: 'var(--bg-card)', padding: '12px 18px', borderRadius: '20px 20px 20px 4px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', display: 'flex', gap: '4px' }}>
                   <div className="typing-dot" style={{ width: '6px', height: '6px', background: 'var(--primary)', borderRadius: '50%' }}></div>
                   <div className="typing-dot" style={{ width: '6px', height: '6px', background: 'var(--primary)', borderRadius: '50%', animationDelay: '0.2s' }}></div>
                   <div className="typing-dot" style={{ width: '6px', height: '6px', background: 'var(--primary)', borderRadius: '50%', animationDelay: '0.4s' }}></div>
@@ -385,7 +411,7 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
           </div>
 
           {/* Input Area */}
-          <div style={{ padding: '24px', background: 'white', borderTop: '1px solid rgba(0,0,0,0.05)', position: 'relative' }}>
+          <div style={{ padding: '24px', background: 'var(--bg-card)', borderTop: '1px solid var(--border)', position: 'relative' }}>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }} className="no-scrollbar">
               {quickPrompts.map((p, i) => (
                 <button 
@@ -393,8 +419,8 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
                   onClick={() => { setInputVal(p.label); inputRef.current?.focus(); }}
                   style={{ 
                     display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', 
-                    borderRadius: '14px', border: '1px solid #f1f5f9', background: '#f8fafc',
-                    fontSize: '0.8rem', color: '#475569', fontWeight: 700, cursor: 'pointer',
+                    borderRadius: '14px', border: '1px solid var(--border)', background: 'var(--bg-primary)',
+                    fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: 700, cursor: 'pointer',
                     whiteSpace: 'nowrap', transition: 'all 0.2s'
                   }}
                   className="quick-prompt-btn"
@@ -406,8 +432,8 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
             </div>
 
             {showCommandPalette && (
-              <div style={{ position: 'absolute', bottom: '100%', left: '20px', right: '20px', marginBottom: '16px', background: 'white', borderRadius: '20px', boxShadow: '0 -10px 40px rgba(0,0,0,0.1)', border: '1px solid rgba(0,0,0,0.05)', overflow: 'hidden', zIndex: 100, maxHeight: '250px', overflowY: 'auto' }}>
-                <div style={{ padding: '12px 20px', fontSize: '0.7rem', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', background: '#f8fafc' }}>
+              <div style={{ position: 'absolute', bottom: '100%', left: '20px', right: '20px', marginBottom: '16px', background: 'var(--bg-card)', borderRadius: '20px', boxShadow: '0 -10px 40px rgba(0,0,0,0.1)', border: '1px solid var(--border)', overflow: 'hidden', zIndex: 100, maxHeight: '250px', overflowY: 'auto' }}>
+                <div style={{ padding: '12px 20px', fontSize: '0.7rem', fontWeight: '900', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', background: 'var(--bg-primary)' }}>
                   {paletteType === 'slash' ? 'Pingor Commands' : `Select ${paletteType}`}
                 </div>
                 <div style={{ padding: '8px' }}>
@@ -417,17 +443,17 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
                       {opt.label}
                     </div>
                   )) : (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>No results matched</div>
+                    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No results matched</div>
                   )}
                 </div>
               </div>
             )}
 
-            <div style={{ background: '#f1f5f9', borderRadius: '20px', padding: '8px' }}>
+            <div style={{ background: 'var(--sidebar-hover)', borderRadius: '20px', padding: '8px' }}>
               {contextChips.length > 0 && (
                 <div style={{ display: 'flex', gap: '6px', padding: '8px', flexWrap: 'wrap' }}>
                   {contextChips.map(chip => (
-                    <div key={chip.id} style={{ background: 'white', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                    <div key={chip.id} style={{ background: 'var(--bg-card)', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                       {chip.icon}
                       <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{chip.label}</span>
                       <X size={14} style={{ cursor: 'pointer', opacity: 0.5 }} onClick={() => removeChip(chip.id)} />
@@ -439,7 +465,7 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 12px' }}>
                 <button 
                   onClick={() => fileInputRef.current?.click()}
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
                   title="Attach context"
                 >
                   <Paperclip size={20} />
@@ -450,7 +476,7 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
                   value={inputVal}
                   onChange={handleInputChange}
                   placeholder="Ask Pingor... (Try / for commands)"
-                  style={{ border: 'none', background: 'transparent', flex: 1, padding: '10px 0', fontSize: '0.95rem', fontWeight: 500, outline: 'none', color: '#1e293b' }}
+                  style={{ border: 'none', background: 'transparent', flex: 1, padding: '10px 0', fontSize: '0.95rem', fontWeight: 500, outline: 'none', color: 'var(--text-main)' }}
                   onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
                 />
                 <button 

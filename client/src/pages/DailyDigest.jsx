@@ -50,7 +50,7 @@ const DailyDigest = ({ onBack = () => {} }) => {
         </button>
       </div>
 
-      <div className="card" style={{ padding: '32px', background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 58%)' }}>
+      <div className="card" style={{ padding: '32px', background: 'var(--bg-card)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 14px', borderRadius: '999px', background: 'rgba(37,99,235,0.1)', color: 'var(--primary)', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>
@@ -63,7 +63,7 @@ const DailyDigest = ({ onBack = () => {} }) => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', minWidth: '280px', flex: 1 }}>
             {(digest?.overview || []).map((item) => (
-              <div key={item} style={{ background: 'white', border: '1px solid rgba(37,99,235,0.08)', borderRadius: '18px', padding: '16px 18px', boxShadow: '0 12px 28px rgba(15,23,42,0.04)' }}>
+              <div key={item} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: '18px', padding: '16px 18px' }}>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 700 }}>{item.split(':')[0]}</div>
                 <div style={{ marginTop: '6px', fontSize: '1.1rem', fontWeight: 900 }}>{item.split(':').slice(1).join(':').trim()}</div>
               </div>
@@ -117,7 +117,7 @@ const DailyDigest = ({ onBack = () => {} }) => {
           <CalendarDays size={20} color="var(--primary)" />
           <h3 className="section-title" style={{ margin: 0 }}>Digest Markdown</h3>
         </div>
-        <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '0.92rem', color: 'var(--text-main)', background: '#f8fafc', borderRadius: '18px', padding: '20px', border: '1px solid var(--border)' }}>
+        <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '0.92rem', color: 'var(--text-main)', background: 'var(--bg-primary)', borderRadius: '18px', padding: '20px', border: '1px solid var(--border)' }}>
           {digest?.markdown}
         </pre>
       </div>

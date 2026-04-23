@@ -133,7 +133,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
           alignItems: 'center', 
           gap: '10px', 
           padding: isOpen ? '12px 16px' : '0',
-          background: isOpen ? 'rgba(255,255,255,0.5)' : 'transparent',
+          background: isOpen ? 'var(--sidebar-hover)' : 'transparent',
           borderRadius: '14px',
           transition: 'all 0.3s'
         }}>
