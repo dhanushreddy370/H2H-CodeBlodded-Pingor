@@ -53,7 +53,7 @@ const ProfilePopup = ({ isOpen, onClose, setActivePage }) => {
           <div className="nav-item" onClick={() => { setActivePage('Contacts'); onClose(); }} style={{ padding: '12px 16px', borderRadius: '12px' }}>
             <User size={18} /> Contacts
           </div>
-          <div className="nav-item" style={{ padding: '12px 16px', borderRadius: '12px' }}>
+          <div className="nav-item" onClick={() => { setActivePage('Settings'); onClose(); }} style={{ padding: '12px 16px', borderRadius: '12px' }}>
             <Settings size={18} /> Account Settings
           </div>
           <div className="nav-item" onClick={logout} style={{ padding: '12px 16px', borderRadius: '12px', color: '#ef4444' }}>
