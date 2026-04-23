@@ -55,7 +55,7 @@ router.get('/draft-count', (req, res) => {
 });
 
 // Update thread status
-router.patch('/:id/status', (req, res) => {
+router.patch('/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
     const db = readDB();
@@ -74,7 +74,7 @@ router.patch('/:id/status', (req, res) => {
 });
 
 // Update the draft content
-router.patch('/edit/:id', (req, res) => {
+router.patch('/edit/:id', async (req, res) => {
   try {
     const { aiResponse } = req.body;
     const db = readDB();
@@ -127,7 +127,7 @@ router.post('/approve/:id', async (req, res) => {
 });
 
 // Reject and discard draft
-router.post('/reject/:id', (req, res) => {
+router.post('/reject/:id', async (req, res) => {
   try {
     const db = readDB();
     const index = (db.threads || []).findIndex(t => t._id === req.params.id);

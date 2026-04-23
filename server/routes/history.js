@@ -34,7 +34,7 @@ router.get('/:id', (req, res) => {
   }
 });
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { userId, title, initialMessage } = req.body;
     const db = readDB();
@@ -57,7 +57,7 @@ router.post('/', (req, res) => {
   }
 });
 
-router.post('/:id/messages', (req, res) => {
+router.post('/:id/messages', async (req, res) => {
   try {
     const { role, content } = req.body;
     const db = readDB();

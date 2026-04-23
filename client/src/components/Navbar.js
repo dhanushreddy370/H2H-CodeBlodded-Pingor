@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, Sun, Moon, LogOut, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ProfilePopup from './ProfilePopup';
+import { API_BASE } from '../config';
 
 const Navbar = ({ activePage, setActivePage, darkMode, toggleDarkMode }) => {
   const { user, logout } = useAuth();
@@ -12,7 +13,8 @@ const Navbar = ({ activePage, setActivePage, darkMode, toggleDarkMode }) => {
 
   useEffect(() => {
     if (user && showNotifications) {
-      fetch(`http://localhost:5000/api/tasks?userId=${user.sub}`)
+      const userId = user.id || user.sub;
+      fetch(`${API_BASE}/api/tasks?userId=${userId}`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {

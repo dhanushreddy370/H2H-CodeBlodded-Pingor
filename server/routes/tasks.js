@@ -36,7 +36,7 @@ router.get('/', (req, res) => {
 });
 
 // Create new task
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const db = readDB();
     if (!db.actionItems) db.actionItems = [];
@@ -58,7 +58,7 @@ router.post('/', (req, res) => {
 });
 
 // Update full task
-router.patch('/:id', (req, res) => {
+router.patch('/:id', async (req, res) => {
   try {
     const db = readDB();
     const index = (db.actionItems || []).findIndex(t => t._id === req.params.id);
@@ -79,7 +79,7 @@ router.patch('/:id', (req, res) => {
 });
 
 // Quick status update
-router.patch('/:id/status', (req, res) => {
+router.patch('/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
     const db = readDB();

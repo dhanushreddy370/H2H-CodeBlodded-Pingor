@@ -185,7 +185,7 @@ router.get('/check-user', (req, res) => {
 });
 
 // Register or update user
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
   const { userData } = req.body;
   if (!userData || !userData.email) {
     return res.status(400).json({ error: 'User data with email is required' });

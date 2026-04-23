@@ -91,11 +91,35 @@ function App() {
           toggleDarkMode={() => setDarkMode(!darkMode)} 
         />
         
-        <div className="content-area">
+        <div className="content-area" style={{ flex: 1 }}>
           <div key={activePage} className="fade-enter fade-enter-active">
             {renderContent()}
           </div>
         </div>
+
+        <footer style={{ 
+          padding: '24px 40px', 
+          borderTop: '1px solid var(--border)', 
+          background: 'transparent',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: 'auto'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img 
+              src="/assets/team_logo.png" 
+              alt="Team" 
+              style={{ height: '24px', opacity: 0.7 }} 
+            />
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+              Built with ❤️ by Team CodeBlooded
+            </div>
+          </div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+            © 2026 Pingor AI. All rights reserved.
+          </div>
+        </footer>
 
         {(!isChatOpen) && (
           <div className="fab" onClick={() => { setActiveChatId(null); setIsChatOpen(true); }} title="Open Pingor">

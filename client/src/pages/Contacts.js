@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, User, Mail, Phone, Edit2, Trash2, X, Save, ChevronRight, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { GooeyInput } from '../components/ui/GooeyInput';
+import { API_BASE } from '../config';
 
 const Contacts = () => {
   const { user } = useAuth();
@@ -13,7 +14,7 @@ const Contacts = () => {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '' });
   const [isSaving, setIsSaving] = useState(false);
   
-  const API_BASE = `http://${window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname}:5000/api`;
+  
 
   const fetchContacts = useCallback(async () => {
     setLoading(true);

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Mail, CheckCircle, CheckSquare, Clock, AlertTriangle, TrendingUp, ArrowRight, RefreshCw, Sparkles, Loader2, MessageSquare } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Mail, CheckCircle, CheckSquare, Clock, AlertTriangle, TrendingUp, ArrowRight, RefreshCw, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../config';
 
 const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
   const { user } = useAuth();
@@ -18,12 +19,46 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState({ processedThreads: 0, totalThreads: 0 });
 
+  const fetchData = useCallback(async () => {
+    try {
+      const userId = user?.id || user?.sub;
+      if (!userId) return;
+      
+      const [tasksRes, followupsRes, threadsRes] = await Promise.all([
+        fetch(`${API_BASE}/api/tasks?userId=${userId}`),
+        fetch(`${API_BASE}/api/followups?userId=${userId}`),
+        fetch(`${API_BASE}/api/threads?userId=${userId}`)
+      ]);
+      
+      const tasks = await tasksRes.json();
+      const followups = await followupsRes.json();
+      const threads = await threadsRes.json();
+      
+      const urgentCount = [...tasks, ...followups].filter(i => i.priority >= 4).length;
+
+      setData({
+        stats: [
+          { label: 'Emails', value: threads.length || '0', icon: <Mail size={18} />, color: '#2563eb' },
+          { label: 'Tasks', value: tasks.length || '0', icon: <CheckCircle size={18} />, color: '#166534' },
+          { label: 'Followups', value: followups.length || '0', icon: <Clock size={18} />, color: '#b45309' },
+          { label: 'Urgent', value: urgentCount, icon: <AlertTriangle size={18} />, color: '#b91c1c' }
+        ],
+        threads: followups.slice(0, 10),
+        tasks: tasks.slice(0, 10)
+      });
+    } catch (err) {
+      console.error('Failed to align with backend:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     let pollInterval;
     if (isSyncing) {
       pollInterval = setInterval(async () => {
         try {
-          const res = await fetch('http://localhost:5000/api/sync/progress');
+          const res = await fetch(`${API_BASE}/api/sync/progress`);
           const progress = await res.json();
           setSyncProgress(progress);
         } catch (err) {
@@ -35,53 +70,18 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
   }, [isSyncing]);
 
   useEffect(() => {
-    // Immediate sync on first mount if directed from login
     const shouldSync = new URLSearchParams(window.location.search).get('sync') === 'true';
     if (shouldSync) {
       handleManualSync();
-      // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userId = user?.id || user?.sub;
-        if (!userId) return;
-        const [tasksRes, followupsRes, threadsRes] = await Promise.all([
-          fetch(`http://localhost:5000/api/tasks?userId=${userId}`),
-          fetch(`http://localhost:5000/api/followups?userId=${userId}`),
-          fetch(`http://localhost:5000/api/threads?userId=${userId}`)
-        ]);
-        
-        const tasks = await tasksRes.json();
-        const followups = await followupsRes.json();
-        const threads = await threadsRes.json();
-        
-        const urgentCount = [...tasks, ...followups].filter(i => i.priority >= 4).length;
-
-        setData({
-          stats: [
-            { label: 'Emails', value: threads.length || '0', icon: <Mail size={18} />, color: '#2563eb' },
-            { label: 'Tasks', value: tasks.length || '0', icon: <CheckCircle size={18} />, color: '#166534' },
-            { label: 'Followups', value: followups.length || '0', icon: <Clock size={18} />, color: '#b45309' },
-            { label: 'Urgent', value: urgentCount, icon: <AlertTriangle size={18} />, color: '#b91c1c' }
-          ],
-          threads: followups.slice(0, 10),
-          tasks: tasks.slice(0, 10)
-        });
-      } catch (err) {
-        console.error('Failed to align with backend:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(fetchData, 10000);
+    const interval = setInterval(fetchData, 30000); // 30s instead of 10s for better perf
     return () => clearInterval(interval);
-  }, [user]);
+  }, [fetchData]);
 
   const handleManualSync = async () => {
     setIsSyncing(true);
@@ -89,31 +89,9 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
     
     try {
       const userId = user?.id || user?.sub;
-      const res = await fetch(`http://localhost:5000/api/sync/manual?userId=${userId}`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/sync/manual?userId=${userId}`, { method: 'POST' });
       if (res.ok) {
-        // Re-run fetchData logic manually
-        const userId = user?.id || user?.sub;
-        if (!userId) return;
-        const [tasksRes, followupsRes, threadsRes] = await Promise.all([
-          fetch(`http://localhost:5000/api/tasks?userId=${userId}`),
-          fetch(`http://localhost:5000/api/followups?userId=${userId}`),
-          fetch(`http://localhost:5000/api/threads?userId=${userId}`)
-        ]);
-        const tasks = await tasksRes.json();
-        const followups = await followupsRes.json();
-        const threads = await threadsRes.json();
-        const urgentCount = [...tasks, ...followups].filter(i => i.priority >= 4).length;
-
-        setData({
-          stats: [
-            { label: 'Emails', value: threads.length || '0', icon: <Mail size={18} />, color: '#2563eb' },
-            { label: 'Tasks', value: tasks.length || '0', icon: <CheckCircle size={18} />, color: '#166534' },
-            { label: 'Followups', value: followups.length || '0', icon: <Clock size={18} />, color: '#b45309' },
-            { label: 'Urgent', value: urgentCount, icon: <AlertTriangle size={18} />, color: '#b91c1c' }
-          ],
-          threads: followups.slice(0, 10),
-          tasks: tasks.slice(0, 10)
-        });
+        await fetchData();
       }
     } catch (err) {
       console.error('Manual sync failed:', err);
@@ -396,3 +374,4 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
 };
 
 export default Dashboard;
+
