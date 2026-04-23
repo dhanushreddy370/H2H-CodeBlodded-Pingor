@@ -242,7 +242,9 @@ H2H-CodeBlodded-Pingor/
 
 ## Demo / Screenshots
 
-[Demo and documentation](https://drive.google.com/file/d/1eZVJiDM6lxR4uxuk6kAOucWS3i63eU1a/view?usp=sharing)
+[Demo Video](https://drive.google.com/file/d/1eZVJiDM6lxR4uxuk6kAOucWS3i63eU1a/view?usp=sharing)
+[Code Documentation and Architectural Flow](https://drive.google.com/file/d/1i_snBNygTyNAm9Ze0qS_GgASaL0_SWB6/view?usp=sharing)
+[Privacy Policy Write-up and Extention Plan for Slack/Teams](https://drive.google.com/file/d/1pKitRJBWM99swUpwOkwxWw_VcPM2xskh/view?usp=sharing)
 
 <table>
   <tr>
