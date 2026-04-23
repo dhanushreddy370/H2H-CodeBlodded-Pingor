@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ArrowLeft, CalendarDays, Sparkles, ClipboardList, Clock, Copy } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Sparkles, ClipboardList, Clock, Copy, Bot } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 
@@ -94,14 +94,21 @@ const DailyDigest = ({ onBack = () => {} }) => {
   };
 
   if (loading) {
-    return <div className="card" style={{ padding: '32px' }}>Loading daily digest...</div>;
+    return (
+      <div className="loading-overlay">
+        <dotlottie-player
+          src="https://lottie.host/a0777886-4a6c-4f15-be5d-99a902caa6ae/5chwxQ3WHT.lottie"
+          background="transparent" speed="1" style={{ width: '200px', height: '200px' }} loop autoplay
+        ></dotlottie-player>
+      </div>
+    );
   }
 
   return (
     <div className="tasks-page" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button className="button-secondary" onClick={onBack}>
-          <ArrowLeft size={18} /> Back
+          <ArrowLeft size={18} /> Back to Dashboard
         </button>
         <button className="button" onClick={copyDigest}>
           <Copy size={16} /> {copied ? 'Copied' : 'Copy Markdown'}
@@ -132,7 +139,7 @@ const DailyDigest = ({ onBack = () => {} }) => {
                 key={item}
                 style={{
                   background: 'var(--bg-card)',
-                  border: '1px solid var(--surface-outline)',
+                  border: '1px solid var(--border)',
                   borderRadius: '18px',
                   padding: '16px 18px',
                   boxShadow: 'var(--shadow)'
@@ -189,7 +196,7 @@ const DailyDigest = ({ onBack = () => {} }) => {
       <div className="card" style={{ padding: '28px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
           <CalendarDays size={20} color="var(--primary)" />
-          <h3 className="section-title" style={{ margin: 0 }}>Digest Preview</h3>
+          <h3 className="section-title" style={{ margin: 0 }}>Intelligence Narrative</h3>
         </div>
         <div className="digest-markdown-preview">
           {renderDigestMarkdown(digest?.markdown)}

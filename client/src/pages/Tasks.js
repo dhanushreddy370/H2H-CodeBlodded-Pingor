@@ -17,7 +17,7 @@ const Tasks = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const fetchTasks = useCallback(async () => {
-    const userId = user?.userId || user?.id || user?.sub;
+    const userId = user?.id || user?.sub;
     if (!userId) {
       setLoading(false);
       return;
@@ -97,7 +97,7 @@ const Tasks = () => {
         />
       </div>
       
-      <div className="card" style={{ padding: '20px', marginBottom: '24px', zIndex: 10, overflow: 'visible', background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
+      <div className="card" style={{ padding: '20px', marginBottom: '24px', zIndex: 10, overflow: 'visible', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', gap: '12px' }}>
             <CustomSelect 
@@ -137,7 +137,7 @@ const Tasks = () => {
           </div>
         ) : filteredTasks.length === 0 ? (
           <div style={{ padding: '100px 40px', textAlign: 'center' }}>
-            <div style={{ width: '120px', height: '120px', background: 'var(--bg-secondary)', borderRadius: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px' }}>
+            <div style={{ width: '120px', height: '120px', background: 'var(--sidebar-hover)', borderRadius: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px' }}>
               <ClipboardList size={60} style={{ color: 'var(--primary)', opacity: 0.2 }} />
             </div>
             <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '12px', color: 'var(--text-main)' }}>You're all caught up!</h3>
@@ -145,8 +145,8 @@ const Tasks = () => {
               {searchTerm ? "No tasks match your search criteria. Try a different term or clear filters." : "No pending tasks found. Pingor will automatically extract tasks from your emails as they arrive."}
             </p>
             {!searchTerm && (
-              <button className="button-secondary" onClick={() => openTask({})}>
-                <Plus size={18} /> Add Manual Task
+              <button className="button" onClick={() => openTask({})} style={{ background: 'var(--primary-light)', color: 'var(--primary)', border: 'none' }}>
+                Add manual task
               </button>
             )}
           </div>
@@ -197,7 +197,7 @@ const Tasks = () => {
                             {a.name ? a.name.charAt(0) : '?'}
                           </div>
                         )) : (
-                          <div className="avatar" style={{ background: 'var(--bg-secondary)', color: 'var(--text-muted)', width: '32px', height: '32px', borderRadius: '10px' }}>
+                          <div className="avatar" style={{ background: 'var(--sidebar-hover)', color: 'var(--text-muted)', width: '32px', height: '32px', borderRadius: '10px' }}>
                             <User size={16} />
                           </div>
                         )}
@@ -243,3 +243,4 @@ const Tasks = () => {
 };
 
 export default Tasks;
+

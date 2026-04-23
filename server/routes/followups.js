@@ -171,18 +171,17 @@ router.post('/approve/:id', async (req, res) => {
   try {
     const db = readDB();
     const index = (db.threads || []).findIndex(t => t._id === req.params.id);
-    
     if (index === -1) return res.status(404).json({ error: 'Thread not found' });
-    const thread = db.threads[index];
-    
-    if (!thread.aiResponse) return res.status(400).json({ error: 'No draft content found' });
 
-    // Push to Gmail API
+    const thread = db.threads[index];
+    if (!thread.aiResponse) return res.status(400).json({ error: 'No draft content to approve' });
+    if (!thread.userId) return res.status(400).json({ error: 'Thread has no userId — cannot authenticate with Gmail' });
+
     const draftCreated = await createAutoReplyDraft(
       thread.userId,
-      thread.threadId, 
-      thread.sender, 
-      thread.subject, 
+      thread.threadId,
+      thread.sender,
+      thread.subject,
       thread.aiResponse
     );
 
@@ -193,9 +192,10 @@ router.post('/approve/:id', async (req, res) => {
       await writeDB(db);
       res.json({ success: true, thread: db.threads[index] });
     } else {
-      res.status(500).json({ error: 'Failed to create draft in Gmail' });
+      res.status(500).json({ error: 'Gmail API rejected the draft. Check OAuth tokens for this user.' });
     }
   } catch (err) {
+    console.error('Approve error:', err);
     res.status(500).json({ error: err.message });
   }
 });

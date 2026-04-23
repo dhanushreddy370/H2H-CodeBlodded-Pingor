@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Sparkles, ArrowLeft, Mail, AlertTriangle } from 'lucide-react';
+import { Search, Sparkles, ArrowLeft, Mail, AlertTriangle, Filter, Clock, User, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 
@@ -40,78 +40,26 @@ const SmartSearch = ({ onBack = () => {} }) => {
 
   return (
     <div className="tasks-page" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        width: '100%',
-        marginBottom: '32px',
-        gap: '20px'
-      }}>
-        {/* Left Side: Back Button */}
-        <div style={{ flex: '0 0 120px' }}>
-          <button className="button-secondary" onClick={onBack} style={{ whiteSpace: 'nowrap' }}>
-            <ArrowLeft size={18} /> Back
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        <button className="button-secondary" onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ArrowLeft size={18} /> Back to Dashboard
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, justifyContent: 'flex-end', minWidth: '280px' }}>
+          <div style={{ position: 'relative', width: 'min(560px, 100%)' }}>
+            <input
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && runSearch()}
+              placeholder="Find all emails from Ravi about the budget where I have not responded yet"
+              className="chat-input"
+              style={{ width: '100%', paddingLeft: '44px' }}
+            />
+            <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          </div>
+          <button className="button" onClick={() => runSearch()} disabled={loading}>
+            {loading ? 'Searching...' : 'Run Search'}
           </button>
         </div>
-
-        {/* Center: Search Bar and Button */}
-        <div style={{ flex: '1', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '12px', 
-            width: '100%', 
-            maxWidth: '750px',
-            background: 'var(--bg-card)',
-            padding: '6px',
-            borderRadius: '16px',
-            border: '1px solid var(--border)',
-            boxShadow: 'var(--shadow-sm)'
-          }}>
-            <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
-              <Search 
-                size={20} 
-                style={{ 
-                  marginLeft: '12px',
-                  color: 'var(--text-muted)',
-                  flexShrink: 0
-                }} 
-              />
-              <input
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && runSearch()}
-                placeholder="Find all emails from Ravi about the budget..."
-                style={{ 
-                  width: '100%', 
-                  padding: '12px 16px', 
-                  height: '44px',
-                  fontSize: '1rem',
-                  border: 'none',
-                  background: 'transparent',
-                  outline: 'none',
-                  color: 'var(--text-main)'
-                }}
-              />
-            </div>
-            <button 
-              className="button" 
-              onClick={() => runSearch()} 
-              disabled={loading}
-              style={{ 
-                height: '44px', 
-                padding: '0 24px', 
-                borderRadius: '12px',
-                flexShrink: 0
-              }}
-            >
-              {loading ? 'Searching...' : 'Run Search'}
-            </button>
-          </div>
-        </div>
-
-        {/* Right Side: Spacer for perfect centering */}
-        <div style={{ flex: '0 0 120px' }} className="mobile-hide"></div>
       </div>
 
       <div className="card" style={{ padding: '24px' }}>
@@ -124,8 +72,7 @@ const SmartSearch = ({ onBack = () => {} }) => {
             <button
               key={query}
               onClick={() => runSearch(query)}
-              className="button-secondary"
-              style={{ padding: '8px 16px', borderRadius: '12px', fontSize: '0.85rem' }}
+              style={{ border: '1px solid var(--border)', background: 'var(--sidebar-hover)', color: 'var(--text-main)', padding: '10px 14px', borderRadius: '14px', cursor: 'pointer', fontWeight: 600 }}
             >
               {query}
             </button>
@@ -136,10 +83,68 @@ const SmartSearch = ({ onBack = () => {} }) => {
       {results && (
         <>
           <div className="card" style={{ padding: '24px' }}>
-            <h3 className="section-title" style={{ marginTop: 0 }}>Search Interpretation</h3>
-            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '0.86rem', color: 'var(--text-main)', background: 'var(--bg-primary)', borderRadius: '16px', padding: '16px', border: '1px solid var(--border)' }}>
-              {JSON.stringify(results.filters, null, 2)}
-            </pre>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+              <Filter size={18} color="var(--primary)" />
+              <h3 className="section-title" style={{ margin: 0 }}>Search Interpretation</h3>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+              {results.filters.categories?.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Categories</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {results.filters.categories.map(cat => (
+                      <span key={cat} className="badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '12px', padding: '6px 12px' }}>
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {results.filters.senderIncludes?.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>From / Sender</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {results.filters.senderIncludes.map(sender => (
+                      <span key={sender} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 600 }}>
+                        <User size={14} color="var(--primary)" /> {sender}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {results.filters.subjectIncludes?.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Subject Contains</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', color: 'var(--text-main)', fontWeight: 600, fontSize: '0.9rem' }}>
+                    "{results.filters.subjectIncludes.join(', ')}"
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Refinement</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 600 }}>
+                    <AlertTriangle size={14} color={results.filters.minPriority >= 4 ? '#ef4444' : '#f59e0b'} /> 
+                    P{results.filters.minPriority}+ Priority
+                  </div>
+                  {results.filters.dateWindowDays && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 600 }}>
+                      <Clock size={14} color="var(--primary)" /> 
+                      Last {results.filters.dateWindowDays} days
+                    </div>
+                  )}
+                  {results.filters.needsFollowUp && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 600, color: '#059669' }}>
+                      <CheckCircle size={14} /> Waiting on response
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="card" style={{ padding: '24px' }}>

@@ -145,7 +145,8 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
           left: 0,
           width: '100%',
           height: '100dvh',
-          background: 'var(--glass-bg)',
+          background: 'var(--bg-primary)',
+          opacity: 0.98,
           backdropFilter: 'blur(40px)',
           display: 'flex',
           alignItems: 'center',
@@ -205,7 +206,7 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
               Pingor is analyzing your communications to extract high-priority tasks and insights.
             </p>
 
-            <div style={{ width: '100%', background: 'var(--bg-secondary)', height: '6px', borderRadius: '3px', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ width: '100%', background: 'var(--sidebar-hover)', height: '6px', borderRadius: '3px', overflow: 'hidden', position: 'relative' }}>
               <div style={{ 
                 width: `${syncProgress.totalThreads > 0 ? (syncProgress.processedThreads / syncProgress.totalThreads) * 100 : 0}%`, 
                 background: 'var(--primary)', 
@@ -222,28 +223,23 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
         </div>
       )}
 
-      <div className="dashboard-header" style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'flex-end', 
-        marginBottom: '40px',
-        flexWrap: 'wrap',
-        gap: '20px'
-      }}>
-        <div style={{ minWidth: '300px', flex: 1 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
+        <div>
           <h1 className="page-title" style={{ marginBottom: '4px' }}>Welcome back, {user?.name || 'User'}</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>Efficiency score is high today. Here's your status.</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', width: '100%', maxWidth: '100%', justifyContent: 'flex-start' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button 
             className="button-secondary" 
             onClick={() => setActivePage('Daily Digest')}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 22px', borderRadius: '16px' }}
           >
             <FileText size={18} /> View Digest
           </button>
           <button 
             className="button-secondary" 
             onClick={() => setActivePage('Smart Search')}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 22px', borderRadius: '16px' }}
           >
             <Search size={18} /> Smart Search
           </button>
@@ -251,16 +247,25 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
             className="button-secondary"
             onClick={handleSeedDemo}
             disabled={seedingDemo}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 22px', borderRadius: '16px' }}
           >
-            <Database size={18} /> {seedingDemo ? 'Generating...' : 'Demo Data'}
+            <Database size={18} /> {seedingDemo ? 'Generating demo...' : 'Generate 100+ Demo Threads'}
           </button>
           <button 
             className="button" 
             onClick={handleManualSync}
             disabled={isSyncing}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '10px', 
+              padding: '14px 28px', 
+              borderRadius: '16px',
+              boxShadow: 'var(--shadow-hover)' 
+            }}
           >
             <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
-            {isSyncing ? 'Syncing...' : 'Sync Now'}
+            {isSyncing ? 'Synchronizing...' : 'Sync Now'}
           </button>
         </div>
       </div>
@@ -292,12 +297,14 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
                  }
                }}
                style={{ 
+                 borderLeft: `none`, 
                  borderBottom: `4px solid ${stat.color}`,
                  display: 'flex', 
                  flexDirection: 'column', 
                  justifyContent: 'center',
                  alignItems: 'center',
                  gap: '12px',
+                 padding: '32px 20px',
                  textAlign: 'center'
                }}>
             <div className="icon-container" style={{ 
@@ -337,7 +344,7 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 className="section-title" style={{ margin: 0 }}>Follow-up Threads</h3>
-            <button className="button-secondary" style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '10px' }} onClick={() => setActivePage('Follow-ups')}>View All <ArrowRight size={14} /></button>
+            <button className="button" style={{ padding: '4px 12px', fontSize: '0.8rem' }} onClick={() => setActivePage('Follow-ups')}>View All <ArrowRight size={14} /></button>
           </div>
           <div className="timeline-container">
             {data.threads.length > 0 ? data.threads.map(thread => (
@@ -389,7 +396,7 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 className="section-title" style={{ margin: 0 }}>Pending Tasks</h3>
-            <button className="button-secondary" style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '10px' }} onClick={() => setActivePage('Tasks')}>Manage <ArrowRight size={14} /></button>
+            <button className="button" style={{ padding: '4px 12px', fontSize: '0.8rem' }} onClick={() => setActivePage('Tasks')}>Manage <ArrowRight size={14} /></button>
           </div>
           <div className="timeline-container">
             {data.tasks.length > 0 ? data.tasks.map(task => (
