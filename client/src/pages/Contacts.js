@@ -21,7 +21,7 @@ const Contacts = () => {
     try {
       const userId = user?.userId || user?.id || user?.sub;
       if (!userId) return;
-      const res = await fetch(`${API_BASE}/contacts?userId=${userId}`);
+      const res = await fetch(`${API_BASE}/api/contacts?userId=${userId}`);
       const data = await res.json();
       setContacts(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -60,7 +60,7 @@ const Contacts = () => {
     e.preventDefault();
     const userId = user?.userId || user?.id || user?.sub;
     const method = selectedContact ? 'PATCH' : 'POST';
-    const url = selectedContact ? `${API_BASE}/contacts/${selectedContact._id}` : `${API_BASE}/contacts`;
+    const url = selectedContact ? `${API_BASE}/api/contacts/${selectedContact._id}` : `${API_BASE}/api/contacts`;
 
     setIsSaving(true);
 
@@ -88,7 +88,7 @@ const Contacts = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this contact?')) return;
     try {
-      const res = await fetch(`${API_BASE}/contacts/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/api/contacts/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchContacts();
       } else {

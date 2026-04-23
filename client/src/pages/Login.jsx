@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { useAuth } from '../context/AuthContext';
-import { Bot, ChevronRight, Mail, ShieldCheck, Sparkles, Zap, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, Mail, ShieldCheck, Sparkles, Zap, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import '../App.css';
@@ -212,6 +212,33 @@ const Login = () => {
               transition={{ delay: 0.1, duration: 0.4 }}
               style={{ zIndex: 2 }}
             >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  marginBottom: '24px'
+                }}
+              >
+                <div
+                  style={{
+                    padding: '18px 24px',
+                    borderRadius: '28px',
+                    background: 'rgba(255,255,255,0.76)',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 18px 40px rgba(37, 99, 235, 0.12)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid rgba(37,99,235,0.08)'
+                  }}
+                >
+                  <img
+                    src="/assets/pingor_full_logo.png"
+                    alt="Pingor"
+                    style={{ width: '240px', maxWidth: '70vw', height: 'auto', objectFit: 'contain' }}
+                  />
+                </div>
+              </div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', padding: '8px 16px', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '20px', marginBottom: '32px', fontWeight: '600', fontSize: '0.9rem' }}>
                 <Zap size={16} fill="currentColor" /> Welcome to Pingor AI
               </div>
@@ -249,17 +276,27 @@ const Login = () => {
           >
             {/* Left Branding Panel */}
             <div style={{ flex: 1, backgroundColor: 'var(--primary)', padding: '60px', display: 'flex', flexDirection: 'column', color: 'white', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ zIndex: 2, display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'auto' }}>
-                <div style={{ background: 'white', padding: '8px', borderRadius: '12px' }}>
-                  <Bot size={28} color="var(--primary)" />
+              <div style={{ zIndex: 2, display: 'flex', alignItems: 'center', marginBottom: 'auto' }}>
+                <div
+                  style={{
+                    background: 'rgba(255,255,255,0.96)',
+                    padding: '12px 18px',
+                    borderRadius: '18px',
+                    boxShadow: '0 10px 24px rgba(15, 23, 42, 0.08)'
+                  }}
+                >
+                  <img
+                    src="/assets/pingor_full_logo.png"
+                    alt="Pingor"
+                    style={{ width: '220px', maxWidth: '100%', height: 'auto', objectFit: 'contain', display: 'block' }}
+                  />
                 </div>
-                <span style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Pingor</span>
               </div>
               
               <div style={{ zIndex: 2, marginBottom: '60px' }}>
                 <h1 style={{ fontSize: '3rem', fontWeight: 'bold', lineHeight: '1.1', marginBottom: '20px' }}>Built for the <br/> Modern Professional</h1>
                 <p style={{ fontSize: '1.1rem', opacity: '0.9', maxWidth: '400px', lineHeight: '1.6' }}>
-                  Join thousands of users who have reclaimed their time. Pingor's agentic synchronization ensures you are always one step ahead.
+                  Built as a hackathon demo to show how a lightweight AI workspace can organize email, action items, and follow-ups in one place.
                 </p>
               </div>
               
@@ -339,7 +376,7 @@ const Login = () => {
                         )}
                       </div>
                       <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '24px' }}>
-                        <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setIsDevMode(true)}>Test login without Gmail</span>
+                        <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setIsDevMode(true)}>Use demo login instead</span>
                       </p>
                     </div>
                   ) : (
@@ -405,10 +442,10 @@ const Login = () => {
 
                   <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'center', gap: '24px' }}>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <ShieldCheck size={14} /> Secure Encryption
+                      <ShieldCheck size={14} /> Local-first demo
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Mail size={14} /> Gmail Certified
+                      <Mail size={14} /> Gmail-ready workflow
                     </div>
                   </div>
                 </motion.div>

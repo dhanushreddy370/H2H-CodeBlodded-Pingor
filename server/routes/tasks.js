@@ -5,7 +5,7 @@ const { readDB, writeDB } = require('../services/dbService');
 // Get all tasks
 router.get('/', (req, res) => {
   try {
-    const { deadline, userId } = req.query;
+    const { deadline, userId, status, priority } = req.query;
     const db = readDB();
     const actionItems = db.actionItems || [];
     
@@ -16,11 +16,18 @@ router.get('/', (req, res) => {
       );
     }
 
+    if (status) {
+      filtered = filtered.filter(item => item.status === status);
+    }
+
     // sorting logic: "done" tasks always at bottom
     filtered.sort((a, b) => {
       if (a.status === 'done' && b.status !== 'done') return 1;
       if (a.status !== 'done' && b.status === 'done') return -1;
       
+      if (priority === 'asc') return (a.priority || 3) - (b.priority || 3);
+      if (priority === 'desc') return (b.priority || 3) - (a.priority || 3);
+
       // Secondary sort: Deadline
       if (deadline === 'asc') return new Date(a.deadline || '9999') - new Date(b.deadline || '9999');
       if (deadline === 'desc') return new Date(b.deadline || '1970') - new Date(a.deadline || '1970');

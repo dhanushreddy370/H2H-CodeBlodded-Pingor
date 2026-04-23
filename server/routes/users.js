@@ -3,11 +3,28 @@ const router = express.Router();
 const { readDB, writeDB } = require('../services/dbService');
 const { initHeartbeat } = require('../services/syncService');
 
+const findUserIndex = (users, identity) => (
+  users.findIndex(u =>
+    u.userId === identity ||
+    u.id === identity ||
+    u.sub === identity ||
+    u.email === identity
+  )
+);
+
+const sanitizeUser = (user) => {
+  if (!user) return user;
+  const { tokens, ...safeUser } = user;
+  return safeUser;
+};
+
 // Get all users (for assignment dropdowns)
 router.get('/', (req, res) => {
   try {
     const db = readDB();
-    const users = (db.users || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    const users = (db.users || [])
+      .map(sanitizeUser)
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -23,12 +40,14 @@ router.post('/profile', async (req, res) => {
     const db = readDB();
     if (!db.users) db.users = [];
 
-    let index = db.users.findIndex(u => u.userId === userId);
+    let index = findUserIndex(db.users, userId);
     
     if (index === -1) {
       const newUser = {
         _id: `user-${Date.now()}`,
         userId,
+        id: userId,
+        sub: userId,
         email,
         name,
         picture,
@@ -47,7 +66,7 @@ router.post('/profile', async (req, res) => {
     }
     
     await writeDB(db);
-    res.json(db.users[index]);
+    res.json(sanitizeUser(db.users[index]));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -69,7 +88,7 @@ async function handleSettingsUpdate(req, res) {
     if (!userId) return res.status(400).json({ error: 'userId is required' });
     
     const db = readDB();
-    const index = (db.users || []).findIndex(u => u.userId === userId);
+    const index = findUserIndex(db.users || [], userId);
     
     if (index === -1) return res.status(404).json({ error: 'User not found' });
     
@@ -82,7 +101,7 @@ async function handleSettingsUpdate(req, res) {
     await writeDB(db);
     // Refresh heartbeat with new settings
     initHeartbeat();
-    res.json(db.users[index]);
+    res.json(sanitizeUser(db.users[index]));
   } catch (err) {
     console.error('Settings update error:', err);
     res.status(500).json({ error: err.message });

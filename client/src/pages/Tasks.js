@@ -76,10 +76,15 @@ const Tasks = () => {
     return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const filteredTasks = tasks.filter(t => 
-    t.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (t.sender && t.sender.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredTasks = tasks.filter((t) => {
+    const normalizedSearch = searchTerm.toLowerCase();
+    const actionText = t.action || t.subject || t.title || '';
+    const senderText = t.sender || '';
+    return (
+      actionText.toLowerCase().includes(normalizedSearch) ||
+      senderText.toLowerCase().includes(normalizedSearch)
+    );
+  });
 
   return (
     <div className="tasks-page">
@@ -178,8 +183,12 @@ const Tasks = () => {
                       </div>
                     </td>
                     <td>
-                      <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '1rem' }}>{task.action}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', fontWeight: 500 }}>{task.sender}</div>
+                      <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '1rem' }}>
+                        {task.action || task.subject || task.title || 'Untitled Task'}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', fontWeight: 500 }}>
+                        {task.sender || 'Manual Task'}
+                      </div>
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px' }}>

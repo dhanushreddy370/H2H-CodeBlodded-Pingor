@@ -235,11 +235,21 @@ const initHeartbeat = () => {
   // Check for global or user-specific sync frequency (default to 10 mins)
   // We'll use the setting from the first user for simplicity in this version
   const firstUser = db.users?.find(u => u.settings?.syncFrequency);
-  const frequency = firstUser?.settings?.syncFrequency || 10;
+  const rawFrequency = firstUser?.settings?.syncFrequency;
+  const isManualMode = rawFrequency === 'manual';
+  const parsedFrequency = Number(rawFrequency);
+  const frequency = Number.isInteger(parsedFrequency) && parsedFrequency > 0 ? parsedFrequency : 10;
   
   if (syncJob) {
     syncJob.stop();
+    syncJob = null;
     console.log('Stopping existing sync job...');
+  }
+
+  if (isManualMode) {
+    triggerAllSyncs().catch(err => console.error('Initial sync failed:', err.message));
+    console.log('Heartbeat cron job paused (manual sync mode).');
+    return;
   }
 
   // Triggers every X minutes

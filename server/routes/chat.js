@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { initAgent } = require('../agents/agentService');
-const { readDB, writeDB } = require('../services/dbService');
 
 // Context Injection Endpoint
 router.post('/context', (req, res) => {
@@ -66,41 +65,6 @@ router.post('/ask', async (req, res) => {
     });
 
     const aiText = result.output;
-    
-    // 4. Persistence: Save to chatSessions in JSON DB
-    const db = readDB();
-    if (!db.chatSessions) db.chatSessions = [];
-    
-    let sessionIndex = db.chatSessions.findIndex(s => s.userId === userId && s.status === 'active');
-    
-    if (sessionIndex === -1) {
-      const newSession = {
-        _id: `chat-${Date.now()}`,
-        userId,
-        title: lastMessage.substring(0, 40) + (lastMessage.length > 40 ? '...' : ''),
-        messages: [],
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      db.chatSessions.push(newSession);
-      sessionIndex = db.chatSessions.length - 1;
-    }
-
-    // Append messages to history
-    db.chatSessions[sessionIndex].messages.push({
-      role: 'user',
-      content: lastMessage,
-      timestamp: new Date().toISOString()
-    });
-    db.chatSessions[sessionIndex].messages.push({
-      role: 'assistant',
-      content: aiText,
-      timestamp: new Date().toISOString()
-    });
-    db.chatSessions[sessionIndex].updatedAt = new Date().toISOString();
-
-    await writeDB(db);
 
     res.json({ text: aiText });
   } catch (err) {

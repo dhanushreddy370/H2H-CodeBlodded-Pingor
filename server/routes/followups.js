@@ -3,20 +3,53 @@ const router = express.Router();
 const { readDB, writeDB } = require('../services/dbService');
 const { createAutoReplyDraft } = require('../services/gmailService');
 
+const MANUAL_FOLLOWUP_TAG = 'manual-followup';
+
+const normalizeFollowUp = (payload = {}, existing = {}) => {
+  const nextSubject = payload.subject || payload.action || existing.subject || existing.action || 'Untitled Follow-up';
+  const nextSnippet = payload.snippet ?? payload.description ?? existing.snippet ?? existing.description ?? '';
+  const parsedPriority = Number(payload.priority);
+
+  return {
+    ...existing,
+    ...payload,
+    subject: nextSubject,
+    action: payload.action || nextSubject,
+    description: payload.description ?? existing.description ?? nextSnippet,
+    snippet: nextSnippet,
+    content: payload.content ?? payload.description ?? existing.content ?? nextSnippet,
+    sender: payload.sender || existing.sender || 'Manual Entry',
+    priority: Number.isFinite(parsedPriority) ? parsedPriority : (existing.priority || 3),
+    categoryTag: payload.categoryTag || existing.categoryTag || MANUAL_FOLLOWUP_TAG,
+    draftStatus: payload.draftStatus || existing.draftStatus || 'none',
+    status: payload.status || existing.status || 'open',
+    assignees: Array.isArray(payload.assignees) ? payload.assignees : (existing.assignees || []),
+    comments: Array.isArray(payload.comments) ? payload.comments : (existing.comments || []),
+    attachments: Array.isArray(payload.attachments) ? payload.attachments : (existing.attachments || []),
+    threadId: payload.threadId ?? existing.threadId ?? null
+  };
+};
+
 // Get all follow-ups
 router.get('/', (req, res) => {
   try {
-    const { priority, userId } = req.query;
+    const { priority, userId, status } = req.query;
     const db = readDB();
     const threads = db.threads || [];
     
     // Core filter: All informational emails OR emails that have a generated draft
     let filtered = threads.filter(t => 
-      t.categoryTag === 'FYI/informational' || (t.draftStatus && t.draftStatus !== 'none')
+      t.categoryTag === 'FYI/informational' ||
+      t.categoryTag === MANUAL_FOLLOWUP_TAG ||
+      (t.draftStatus && t.draftStatus !== 'none')
     );
     
     if (userId && userId !== 'undefined') {
       filtered = filtered.filter(t => t.userId === userId || t.userId === 'system-sync');
+    }
+
+    if (status) {
+      filtered = filtered.filter(t => t.status === status);
     }
 
     filtered.sort((a, b) => {
@@ -49,6 +82,44 @@ router.get('/draft-count', (req, res) => {
     ).length;
     
     res.json({ count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/', async (req, res) => {
+  try {
+    const db = readDB();
+    if (!db.threads) db.threads = [];
+
+    const newThread = normalizeFollowUp(req.body, {
+      _id: `thread-manual-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+
+    db.threads.push(newThread);
+    await writeDB(db);
+    res.status(201).json(newThread);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.patch('/:id', async (req, res) => {
+  try {
+    const db = readDB();
+    const index = (db.threads || []).findIndex(t => t._id === req.params.id);
+
+    if (index === -1) return res.status(404).json({ error: 'Thread not found' });
+
+    db.threads[index] = normalizeFollowUp(req.body, {
+      ...db.threads[index],
+      updatedAt: new Date().toISOString()
+    });
+
+    await writeDB(db);
+    res.json(db.threads[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

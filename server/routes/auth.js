@@ -48,6 +48,7 @@ router.get('/callback', async (req, res) => {
     let userIndex = db.users.findIndex(u => u.email.toLowerCase() === userInfo.email.toLowerCase());
     
     const userUpdate = {
+      userId: userInfo.id,
       id: userInfo.id,
       sub: userInfo.id,
       email: userInfo.email,
@@ -135,6 +136,7 @@ router.post('/callback', async (req, res) => {
     let userIndex = db.users.findIndex(u => u.email.toLowerCase() === userInfo.email.toLowerCase());
     
     const userUpdate = {
+      userId: userInfo.id,
       id: userInfo.id,
       sub: userInfo.id,
       email: userInfo.email,
@@ -197,13 +199,22 @@ router.post('/register', async (req, res) => {
   let finalUser;
   if (existingUserIndex > -1) {
     // Update existing user
-    db.users[existingUserIndex] = { ...db.users[existingUserIndex], ...userData, updatedAt: new Date().toISOString() };
+    db.users[existingUserIndex] = {
+      ...db.users[existingUserIndex],
+      ...userData,
+      userId: userData.userId || userData.id || userData.sub || userData.email,
+      id: userData.id || userData.sub || db.users[existingUserIndex].id || db.users[existingUserIndex].userId,
+      sub: userData.sub || userData.id || db.users[existingUserIndex].sub || db.users[existingUserIndex].userId,
+      updatedAt: new Date().toISOString()
+    };
     finalUser = db.users[existingUserIndex];
   } else {
     // Create new user
     finalUser = { 
       ...userData, 
-      id: `user-${Date.now()}`,
+      userId: userData.userId || userData.id || userData.sub || userData.email,
+      id: userData.id || userData.sub || `user-${Date.now()}`,
+      sub: userData.sub || userData.id || userData.email,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

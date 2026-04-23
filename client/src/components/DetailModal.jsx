@@ -135,10 +135,10 @@ const DetailModal = ({ isOpen, onClose, data, onUpdate, type = 'task' }) => {
   };
 
   const syncWithGmail = async (action) => {
-    if (!activeData.threadId) return;
+    if (!activeData._id || !activeData.threadId) return;
     setIsSyncing(true);
     try {
-      const res = await fetch(`${API_BASE}/api/threads/${activeData.threadId}/sync-gmail`, {
+      const res = await fetch(`${API_BASE}/api/threads/${activeData._id}/sync-gmail`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action })

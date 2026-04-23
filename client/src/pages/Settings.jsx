@@ -33,7 +33,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const userId = user?.id || user?.sub;
+      const userId = user?.userId || user?.id || user?.sub;
       const res = await fetch(`${API_BASE}/api/users/preferences`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -55,7 +55,7 @@ const Settings = ({ darkMode, toggleDarkMode }) => {
   const handleSyncNow = async () => {
     setIsSyncing(true);
     try {
-      const userId = user?.id || user?.sub;
+      const userId = user?.userId || user?.id || user?.sub;
       await fetch(`${API_BASE}/api/sync/manual?userId=${userId}`, { method: 'POST' });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);

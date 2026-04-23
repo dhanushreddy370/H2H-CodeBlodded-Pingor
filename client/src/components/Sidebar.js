@@ -77,21 +77,18 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
           onClick={() => setIsOpen(!isOpen)} 
         />
         <img 
-          src="/assets/pingor_logo.jpg" 
+          src="/assets/pingor_banner.png" 
           alt="Pingor" 
           style={{ 
-            width: '32px', 
-            height: '32px', 
-            borderRadius: '10px', 
-            objectFit: 'cover',
-            mixBlendMode: 'multiply',
+            width: isOpen ? '136px' : '44px',
+            height: '44px', 
+            borderRadius: '8px',
+            objectFit: 'contain',
             marginLeft: isOpen ? '12px' : '8px',
-            flexShrink: 0
+            flexShrink: 0,
+            background: 'transparent'
           }} 
         />
-        {isOpen && (
-           <span style={{ fontWeight: 900, fontSize: '1.3rem', letterSpacing: '-0.03em', color: 'var(--text-main)', marginLeft: '8px' }}>Pingor</span>
-        )}
       </div>
 
       <div className="nav-links" style={{ flex: 1 }}>

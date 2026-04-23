@@ -13,7 +13,6 @@ import Settings from './pages/Settings';
 import Login from './pages/Login';
 import LoadingScreen from './components/LoadingScreen';
 import { useAuth } from './context/AuthContext';
-import { Bot, MessageSquare } from 'lucide-react';
 import { useRipple } from './utils/useRipple';
 
 function App() {
@@ -24,7 +23,7 @@ function App() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeChatId, setActiveChatId] = useState(null);
   const [initialChatContext, setInitialChatContext] = useState(null);
-  
+
   useRipple();
 
   useEffect(() => {
@@ -36,33 +35,46 @@ function App() {
   }, [darkMode]);
 
   const renderContent = () => {
-    switch(activePage) {
-      case 'Dashboard': return <Dashboard setActivePage={setActivePage} onOpenChat={(context) => {
-        setInitialChatContext(context);
-        setIsChatOpen(true);
-      }} />;
-      case 'Inbox': return <Inbox />;
-      case 'Tasks': return <Tasks />;
-      case 'Follow-ups': return (
-        <FollowUps 
-          onOpenChat={(context) => {
-            setActiveChatId(null);
-            setInitialChatContext(context);
-            setIsChatOpen(true);
-          }} 
-        />
-      );
-      case 'Chat History': return (
-        <ChatHistory 
-          onOpenChat={(id) => {
-            setActiveChatId(id || null);
-            setIsChatOpen(true);
-          }} 
-        />
-      );
-      case 'Contacts': return <Contacts />;
-      case 'Settings': return <Settings darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)} />;
-      default: return <Dashboard setActivePage={setActivePage} />;
+    switch (activePage) {
+      case 'Dashboard':
+        return (
+          <Dashboard
+            setActivePage={setActivePage}
+            onOpenChat={(context) => {
+              setInitialChatContext(context);
+              setIsChatOpen(true);
+            }}
+          />
+        );
+      case 'Inbox':
+        return <Inbox />;
+      case 'Tasks':
+        return <Tasks />;
+      case 'Follow-ups':
+        return (
+          <FollowUps
+            onOpenChat={(context) => {
+              setActiveChatId(null);
+              setInitialChatContext(context);
+              setIsChatOpen(true);
+            }}
+          />
+        );
+      case 'Chat History':
+        return (
+          <ChatHistory
+            onOpenChat={(id) => {
+              setActiveChatId(id || null);
+              setIsChatOpen(true);
+            }}
+          />
+        );
+      case 'Contacts':
+        return <Contacts />;
+      case 'Settings':
+        return <Settings darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)} />;
+      default:
+        return <Dashboard setActivePage={setActivePage} />;
     }
   };
 
@@ -76,63 +88,50 @@ function App() {
 
   return (
     <div className="app-container">
-      <Sidebar 
-        activePage={activePage} 
-        setActivePage={setActivePage} 
-        isOpen={isSidebarOpen} 
-        setIsOpen={setIsSidebarOpen} 
+      <Sidebar
+        activePage={activePage}
+        setActivePage={setActivePage}
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
       />
-      
+
       <div className="main-content">
-        <Navbar 
-          activePage={activePage} 
+        <Navbar
+          activePage={activePage}
           setActivePage={setActivePage}
-          darkMode={darkMode} 
-          toggleDarkMode={() => setDarkMode(!darkMode)} 
+          darkMode={darkMode}
+          toggleDarkMode={() => setDarkMode(!darkMode)}
         />
-        
+
         <div className="content-area" style={{ flex: 1 }}>
           <div key={activePage} className="fade-enter fade-enter-active">
             {renderContent()}
           </div>
         </div>
 
-        <footer style={{ 
-          padding: '24px 40px', 
-          borderTop: '1px solid var(--border)', 
-          background: 'transparent',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: 'auto'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img 
-              src="/assets/team_logo.png" 
-              alt="Team" 
-              style={{ height: '24px', opacity: 0.7 }} 
+        {!isChatOpen && (
+          <div
+            className="fab"
+            onClick={() => {
+              setActiveChatId(null);
+              setIsChatOpen(true);
+            }}
+            title="Open Pingor"
+          >
+            <img
+              src="/assets/pingor_mark.svg"
+              alt="Open Pingor"
+              style={{ width: '28px', height: '28px', objectFit: 'contain' }}
             />
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-              Built with ❤️ by Team CodeBlooded
-            </div>
-          </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-            © 2026 Pingor AI. All rights reserved.
-          </div>
-        </footer>
-
-        {(!isChatOpen) && (
-          <div className="fab" onClick={() => { setActiveChatId(null); setIsChatOpen(true); }} title="Open Pingor">
-            <MessageSquare size={28} />
           </div>
         )}
-        
-        <FloatingChat 
-          isOpen={isChatOpen} 
+
+        <FloatingChat
+          isOpen={isChatOpen}
           onClose={() => {
             setIsChatOpen(false);
             setInitialChatContext(null);
-          }} 
+          }}
           chatId={activeChatId}
           initialContext={initialChatContext}
         />

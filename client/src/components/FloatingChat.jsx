@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Hash, AtSign, Paperclip, X, Bot, User, Minimize2, Sparkles, Trash2, Cpu, Zap } from 'lucide-react';
+import { Send, Hash, AtSign, Paperclip, X, Bot, User, Minimize2, Sparkles, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 
 const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
   const { user } = useAuth();
+  const userId = user?.userId || user?.id || user?.sub;
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([
     { id: 1, role: 'assistant', text: "Hello! I am Pingor, your AI communication assistant. I can help you summarize threads, draft replies, or manage your tasks. How can I help you today?" }
@@ -29,10 +30,10 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
   };
 
   useEffect(() => {
-    if (isOpen && user?.id) {
+    if (isOpen && userId) {
       scrollToBottom();
-      fetch(`${API_BASE}/api/tasks?userId=${user.id}`).then(r => r.json()).then(setTasks).catch(console.error);
-      fetch(`${API_BASE}/api/followups?userId=${user.id}`).then(r => r.json()).then(setFollowUps).catch(console.error);
+      fetch(`${API_BASE}/api/tasks?userId=${userId}`).then(r => r.json()).then(setTasks).catch(console.error);
+      fetch(`${API_BASE}/api/followups?userId=${userId}`).then(r => r.json()).then(setFollowUps).catch(console.error);
       
       if (chatId) {
         loadSession(chatId);
@@ -50,7 +51,7 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
         ]);
       }
     }
-  }, [isOpen, chatId, user, initialContext]);
+  }, [isOpen, chatId, userId, initialContext]);
 
   const loadSession = async (id) => {
     try {
@@ -146,8 +147,7 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
 
   const sendMessage = async () => {
     if (!inputVal.trim() && contextChips.length === 0) return;
-    
-    const userId = user?.id || user?.sub;
+
     const userText = inputVal;
     const userMsg = { id: Date.now(), role: 'user', text: userText, chips: [...contextChips] };
     
@@ -274,8 +274,22 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
         minHeight: '70px'
       }} onClick={() => isMinimized && setIsMinimized(false)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div className="icon-container" style={{ background: 'var(--primary)', color: 'white', width: '40px', height: '40px', borderRadius: '14px', boxShadow: '0 4px 12px rgba(37,99,235,0.2)' }}>
-            <Bot size={22} />
+          <div
+            className="icon-container"
+            style={{
+              background: 'linear-gradient(180deg, #ffffff 0%, #eef4ff 100%)',
+              width: '42px',
+              height: '42px',
+              borderRadius: '14px',
+              boxShadow: '0 8px 18px rgba(37,99,235,0.16)',
+              border: '1px solid rgba(37,99,235,0.08)'
+            }}
+          >
+            <img
+              src="/assets/pingor_mark.svg"
+              alt="Pingor"
+              style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+            />
           </div>
           <div>
             <div style={{ fontWeight: '900', fontSize: '1.05rem', color: 'var(--text-main)', letterSpacing: '-0.01em' }}>Pingor AI</div>
@@ -315,7 +329,15 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
                   boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                   flexShrink: 0
                 }}>
-                  {msg.role === 'user' ? <User size={16} /> : <Bot size={18} />}
+                  {msg.role === 'user' ? (
+                    <User size={16} />
+                  ) : (
+                    <img
+                      src="/assets/pingor_mark.svg"
+                      alt="Pingor"
+                      style={{ width: '18px', height: '18px', objectFit: 'contain' }}
+                    />
+                  )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
                   <div style={{ 
@@ -346,7 +368,11 @@ const FloatingChat = ({ isOpen, onClose, chatId, initialContext }) => {
             {isTyping && (
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'white', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                  <Bot size={18} />
+                  <img
+                    src="/assets/pingor_mark.svg"
+                    alt="Pingor"
+                    style={{ width: '18px', height: '18px', objectFit: 'contain' }}
+                  />
                 </div>
                 <div style={{ background: 'white', padding: '12px 18px', borderRadius: '20px 20px 20px 4px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', display: 'flex', gap: '4px' }}>
                   <div className="typing-dot" style={{ width: '6px', height: '6px', background: 'var(--primary)', borderRadius: '50%' }}></div>
