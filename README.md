@@ -32,6 +32,20 @@ No cloud AI subscriptions. No data sent to third parties. Everything runs locall
 
 ---
 
+## Problem Statement
+
+Managing email effectively is one of the biggest productivity challenges for professionals. Important threads get buried, action items are missed, follow-ups fall through the cracks, and there's no easy way to search across conversations with natural language. Existing tools either require manual effort to organize or rely on cloud-based AI services that raise serious privacy concerns when processing sensitive communications.
+
+Pingor addresses this by building an AI agent that connects to Gmail via OAuth2, automatically classifies and prioritizes every thread, extracts structured action items with owners and deadlines, detects stale threads needing follow-up, generates a daily digest of critical items, and supports natural language search across the entire inbox — all while processing everything locally through Ollama, ensuring no email content ever leaves the user's machine.
+
+---
+
+## Proposed Solution
+
+Pingor is a local-first agentic email assistant that acts as an AI-powered executive assistant for your inbox. It uses a LangChain ReAct agent backed by a locally-running Llama 3.2 model (via Ollama) to analyze, classify, and summarize email threads in real time. The system syncs with Gmail on a 10-minute heartbeat, processes threads through an AI pipeline that tags categories, assigns priority scores, extracts tasks, and detects follow-up needs — then surfaces everything through an intuitive React dashboard with smart search, daily digests, and human-in-the-loop draft approval. All processing stays on-device, meeting strict privacy requirements while handling 100+ threads at scale.
+
+---
+
 ## The Build — Day by Day
 
 | Day | What We Shipped |
@@ -43,6 +57,7 @@ No cloud AI subscriptions. No data sent to third parties. Everything runs locall
 | **05** | 🛠️ Refactored database operations to be asynchronous · Detail Modals scaffolded · Real-time Gmail Archive/Trash actions wired |
 | **06** | 🎨 UI/UX overhaul · FloatingChat hook violations resolved · Quick Compose system completed · Advanced inbox filtering shipped |
 | **07** | 📬 Full email body extraction with HTML rendering · One-click AI Reply generation · Auth flow stabilized · 10-minute heartbeat sync finalized |
+| **08** | 🔍 Smart Search with natural language queries · Follow-up detection engine · Daily digest generation · 100+ thread demo data seeding · Dark mode fixes · Final UI polish |
 
 ---
 
@@ -74,6 +89,15 @@ Extracted action items are surfaced in a dedicated Tasks view with priority sort
 
 **Chat History**
 Every AI conversation is persisted and accessible from the Chat History page. Resume any session exactly where you left off.
+
+**Smart Search**
+Natural language search across your entire inbox. Ask queries like "find all emails from Ravi about the budget where I have not responded yet" and get instant, relevant results powered by the local LLM.
+
+**Follow-up Detection**
+Automatically identifies threads where no response was received within a configurable number of days, and threads where someone is waiting on you — so nothing slips through the cracks.
+
+**Daily Digest**
+A prioritized daily summary that surfaces critical actions first, then pending follow-ups, then FYI items. Formatted as a clean, readable report with thread counts, open tasks, and urgency indicators.
 
 **Local-First Privacy**
 The AI engine (Ollama) runs entirely on your machine. Your emails never leave your environment.
@@ -210,6 +234,27 @@ H2H-CodeBlodded-Pingor/
 | `/api/chat/ask` | POST | Send a message to the AI assistant |
 | `/api/contacts` | GET/POST/PATCH/DELETE | Manage contacts |
 | `/api/history` | GET/POST | List and create chat sessions |
+| `/api/search` | POST | Natural language smart search across threads |
+| `/api/digest` | GET | Generate prioritized daily digest |
+| `/api/demo/seed` | POST | Seed 100+ demo email threads for testing |
+
+---
+
+## Demo / Screenshots
+
+[Demo and documentation](https://drive.google.com/file/d/1eZVJiDM6lxR4uxuk6kAOucWS3i63eU1a/view?usp=sharing)
+
+<table>
+  <tr>
+    <td width="50%"><img src="assets/Dashboard.jpeg" alt="Dashboard" width="100%"/><br/><sub><b>Dashboard</b> — Prioritized overview with thread stats and quick actions</sub></td>
+    <td width="50%"><img src="assets/Inbox.jpeg" alt="Inbox" width="100%"/><br/><sub><b>Inbox</b> — AI-classified threads with category tags and priority scores</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="assets/Tasks.jpeg" alt="Tasks" width="100%"/><br/><sub><b>Tasks</b> — Extracted action items with deadlines and owner assignment</sub></td>
+    <td width="50%"><img src="assets/DailyDigest.jpeg" alt="Daily Digest" width="100%"/><br/><sub><b>Daily Digest</b> — Prioritized summary of critical actions and follow-ups</sub></td>
+  </tr>
+</table>
+
 
 ---
 

@@ -3,6 +3,7 @@ const axios = require('axios');
 // Configure from .env
 const OLLAMA_BASE = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2:latest';
+const OLLAMA_TIMEOUT = parseInt(process.env.OLLAMA_TIMEOUT) || 30000;
 
 const OLLAMA_GENERATE_URL = `${OLLAMA_BASE}/api/generate`;
 const OLLAMA_CHAT_URL = `${OLLAMA_BASE}/api/chat`;
@@ -28,7 +29,7 @@ Respond ONLY with valid JSON: { "tag": "tag-name" }
       stream: false,
       format: 'json'
     }, {
-      timeout: 4000
+      timeout: OLLAMA_TIMEOUT
     });
 
     const responseText = response.data.response;
@@ -61,7 +62,7 @@ Respond ONLY with JSON: { "priority": 3 }
       stream: false,
       format: 'json'
     }, {
-      timeout: 4000
+      timeout: OLLAMA_TIMEOUT
     });
 
     const responseText = response.data.response;
