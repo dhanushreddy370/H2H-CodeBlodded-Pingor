@@ -21,7 +21,9 @@ function App() {
   const { user, loading } = useAuth();
   const [activePage, setActivePage] = useState('Dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('pingor-theme') === 'dark';
+  });
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeChatId, setActiveChatId] = useState(null);
   const [initialChatContext, setInitialChatContext] = useState(null);
@@ -45,8 +47,10 @@ function App() {
   useEffect(() => {
     if (darkMode) {
       document.body.setAttribute('data-theme', 'dark');
+      localStorage.setItem('pingor-theme', 'dark');
     } else {
       document.body.removeAttribute('data-theme');
+      localStorage.setItem('pingor-theme', 'light');
     }
   }, [darkMode]);
 

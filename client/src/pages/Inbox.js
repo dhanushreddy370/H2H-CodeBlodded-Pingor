@@ -266,9 +266,9 @@ const Inbox = () => {
 
       <div className="inbox-layout">
         <div className="inbox-sidebar card" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+          <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-primary)' }}>
             <div style={{ fontWeight: '900', fontSize: '0.75rem', color: 'var(--text-muted)', letterSpacing: '0.1em' }}>INBOX</div>
-            <button onClick={() => { setComposeData({ to: '', subject: '', body: '', _isReply: false }); setIsComposeOpen(true); }} className="icon-container" style={{ color: 'var(--primary)', cursor: 'pointer', border: 'none', background: 'white' }}>
+            <button onClick={() => { setComposeData({ to: '', subject: '', body: '', _isReply: false }); setIsComposeOpen(true); }} className="icon-container" style={{ color: 'var(--primary)', cursor: 'pointer', border: 'none', background: 'var(--bg-card)' }}>
                <Plus size={18} />
             </button>
           </div>
@@ -301,23 +301,23 @@ const Inbox = () => {
         <div className="inbox-main card" style={{ padding: 0 }}>
           {selectedThread ? (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+              <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-primary)' }}>
                 <div style={{ maxWidth: '70%' }}>
                   <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: 0, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>{selectedThread.subject}</h2>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <button className="icon-container" onClick={handleManualReply} style={{ border: '1px solid var(--border)', background: 'white' }} title="Manual Reply"><Reply size={18} /></button>
+                  <button className="icon-container" onClick={handleManualReply} style={{ border: '1px solid var(--border)', background: 'var(--bg-card)' }} title="Manual Reply"><Reply size={18} /></button>
                   <button 
                     className="icon-container" 
                     onClick={handleAIReply} 
                     disabled={isGeneratingAI}
-                    style={{ border: '1px solid var(--border)', color: 'var(--primary)', background: 'white' }} 
+                    style={{ border: '1px solid var(--border)', color: 'var(--primary)', background: 'var(--bg-card)' }} 
                     title="AI Generate Reply"
                   >
                     {isGeneratingAI ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
                   </button>
-                  <button className="icon-container" onClick={() => handleGmailAction('archive')} style={{ border: '1px solid var(--border)', background: 'white' }} title="Archive"><Archive size={18} /></button>
-                  <button className="icon-container" onClick={() => handleGmailAction('trash')} style={{ border: '1px solid var(--border)', color: '#ef4444', background: 'white' }} title="Trash"><Trash2 size={18} /></button>
+                  <button className="icon-container" onClick={() => handleGmailAction('archive')} style={{ border: '1px solid var(--border)', background: 'var(--bg-card)' }} title="Archive"><Archive size={18} /></button>
+                  <button className="icon-container" onClick={() => handleGmailAction('trash')} style={{ border: '1px solid var(--border)', color: '#ef4444', background: 'var(--bg-card)' }} title="Trash"><Trash2 size={18} /></button>
                 </div>
               </div>
 
@@ -336,17 +336,17 @@ const Inbox = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--primary)', fontWeight: 900, marginBottom: '16px', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                     <Bot size={20} /> AI Insight
                   </div>
-                  <p style={{ margin: 0, lineHeight: 1.7, color: '#1e3a8a', fontWeight: 500 }}>{selectedThread.aiSummary || "Analysis in progress by Pingor Intelligence..."}</p>
+                  <p style={{ margin: 0, lineHeight: 1.7, color: 'var(--text-main)', fontWeight: 500 }}>{selectedThread.aiSummary || "Analysis in progress by Pingor Intelligence..."}</p>
                 </div>
 
-                <div style={{ background: 'white', borderRadius: '24px', padding: '0px' }}>
+                <div style={{ background: 'var(--bg-card)', borderRadius: '24px', padding: '0px' }}>
                   {selectedThread.content && selectedThread.content.includes('<') ? (
                     <div 
-                      style={{ lineHeight: 1.8, fontSize: '1.05rem', color: '#334155' }}
+                      style={{ lineHeight: 1.8, fontSize: '1.05rem', color: 'var(--text-main)' }}
                       dangerouslySetInnerHTML={{ __html: selectedThread.content }} 
                     />
                   ) : (
-                    <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, fontSize: '1.05rem', color: '#334155' }}>
+                    <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, fontSize: '1.05rem', color: 'var(--text-main)' }}>
                       {selectedThread.content || selectedThread.snippet}
                     </div>
                   )}

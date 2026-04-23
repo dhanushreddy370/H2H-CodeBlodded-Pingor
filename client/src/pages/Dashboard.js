@@ -145,7 +145,7 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
           left: 0,
           width: '100%',
           height: '100dvh',
-          background: 'rgba(255,255,255,0.98)',
+          background: 'var(--glass-bg)',
           backdropFilter: 'blur(40px)',
           display: 'flex',
           alignItems: 'center',
@@ -205,7 +205,7 @@ const Dashboard = ({ setActivePage = () => {}, onOpenChat = () => {} }) => {
               Pingor is analyzing your communications to extract high-priority tasks and insights.
             </p>
 
-            <div style={{ width: '100%', background: 'rgba(0,0,0,0.05)', height: '6px', borderRadius: '3px', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ width: '100%', background: 'var(--bg-secondary)', height: '6px', borderRadius: '3px', overflow: 'hidden', position: 'relative' }}>
               <div style={{ 
                 width: `${syncProgress.totalThreads > 0 ? (syncProgress.processedThreads / syncProgress.totalThreads) * 100 : 0}%`, 
                 background: 'var(--primary)', 

@@ -137,7 +137,7 @@ const SmartSearch = ({ onBack = () => {} }) => {
         <>
           <div className="card" style={{ padding: '24px' }}>
             <h3 className="section-title" style={{ marginTop: 0 }}>Search Interpretation</h3>
-            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '0.86rem', color: 'var(--text-main)', background: '#f8fafc', borderRadius: '16px', padding: '16px', border: '1px solid var(--border)' }}>
+            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '0.86rem', color: 'var(--text-main)', background: 'var(--bg-primary)', borderRadius: '16px', padding: '16px', border: '1px solid var(--border)' }}>
               {JSON.stringify(results.filters, null, 2)}
             </pre>
           </div>

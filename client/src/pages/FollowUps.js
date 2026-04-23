@@ -82,7 +82,7 @@ const FollowUps = ({ onOpenChat }) => {
 
   return (
     <div className="followups-page">
-      <div className="card" style={{ padding: '20px', marginBottom: '24px', zIndex: 10, overflow: 'visible', background: '#f8fafc', border: '1px solid var(--border)' }}>
+      <div className="card" style={{ padding: '20px', marginBottom: '24px', zIndex: 10, overflow: 'visible', background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', gap: '12px' }}>
             <CustomSelect 
@@ -123,7 +123,7 @@ const FollowUps = ({ onOpenChat }) => {
           </div>
         ) : threads.length === 0 ? (
           <div style={{ padding: '100px 40px', textAlign: 'center' }}>
-            <div style={{ width: '120px', height: '120px', background: '#f1f5f9', borderRadius: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px' }}>
+            <div style={{ width: '120px', height: '120px', background: 'var(--bg-secondary)', borderRadius: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px' }}>
               <CalendarCheck size={60} style={{ color: 'var(--primary)', opacity: 0.2 }} />
             </div>
             <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '12px', color: 'var(--text-main)' }}>No pending follow-ups</h3>
@@ -155,7 +155,7 @@ const FollowUps = ({ onOpenChat }) => {
                     <td style={{ maxWidth: '300px' }}>
                       <div style={{ fontWeight: '800', color: 'var(--text-main)', marginBottom: '6px', fontSize: '1rem' }}>{thread.subject}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{thread.sender}</div>
-                      <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '12px', fontStyle: 'italic', lineHeight: 1.5, background: '#f8fafc', padding: '10px', borderRadius: '12px' }}>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '12px', fontStyle: 'italic', lineHeight: 1.5, background: 'var(--bg-primary)', padding: '10px', borderRadius: '12px' }}>
                          "{thread.snippet?.substring(0, 100)}..."
                       </div>
                     </td>
@@ -164,7 +164,7 @@ const FollowUps = ({ onOpenChat }) => {
                         <div 
                           className="card" 
                           onClick={e => e.stopPropagation()}
-                          style={{ background: 'white', border: '1px solid var(--primary)', padding: '20px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.05)' }}
+                          style={{ background: 'var(--bg-card)', border: '1px solid var(--primary)', padding: '20px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.05)' }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--primary)', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                             <Sparkles size={16} /> AI Drafted Reply
@@ -178,7 +178,7 @@ const FollowUps = ({ onOpenChat }) => {
                               style={{ width: '100%', minHeight: '120px', marginBottom: '16px', fontSize: '0.95rem', borderRadius: '12px', padding: '12px', border: '1px solid var(--primary)' }}
                             />
                           ) : (
-                            <div style={{ fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap', marginBottom: '16px', color: '#1e293b' }}>
+                            <div style={{ fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap', marginBottom: '16px' }}>
                               {thread.aiResponse}
                             </div>
                           )}
@@ -202,7 +202,7 @@ const FollowUps = ({ onOpenChat }) => {
                           </div>
                         </div>
                       ) : (
-                        <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '20px', background: '#f8fafc', borderRadius: '16px', textAlign: 'center', border: '1px dashed var(--border)' }}>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '20px', background: 'var(--bg-primary)', borderRadius: '16px', textAlign: 'center', border: '1px dashed var(--border)' }}>
                           No automated draft required.
                         </div>
                       )}
